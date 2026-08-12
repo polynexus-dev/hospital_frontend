@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Source Sans 3", "Noto Sans Devanagari", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  /* Brand */
+  --color-brand: #1d4e89;
+  --color-brand-hover: #17406f;
+  --color-brand-dark: #133658;
+  --color-brand-tint: #eef4fa;
+  --color-brand-tint-strong: #e9eff6;
+  --color-brand-border: #dbe6f2;
+
+  /* Surfaces */
+  --color-page: #f4f5f7;
+  --color-sidebar: #fbfbfc;
+  --color-surface: #ffffff;
+
+  /* Borders */
+  --color-border: #e3e6ea;
+  --color-border-soft: #eceff2;
+  --color-border-faint: #f1f3f5;
+  --color-border-strong: #d8dde2;
+
+  /* Text */
+  --color-ink: #16191d;
+  --color-ink-2: #3d4650;
+  --color-ink-3: #55606b;
+  --color-ink-4: #7a838d;
+  --color-ink-5: #9aa2aa;
+  --color-ink-6: #8a929b;
+
+  /* Status */
+  --color-success: #1c7a55;
+  --color-success-text: #1c6a4b;
+  --color-success-bg: #e9f2ec;
+
+  --color-warning: #c58a1a;
+  --color-warning-text: #8a6516;
+  --color-warning-bg: #f6f2e9;
+
+  --color-danger: #b3261e;
+  --color-danger-text: #a8332a;
+  --color-danger-bg: #fdf3f2;
+  --color-danger-border: #f2d9d6;
+
+  --color-chip-bg: #f0f2f5;
+  --color-chip-text: #4a545e;
+
+  --radius-card: 6px;
+  --radius-control: 5px;
+  --radius-chip: 4px;
+  --radius-tag: 3px;
+}
+
+@keyframes livepulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-livepulse {
+  animation: livepulse 1.6s ease-in-out infinite;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-page);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d5dade;
+  border-radius: 6px;
+  border: 3px solid var(--color-page);
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
