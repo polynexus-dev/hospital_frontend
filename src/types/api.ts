@@ -22,6 +22,9 @@ export interface User {
   last_name: string
   hospital: string | null
   hospital_name?: string
+  hospital_address?: string
+  hospital_city?: string
+  hospital_state?: string
   available_hospitals?: Array<{ id: string; name: string; slug: string; city: string }>
   department: number | null
   role: number | null

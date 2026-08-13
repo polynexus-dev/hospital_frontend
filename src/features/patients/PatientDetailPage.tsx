@@ -14,6 +14,7 @@ import { listHisBilling } from "../../api/integrations"
 import { listPrescriptions, createPrescription } from "../../api/prescriptions"
 import type { Prescription, Medication } from "../../api/prescriptions"
 import type { AppointmentStatus, Channel, ConsentOptOut, Patient } from "../../types/api"
+import { useAuthStore } from "../../store/auth"
 
 const INR = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })
 
@@ -236,6 +237,7 @@ export function PatientDetailPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const patientId = id ? parseInt(id, 10) : 0
+  const authUser = useAuthStore((state) => state.user)
 
   const [activeTab, setActiveTab] = useState<TabKey>("timeline")
   const [isDocModalOpen, setIsDocModalOpen] = useState(false)
@@ -953,10 +955,12 @@ export function PatientDetailPage() {
             {/* Prescription Letterhead Header */}
             <div className="flex justify-between items-start pb-4 border-b-2 border-slate-800">
               <div>
-                <h2 className="text-xl font-bold tracking-tight text-slate-900">POLYNEXUS HOSPITAL</h2>
-
-                <p className="text-xs text-slate-600">Multispeciality OPD & Diagnostic Centre</p>
-                <p className="text-xs text-slate-500">Baner Road, Pune, MH 411045 · Tel: +91 98765 43210</p>
+                <h2 className="text-xl font-bold tracking-tight text-slate-900">{authUser?.hospital_name || "Hospital name not set"}</h2>
+                {(authUser?.hospital_address || authUser?.hospital_city || authUser?.hospital_state) && (
+                  <p className="text-xs text-slate-500">
+                    {[authUser?.hospital_address, authUser?.hospital_city, authUser?.hospital_state].filter(Boolean).join(", ")}
+                  </p>
+                )}
               </div>
               <div className="text-right">
                 <span className="inline-block bg-slate-900 text-white font-bold text-xs px-2.5 py-1 rounded">OPD e-PRESCRIPTION</span>
@@ -972,7 +976,7 @@ export function PatientDetailPage() {
                 <p><span className="font-bold text-slate-900">Mobile:</span> {patient.mobile}</p>
               </div>
               <div>
-                <p><span className="font-bold text-slate-900">Consultant Doctor:</span> {viewingRx.doctor_name || "Dr. Ramesh Kulkarni (MD)"}</p>
+                <p><span className="font-bold text-slate-900">Consultant Doctor:</span> {viewingRx.doctor_name || "—"}</p>
                 <p><span className="font-bold text-slate-900">Department:</span> OPD Consult</p>
               </div>
             </div>

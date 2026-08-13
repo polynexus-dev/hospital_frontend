@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { useMutation } from "@tanstack/react-query"
 import { postInteractiveChatAction } from "../../api/communications"
+import { useAuthStore } from "../../store/auth"
 
 interface ChatMessage {
   sender: "user" | "ai"
@@ -9,16 +10,23 @@ interface ChatMessage {
 }
 
 export function AIChatbotWidget() {
+  const hospitalName = useAuthStore((state) => state.user?.hospital_name)
   const [isOpen, setIsOpen] = useState(false)
   const [language, setLanguage] = useState<"en" | "mr" | "hi">("en")
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([])
   const [activeOptions, setActiveOptions] = useState<Array<{ id: string; label: string }>>([])
+  const [requiresInput, setRequiresInput] = useState<string[] | null>(null)
+  const [pendingSlotId, setPendingSlotId] = useState<number | null>(null)
+  const [formValues, setFormValues] = useState<{ name: string; mobile: string }>({ name: "", mobile: "" })
 
   const actionMutation = useMutation({
     mutationFn: postInteractiveChatAction,
     onSuccess: (data) => {
       setChatHistory((prev) => [...prev, { sender: "ai", text: data.text, options: data.options }])
       setActiveOptions(data.options || [])
+      setRequiresInput(data.requires_input || null)
+      setPendingSlotId(data.pending_slot_id ?? null)
+      if (data.requires_input) setFormValues({ name: "", mobile: "" })
     },
   })
 
@@ -29,17 +37,28 @@ export function AIChatbotWidget() {
     }
   }, [isOpen])
 
-  const triggerAction = (actionId: string, labelText?: string) => {
+  const triggerAction = (actionId: string, labelText?: string, extraPayload?: Record<string, unknown>) => {
     if (labelText) {
       setChatHistory((prev) => [...prev, { sender: "user", text: labelText }])
     }
     setActiveOptions([])
-    actionMutation.mutate({ action: actionId, language })
+    setRequiresInput(null)
+    actionMutation.mutate({ action: actionId, language, payload: extraPayload })
+  }
+
+  const submitBookingDetails = () => {
+    if (!formValues.mobile.trim()) return
+    triggerAction(
+      "submit_booking",
+      `${formValues.name || "Patient"} · ${formValues.mobile}`,
+      { slot_id: pendingSlotId, name: formValues.name, mobile: formValues.mobile },
+    )
   }
 
   const handleLanguageChange = (newLang: "en" | "mr" | "hi") => {
     setLanguage(newLang)
     setChatHistory([])
+    setRequiresInput(null)
     actionMutation.mutate({ action: "main_menu", language: newLang })
   }
 
@@ -108,6 +127,40 @@ export function AIChatbotWidget() {
               </div>
             ))}
 
+            {/* Booking details form (name + mobile) when the backend asks for them */}
+            {requiresInput && !actionMutation.isPending && (
+              <div className="space-y-2 pt-1 border-t border-border-soft mt-1 pt-2.5">
+                <span className="text-[11px] font-semibold text-ink-5 uppercase tracking-[.06em] block px-1">
+                  Confirm booking details:
+                </span>
+                {requiresInput.includes("name") && (
+                  <input
+                    type="text"
+                    placeholder="Patient name"
+                    value={formValues.name}
+                    onChange={(e) => setFormValues((v) => ({ ...v, name: e.target.value }))}
+                    className="w-full px-3 py-2 text-xs border border-border-strong rounded-control bg-surface"
+                  />
+                )}
+                {requiresInput.includes("mobile") && (
+                  <input
+                    type="tel"
+                    placeholder="Mobile number"
+                    value={formValues.mobile}
+                    onChange={(e) => setFormValues((v) => ({ ...v, mobile: e.target.value }))}
+                    className="w-full px-3 py-2 text-xs border border-border-strong rounded-control bg-surface"
+                  />
+                )}
+                <button
+                  onClick={submitBookingDetails}
+                  disabled={!formValues.mobile.trim()}
+                  className="w-full px-3 py-2 bg-brand hover:bg-brand-hover disabled:opacity-50 text-white font-semibold rounded-control transition-colors text-xs"
+                >
+                  Confirm Booking
+                </button>
+              </div>
+            )}
+
             {/* Active Action Option Buttons */}
             {activeOptions.length > 0 && !actionMutation.isPending && (
               <div className="space-y-1.5 pt-1">
@@ -138,7 +191,7 @@ export function AIChatbotWidget() {
 
           {/* Footer Reset button */}
           <div className="p-2 border-t border-border-soft bg-page flex justify-between items-center text-xs">
-            <span className="text-[11px] text-ink-5">Polynexus Hospital Pune</span>
+            <span className="text-[11px] text-ink-5">{hospitalName || "Hospital Assistant"}</span>
             <button
               onClick={() => triggerAction("main_menu")}
               className="text-xs text-brand font-semibold hover:underline"

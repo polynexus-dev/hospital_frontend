@@ -32,6 +32,8 @@ export function postInteractiveChatAction(payload: { action: string; language?: 
     options: Array<{ id: string; label: string }>
     step: string
     confirmed_details?: any
+    requires_input?: string[] | null
+    pending_slot_id?: number | null
   }>("/messages/ai-chat/", payload)
 }
 
