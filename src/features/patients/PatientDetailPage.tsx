@@ -136,12 +136,16 @@ function LinkedPeopleCard({ patient, treatingDoctorLabel }: { patient: Patient; 
   const [attendantPhone, setAttendantPhone] = useState(patient.attendant_phone)
   const [attendantRelation, setAttendantRelation] = useState(patient.attendant_relation)
   const [referringDoctor, setReferringDoctor] = useState(patient.referring_doctor_name)
+  const [guardianId, setGuardianId] = useState(patient.guardian ? String(patient.guardian) : "")
+  const [relationshipToGuardian, setRelationshipToGuardian] = useState(patient.relationship_to_guardian)
 
   const openEdit = () => {
     setAttendantName(patient.attendant_name)
     setAttendantPhone(patient.attendant_phone)
     setAttendantRelation(patient.attendant_relation)
     setReferringDoctor(patient.referring_doctor_name)
+    setGuardianId(patient.guardian ? String(patient.guardian) : "")
+    setRelationshipToGuardian(patient.relationship_to_guardian)
     setIsEditing(true)
   }
 
@@ -152,6 +156,8 @@ function LinkedPeopleCard({ patient, treatingDoctorLabel }: { patient: Patient; 
         attendant_phone: attendantPhone,
         attendant_relation: attendantRelation,
         referring_doctor_name: referringDoctor,
+        guardian: guardianId ? Number(guardianId) : null,
+        relationship_to_guardian: relationshipToGuardian,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["patient", patient.id] })
@@ -198,6 +204,21 @@ function LinkedPeopleCard({ patient, treatingDoctorLabel }: { patient: Patient; 
             placeholder="Referred by"
             className="h-8 px-2.5 border border-border-strong rounded-control text-[12.5px] outline-none focus:border-brand"
           />
+          <div className="grid grid-cols-2 gap-2">
+            <input
+              value={guardianId}
+              onChange={(e) => setGuardianId(e.target.value)}
+              placeholder="Guardian patient ID"
+              type="number"
+              className="h-8 px-2.5 border border-border-strong rounded-control text-[12.5px] font-mono outline-none focus:border-brand"
+            />
+            <input
+              value={relationshipToGuardian}
+              onChange={(e) => setRelationshipToGuardian(e.target.value)}
+              placeholder="Relation (e.g. child, spouse)"
+              className="h-8 px-2.5 border border-border-strong rounded-control text-[12.5px] outline-none focus:border-brand"
+            />
+          </div>
           <div className="flex justify-end gap-2 mt-1">
             <Button variant="secondary" size="sm" onClick={() => setIsEditing(false)}>
               Cancel
@@ -226,7 +247,86 @@ function LinkedPeopleCard({ patient, treatingDoctorLabel }: { patient: Patient; 
             <div className="text-[11.5px] text-ink-4">Treating doctor</div>
             <div className="text-ink-2 font-semibold mt-0.5">{treatingDoctorLabel}</div>
           </div>
+          <div>
+            <div className="text-[11.5px] text-ink-4">Guardian / household head</div>
+            <div className="text-ink-2 font-semibold mt-0.5">
+              {patient.guardian ? `Patient #${patient.guardian}` : "—"}
+            </div>
+            {patient.relationship_to_guardian && <div className="text-[11.5px] text-ink-4 mt-0.5">{patient.relationship_to_guardian}</div>}
+          </div>
         </div>
+      )}
+    </Card>
+  )
+}
+
+function RecallCard({ patient }: { patient: Patient }) {
+  const queryClient = useQueryClient()
+  const [isEditing, setIsEditing] = useState(false)
+  const [dueDate, setDueDate] = useState(patient.next_recall_due_at ? patient.next_recall_due_at.slice(0, 10) : "")
+  const [reason, setReason] = useState(patient.recall_reason)
+
+  const openEdit = () => {
+    setDueDate(patient.next_recall_due_at ? patient.next_recall_due_at.slice(0, 10) : "")
+    setReason(patient.recall_reason)
+    setIsEditing(true)
+  }
+
+  const save = useMutation({
+    mutationFn: () =>
+      updatePatient(patient.id, {
+        next_recall_due_at: dueDate ? new Date(dueDate).toISOString() : null,
+        recall_reason: reason,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["patient", patient.id] })
+      setIsEditing(false)
+    },
+  })
+
+  const overdue = patient.next_recall_due_at && new Date(patient.next_recall_due_at).getTime() < Date.now()
+
+  return (
+    <Card padded>
+      <div className="flex items-center justify-between mb-2.5">
+        <div className="text-[11px] tracking-[.08em] uppercase text-ink-4 font-semibold">Preventive-care recall</div>
+        {!isEditing && (
+          <button onClick={openEdit} className="text-[11.5px] font-semibold text-brand hover:underline">
+            {patient.next_recall_due_at ? "Edit" : "Schedule"}
+          </button>
+        )}
+      </div>
+      {isEditing ? (
+        <div className="flex flex-col gap-2">
+          <input
+            type="date"
+            value={dueDate}
+            onChange={(e) => setDueDate(e.target.value)}
+            className="h-8 px-2.5 border border-border-strong rounded-control text-[12.5px] outline-none focus:border-brand"
+          />
+          <input
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="e.g. Annual checkup, post-surgery follow-up"
+            className="h-8 px-2.5 border border-border-strong rounded-control text-[12.5px] outline-none focus:border-brand"
+          />
+          <div className="flex justify-end gap-2 mt-1">
+            <Button variant="secondary" size="sm" onClick={() => setIsEditing(false)}>Cancel</Button>
+            <Button variant="primary" size="sm" onClick={() => save.mutate()} disabled={save.isPending}>
+              {save.isPending ? "Saving…" : "Save"}
+            </Button>
+          </div>
+        </div>
+      ) : patient.next_recall_due_at ? (
+        <div className="text-[13px]">
+          <div className={overdue ? "font-semibold text-danger" : "font-semibold text-ink-2"}>
+            {overdue ? "Overdue since " : "Due "}
+            {new Date(patient.next_recall_due_at).toLocaleDateString("en-IN")}
+          </div>
+          {patient.recall_reason && <div className="text-[11.5px] text-ink-4 mt-0.5">{patient.recall_reason}</div>}
+        </div>
+      ) : (
+        <div className="text-[12.5px] text-ink-4">No recall scheduled.</div>
       )}
     </Card>
   )
@@ -458,6 +558,7 @@ export function PatientDetailPage() {
         <AccountCard patient={patient} outstandingDues={outstandingDues} lifetimeBilled={lifetimeBilled} />
         <LinkedPeopleCard patient={patient} treatingDoctorLabel={treatingDoctorLabel} />
       </div>
+      <RecallCard patient={patient} />
 
       {/* Tabs */}
       <div className="flex items-center gap-1 border-b border-border">

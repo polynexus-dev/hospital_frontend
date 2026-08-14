@@ -65,6 +65,10 @@ export interface Patient {
   attendant_phone: string
   attendant_relation: string
   referring_doctor_name: string
+  guardian: number | null
+  relationship_to_guardian: string
+  next_recall_due_at: string | null
+  recall_reason: string
   preferred_language: Language
   is_active: boolean
   created_at: string
@@ -149,6 +153,17 @@ export type EnquiryStage = "new" | "contacted" | "scheduled" | "visited" | "comp
 export type EnquirySource = "ivr" | "whatsapp" | "website" | "walk_in" | "referral" | "google" | "meta" | "other"
 export type Urgency = "low" | "normal" | "high" | "urgent"
 
+export type LostReason =
+  | "cost"
+  | "location"
+  | "went_elsewhere"
+  | "no_response"
+  | "not_interested"
+  | "medical_reason"
+  | "duplicate"
+  | "other"
+  | ""
+
 export interface Enquiry {
   id: number
   patient: number | null
@@ -158,19 +173,38 @@ export interface Enquiry {
   email: string
   source: EnquirySource
   campaign: string
+  utm_source: string
+  utm_medium: string
+  utm_campaign: string
+  utm_term: string
+  utm_content: string
+  landing_page: string
+  referrer_url: string
   department: number | null
   service_requested: string
   urgency: Urgency
+  score: number
   stage: EnquiryStage
   assigned_to: number | null
   duplicate_of: number | null
   sla_due_at: string | null
   escalation_level: number
-  lost_reason: string
+  lost_reason: LostReason
+  lost_notes: string
   notes: string
   estimated_value: string | null
   created_at: string
   updated_at: string
+}
+
+export interface EnquiryAssignmentChange {
+  id: number
+  enquiry: number
+  from_owner: number | null
+  to_owner: number | null
+  changed_by: number | null
+  reason: string
+  created_at: string
 }
 
 export interface Doctor {
@@ -191,6 +225,7 @@ export interface Slot {
   start_time: string
   end_time: string
   is_blocked: boolean
+  blocked_reason: string
   is_booked: boolean
 }
 
@@ -216,6 +251,7 @@ export interface Appointment {
   consent_captured: boolean
   consent_captured_at: string | null
   registration_token: string
+  queue_token: number | null
   reminder_24h_sent_at: string | null
   reminder_2h_sent_at: string | null
   checked_in_at: string | null
@@ -241,6 +277,11 @@ export interface Waitlist {
   resulting_appointment: number | null
   notes: string
   created_at: string
+}
+
+export interface DoctorQueue {
+  now_serving: Appointment | null
+  waiting: Appointment[]
 }
 
 export type Channel = "whatsapp" | "sms" | "email" | "call_note"
@@ -422,6 +463,18 @@ export interface ReminderDeliveryRow {
 
 export interface ReminderDeliveryReport {
   rows: ReminderDeliveryRow[]
+}
+
+export interface DoctorRevenueRow {
+  doctor_id: number
+  doctor_name: string
+  completed_appointments: number
+  billed_amount: string
+}
+
+export interface DoctorRevenueReport {
+  rows: DoctorRevenueRow[]
+  note: string
 }
 
 export interface NpsByDepartmentRow {

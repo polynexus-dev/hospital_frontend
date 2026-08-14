@@ -1,5 +1,5 @@
 import { api } from "./client"
-import type { Appointment, AppointmentStatus, Doctor, Paginated, Slot, Waitlist } from "../types/api"
+import type { Appointment, AppointmentStatus, Doctor, DoctorQueue, Paginated, Slot, Waitlist } from "../types/api"
 
 export function listDoctors() {
   return api.get<Paginated<Doctor>>("/doctors/")
@@ -56,4 +56,19 @@ export function confirmWaitlist(id: number) {
 
 export function cancelWaitlist(id: number) {
   return api.post<Waitlist>(`/waitlist/${id}/cancel/`)
+}
+
+export function fetchDoctorQueue(doctorId: number, date: string) {
+  return api.get<DoctorQueue>(`/doctors/${doctorId}/queue/?date=${date}`)
+}
+
+export function blockDoctorLeave(doctorId: number, payload: { start_date: string; end_date: string; reason?: string }) {
+  return api.post<{ blocked: number; skipped_already_booked: number; booked_slot_ids: number[] }>(
+    `/doctors/${doctorId}/block-leave/`,
+    payload,
+  )
+}
+
+export function unblockDoctorLeave(doctorId: number, payload: { start_date: string; end_date: string }) {
+  return api.post<{ unblocked: number }>(`/doctors/${doctorId}/unblock-leave/`, payload)
 }

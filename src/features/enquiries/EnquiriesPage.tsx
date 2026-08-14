@@ -4,9 +4,10 @@ import { Button } from "../../components/ui/Button"
 import { NeutralTag, Pill } from "../../components/ui/Pill"
 import { Avatar } from "../../components/ui/Avatar"
 import { LoadingState } from "../../components/ui/QueryStates"
-import { createEnquiry, listEnquiries, loseEnquiry, moveEnquiryStage } from "../../api/enquiries"
+import { createEnquiry, listEnquiries, loseEnquiry, mergeEnquiry, moveEnquiryStage, reassignEnquiry } from "../../api/enquiries"
 import { listUsers } from "../../api/accounts"
 import type { Enquiry, EnquiryStage, EnquirySource } from "../../types/api"
+import type { User } from "../../types/api"
 
 const INR = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })
 
@@ -85,8 +86,9 @@ function NewEnquiryForm({ onClose }: { onClose: () => void }) {
   )
 }
 
-function EnquiryCard({ enquiry, ownerName }: { enquiry: Enquiry; ownerName: string | null }) {
+function EnquiryCard({ enquiry, ownerName, users }: { enquiry: Enquiry; ownerName: string | null; users: User[] }) {
   const queryClient = useQueryClient()
+  const [isReassigning, setIsReassigning] = useState(false)
   const currentIndex = STAGES.findIndex((s) => s.key === enquiry.stage)
   const nextStage = STAGES[currentIndex + 1]
 
@@ -95,7 +97,18 @@ function EnquiryCard({ enquiry, ownerName }: { enquiry: Enquiry; ownerName: stri
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["enquiries"] }),
   })
   const lose = useMutation({
-    mutationFn: () => loseEnquiry(enquiry.id, "Not interested"),
+    mutationFn: () => loseEnquiry(enquiry.id, "not_interested"),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["enquiries"] }),
+  })
+  const reassign = useMutation({
+    mutationFn: (ownerId: number) => reassignEnquiry(enquiry.id, ownerId, "manual reassignment"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["enquiries"] })
+      setIsReassigning(false)
+    },
+  })
+  const merge = useMutation({
+    mutationFn: () => mergeEnquiry(enquiry.id, enquiry.duplicate_of!),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["enquiries"] }),
   })
 
@@ -105,18 +118,37 @@ function EnquiryCard({ enquiry, ownerName }: { enquiry: Enquiry; ownerName: stri
     <div className="bg-surface border border-border rounded-[5px] p-2.5 hover:border-border-strong">
       <div className="flex items-start justify-between gap-2">
         <div className="text-[13px] font-semibold leading-tight">{enquiry.name}</div>
-        {ownerName && <Avatar name={ownerName} size={20} />}
+        <button onClick={() => setIsReassigning((v) => !v)} title="Reassign owner">
+          {ownerName ? <Avatar name={ownerName} size={20} /> : <span className="text-[10px] text-ink-5 underline">assign</span>}
+        </button>
       </div>
       {enquiry.service_requested && <div className="text-[12px] text-ink-3 mt-1">{enquiry.service_requested}</div>}
       <div className="text-[11.5px] text-ink-4 mt-0.5 font-mono">{enquiry.mobile}</div>
       <div className="flex items-center gap-1.5 mt-2 flex-wrap">
         <NeutralTag>{enquiry.source}</NeutralTag>
+        {enquiry.utm_source && <NeutralTag>{enquiry.utm_source}{enquiry.utm_medium ? `/${enquiry.utm_medium}` : ""}</NeutralTag>}
+        {enquiry.score > 0 && <NeutralTag>score {enquiry.score}</NeutralTag>}
         {enquiry.duplicate_of && <NeutralTag>dup</NeutralTag>}
         {enquiry.urgency !== "normal" && <NeutralTag>{enquiry.urgency}</NeutralTag>}
         {enquiry.estimated_value && <NeutralTag>{INR.format(Number(enquiry.estimated_value))}</NeutralTag>}
         {slaBreached && <Pill tone="bad">SLA breached</Pill>}
       </div>
-      <div className="flex items-center gap-1.5 mt-2">
+      {isReassigning && (
+        <select
+          autoFocus
+          defaultValue=""
+          onChange={(e) => e.target.value && reassign.mutate(Number(e.target.value))}
+          onBlur={() => setIsReassigning(false)}
+          disabled={reassign.isPending}
+          className="w-full h-7 mt-2 px-1.5 border border-border-strong rounded-control bg-surface text-[11.5px]"
+        >
+          <option value="">Reassign to…</option>
+          {users.map((u) => (
+            <option key={u.id} value={u.id}>{u.first_name || u.email}</option>
+          ))}
+        </select>
+      )}
+      <div className="flex items-center gap-1.5 mt-2 flex-wrap">
         {nextStage && (
           <button
             onClick={() => move.mutate(nextStage.key)}
@@ -124,6 +156,11 @@ function EnquiryCard({ enquiry, ownerName }: { enquiry: Enquiry; ownerName: stri
             className="text-[11px] font-semibold text-brand hover:underline"
           >
             → {nextStage.label}
+          </button>
+        )}
+        {enquiry.duplicate_of && (
+          <button onClick={() => merge.mutate()} disabled={merge.isPending} className="text-[11px] font-semibold text-brand hover:underline">
+            Merge into #{enquiry.duplicate_of}
           </button>
         )}
         <div className="flex-1" />
@@ -235,7 +272,7 @@ export function EnquiriesPage() {
                 <div className="text-[11.5px] text-ink-4 font-semibold">{cards.length}</div>
               </div>
               {cards.map((e) => (
-                <EnquiryCard key={e.id} enquiry={e} ownerName={ownerName(e.assigned_to)} />
+                <EnquiryCard key={e.id} enquiry={e} ownerName={ownerName(e.assigned_to)} users={users.data?.results ?? []} />
               ))}
               {cards.length === 0 && <div className="text-[11.5px] text-ink-5 px-1">—</div>}
             </div>

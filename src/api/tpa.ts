@@ -48,3 +48,33 @@ export function createPreAuthRequest(payload: Partial<PreAuthRequest>) {
 export function updatePreAuthStatus(id: number, status: PreAuthRequest["status"], approved_amount?: number) {
   return api.patch<PreAuthRequest>(`/tpa/pre-auth/${id}/`, { status, approved_amount })
 }
+
+export interface Claim {
+  id: number
+  preauth_request: number | null
+  patient: number
+  patient_name: string
+  tpa_company: number
+  tpa_name: string
+  claim_number: string
+  billed_amount: number
+  settled_amount: number
+  outstanding_amount: number
+  status: "submitted" | "under_review" | "settled" | "partially_settled" | "rejected"
+  rejection_reason: string
+  notes: string
+  submitted_at: string
+  settled_at?: string
+}
+
+export function listClaims() {
+  return api.get<Paginated<Claim>>("/tpa/claims/")
+}
+
+export function createClaim(payload: Partial<Claim>) {
+  return api.post<Claim>("/tpa/claims/", payload)
+}
+
+export function updateClaim(id: number, payload: Partial<Claim>) {
+  return api.patch<Claim>(`/tpa/claims/${id}/`, payload)
+}

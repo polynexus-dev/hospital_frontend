@@ -7,6 +7,7 @@ import {
   callPerformance,
   dailyMisPreview,
   departmentDoctorVolume,
+  doctorRevenue,
   enquiryFunnel,
   noShowEffectiveness,
   revenueBySource,
@@ -31,6 +32,7 @@ export function DashboardPage() {
   const noShow = useQuery({ queryKey: ["reports", "no-show-effectiveness"], queryFn: noShowEffectiveness })
   const mis = useQuery({ queryKey: ["reports", "daily-mis-preview"], queryFn: dailyMisPreview })
   const revenue = useQuery({ queryKey: ["reports", "revenue-by-source"], queryFn: revenueBySource })
+  const docRevenue = useQuery({ queryKey: ["reports", "doctor-revenue"], queryFn: doctorRevenue })
 
   if (calls.isLoading || funnel.isLoading) return <LoadingState />
   if (calls.isError || funnel.isError) return <ErrorState />
@@ -120,6 +122,24 @@ export function DashboardPage() {
         ))}
         {!revenue.data?.rows.length && <div className="text-[13px] text-ink-4 py-2">No source data yet.</div>}
         {revenue.data?.note && <div className="text-[11.5px] text-ink-4 mt-2 leading-relaxed">{revenue.data.note}</div>}
+      </Card>
+
+      <Card padded>
+        <div className="text-[13px] font-semibold mb-3">Revenue by doctor</div>
+        <div className="grid grid-cols-[1.6fr_0.7fr_1fr] gap-2 pb-2 border-b border-border-soft text-[11px] tracking-[.06em] uppercase text-ink-4 font-semibold">
+          <div>Doctor</div>
+          <div className="text-right">Completed</div>
+          <div className="text-right">Billed</div>
+        </div>
+        {docRevenue.data?.rows.map((r) => (
+          <div key={r.doctor_id} className="grid grid-cols-[1.6fr_0.7fr_1fr] gap-2 py-2 border-b border-border-faint text-[13px] items-center">
+            <div>{r.doctor_name}</div>
+            <div className="text-right text-ink-3">{r.completed_appointments}</div>
+            <div className="text-right font-semibold">{INR.format(Number(r.billed_amount))}</div>
+          </div>
+        ))}
+        {!docRevenue.data?.rows.length && <div className="text-[13px] text-ink-4 py-2">No doctor revenue data yet.</div>}
+        {docRevenue.data?.note && <div className="text-[11.5px] text-ink-4 mt-2 leading-relaxed">{docRevenue.data.note}</div>}
       </Card>
 
       <div className="grid grid-cols-3 gap-3.5 items-start">

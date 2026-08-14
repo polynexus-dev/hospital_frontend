@@ -14,7 +14,7 @@ export interface Workflow {
   id: number
   name: string
   description: string
-  trigger_type: "missed_call" | "enquiry_stage_changed" | "appointment_no_show" | "nps_detractor"
+  trigger_type: "missed_call" | "enquiry_stage_changed" | "appointment_no_show" | "nps_detractor" | "patient_recall_due"
   is_active: boolean
   steps: WorkflowStep[]
   created_at: string

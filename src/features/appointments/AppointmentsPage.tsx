@@ -5,8 +5,10 @@ import { Button } from "../../components/ui/Button"
 import { NeutralTag, Pill } from "../../components/ui/Pill"
 import { EmptyState, ErrorState, LoadingState } from "../../components/ui/QueryStates"
 import {
+  blockDoctorLeave,
   bookAppointment,
   confirmWaitlist,
+  fetchDoctorQueue,
   listAppointments,
   listDoctors,
   listSlots,
@@ -119,6 +121,16 @@ export function AppointmentsPage() {
   const [bookSlotId, setBookSlotId] = useState<number>(0)
   const [bookReason, setBookReason] = useState("")
 
+  // Block-leave modal state
+  const [isBlockModalOpen, setIsBlockModalOpen] = useState(false)
+  const [blockDoctorId, setBlockDoctorId] = useState<number>(0)
+  const [blockStart, setBlockStart] = useState(todayIso())
+  const [blockEnd, setBlockEnd] = useState(todayIso())
+  const [blockReason, setBlockReason] = useState("")
+
+  // OPD queue panel doctor selection
+  const [queueDoctorId, setQueueDoctorId] = useState<number>(0)
+
   const doctorsQuery = useQuery({ queryKey: ["doctors"], queryFn: () => listDoctors() })
   const patientsQuery = useQuery({ queryKey: ["patients-dropdown"], queryFn: () => listPatients() })
   const slotsQuery = useQuery({
@@ -131,6 +143,11 @@ export function AppointmentsPage() {
   })
   const waitlistQuery = useQuery({ queryKey: ["waitlist"], queryFn: () => listWaitlist() })
   const reminderQuery = useQuery({ queryKey: ["reports", "reminder-delivery"], queryFn: reminderDelivery })
+  const queueQuery = useQuery({
+    queryKey: ["doctor-queue", queueDoctorId, selectedDate],
+    queryFn: () => fetchDoctorQueue(queueDoctorId, selectedDate),
+    enabled: queueDoctorId > 0,
+  })
 
   const doctors = useMemo(() => (doctorsQuery.data?.results ?? []).filter((d) => d.is_active), [doctorsQuery.data])
   const patients = patientsQuery.data?.results ?? []
@@ -221,6 +238,26 @@ export function AppointmentsPage() {
     },
   })
 
+  const blockLeaveMutation = useMutation({
+    mutationFn: () => blockDoctorLeave(blockDoctorId, { start_date: blockStart, end_date: blockEnd, reason: blockReason }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["slots"] })
+      closeBlockModal()
+    },
+  })
+
+  function openBlockModal(doctorId = 0) {
+    setBlockDoctorId(doctorId)
+    setBlockStart(todayIso())
+    setBlockEnd(todayIso())
+    setBlockReason("")
+    setIsBlockModalOpen(true)
+  }
+
+  function closeBlockModal() {
+    setIsBlockModalOpen(false)
+  }
+
   function openBooking(doctorId = 0, slotId = 0) {
     setBookDoctorId(doctorId)
     setBookSlotId(slotId)
@@ -303,6 +340,9 @@ export function AppointmentsPage() {
                 </div>
               ))}
             </div>
+            <Button variant="secondary" size="sm" onClick={() => openBlockModal()}>
+              Block doctor leave
+            </Button>
             <Button variant="primary" size="sm" onClick={() => openBooking()}>
               Book slot
             </Button>
@@ -362,7 +402,10 @@ export function AppointmentsPage() {
                       if (appt && (tone === "booked" || tone === "active" || tone === "risk")) {
                         return (
                           <button key={d.id} type="button" className={baseClass} onClick={() => setSelectedApptId(appt.id)}>
-                            <span className="text-[11.5px] font-semibold truncate">{patientName(appt.patient)}</span>
+                            <span className="text-[11.5px] font-semibold truncate">
+                              {appt.queue_token != null && `#${appt.queue_token} `}
+                              {patientName(appt.patient)}
+                            </span>
                             <span className="text-[10px] truncate opacity-80">
                               {STATUS_LABELS[appt.status]}
                               {appt.reason ? ` · ${appt.reason}` : ""}
@@ -411,6 +454,43 @@ export function AppointmentsPage() {
                 <div className="text-[11.5px] text-ink-4">Walk-ins added</div>
               </div>
             </div>
+          </Card>
+
+          <Card padded>
+            <div className="flex items-center justify-between mb-2">
+              <Eyebrow>OPD queue</Eyebrow>
+              <select
+                value={queueDoctorId}
+                onChange={(e) => setQueueDoctorId(Number(e.target.value))}
+                className="h-7 px-2 border border-border-strong rounded-control bg-surface text-[11.5px] text-ink-3"
+              >
+                <option value={0}>Select doctor…</option>
+                {doctors.map((d) => (
+                  <option key={d.id} value={d.id}>{d.name}</option>
+                ))}
+              </select>
+            </div>
+            {queueDoctorId === 0 && <div className="text-[12.5px] text-ink-4">Pick a doctor to see who's waiting.</div>}
+            {queueDoctorId > 0 && queueQuery.isLoading && <div className="text-[12.5px] text-ink-4">Loading…</div>}
+            {queueDoctorId > 0 && queueQuery.data && (
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between text-[13px]">
+                  <span className="text-ink-3">Now serving</span>
+                  <span className="font-bold text-success">
+                    {queueQuery.data.now_serving
+                      ? `#${queueQuery.data.now_serving.queue_token} · ${patientName(queueQuery.data.now_serving.patient)}`
+                      : "—"}
+                  </span>
+                </div>
+                <div className="text-[11.5px] text-ink-4 mt-1">Waiting ({queueQuery.data.waiting.length})</div>
+                {queueQuery.data.waiting.slice(0, 6).map((a) => (
+                  <div key={a.id} className="flex justify-between text-[12.5px]">
+                    <span>#{a.queue_token} {patientName(a.patient)}</span>
+                  </div>
+                ))}
+                {queueQuery.data.waiting.length === 0 && <div className="text-[12px] text-ink-5">No one waiting.</div>}
+              </div>
+            )}
           </Card>
 
           <Card padded>
@@ -592,6 +672,70 @@ export function AppointmentsPage() {
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Block doctor leave modal */}
+      {isBlockModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={closeBlockModal}>
+          <div className="bg-surface rounded-card p-5 w-full max-w-[380px]" onClick={(e) => e.stopPropagation()}>
+            <div className="text-[15px] font-semibold mb-3.5">Block doctor leave</div>
+            <div className="flex flex-col gap-3">
+              <div>
+                <label className="block text-[11px] font-semibold uppercase tracking-[.04em] text-ink-4 mb-1">Doctor *</label>
+                <select
+                  required
+                  className="w-full h-9 px-3 border border-border-strong rounded-control text-[13px] bg-surface"
+                  value={blockDoctorId}
+                  onChange={(e) => setBlockDoctorId(Number(e.target.value))}
+                >
+                  <option value={0}>Select doctor…</option>
+                  {doctors.map((d) => (
+                    <option key={d.id} value={d.id}>{d.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[11px] font-semibold uppercase tracking-[.04em] text-ink-4 mb-1">From</label>
+                  <input type="date" value={blockStart} onChange={(e) => setBlockStart(e.target.value)} className="w-full h-9 px-3 border border-border-strong rounded-control text-[13px]" />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold uppercase tracking-[.04em] text-ink-4 mb-1">To</label>
+                  <input type="date" value={blockEnd} onChange={(e) => setBlockEnd(e.target.value)} className="w-full h-9 px-3 border border-border-strong rounded-control text-[13px]" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold uppercase tracking-[.04em] text-ink-4 mb-1">Reason</label>
+                <input
+                  type="text"
+                  placeholder="e.g. On leave, Conference"
+                  className="w-full h-9 px-3 border border-border-strong rounded-control text-[13px]"
+                  value={blockReason}
+                  onChange={(e) => setBlockReason(e.target.value)}
+                />
+              </div>
+              {blockLeaveMutation.isSuccess && (
+                <div className="text-[12px] text-success">
+                  Blocked {blockLeaveMutation.data?.blocked} slot(s)
+                  {blockLeaveMutation.data && blockLeaveMutation.data.skipped_already_booked > 0
+                    ? ` · ${blockLeaveMutation.data.skipped_already_booked} already-booked slot(s) need manual reschedule`
+                    : ""}
+                </div>
+              )}
+              <div className="flex justify-end gap-2 pt-2">
+                <Button type="button" variant="secondary" onClick={closeBlockModal}>Cancel</Button>
+                <Button
+                  type="button"
+                  variant="primary"
+                  onClick={() => blockLeaveMutation.mutate()}
+                  disabled={!blockDoctorId || blockLeaveMutation.isPending}
+                >
+                  {blockLeaveMutation.isPending ? "Blocking…" : "Block slots"}
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       )}

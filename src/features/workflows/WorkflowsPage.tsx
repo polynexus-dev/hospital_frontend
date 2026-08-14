@@ -224,6 +224,7 @@ export function WorkflowsPage() {
                     <option value="enquiry_stage_changed">📈 Enquiry Stage Changed</option>
                     <option value="appointment_no_show">⏰ Appointment No-Show</option>
                     <option value="nps_detractor">⭐ NPS Detractor Rating Received</option>
+                    <option value="patient_recall_due">🔁 Patient Recall Due (scheduled)</option>
                   </select>
                 </div>
 

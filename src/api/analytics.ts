@@ -3,6 +3,7 @@ import type {
   CallPerformanceReport,
   DailyMisPreview,
   DepartmentDoctorVolumeRow,
+  DoctorRevenueReport,
   EnquiryFunnelReport,
   NoShowEffectivenessReport,
   ReminderDeliveryReport,
@@ -35,4 +36,8 @@ export function revenueBySource() {
 
 export function reminderDelivery() {
   return api.get<ReminderDeliveryReport>("/reports/reminder-delivery/")
+}
+
+export function doctorRevenue() {
+  return api.get<DoctorRevenueReport>("/reports/doctor-revenue/")
 }
