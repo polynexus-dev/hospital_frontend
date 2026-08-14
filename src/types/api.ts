@@ -25,10 +25,13 @@ export interface User {
   hospital_address?: string
   hospital_city?: string
   hospital_state?: string
+  hospital_enabled_modules?: string[]
   available_hospitals?: Array<{ id: string; name: string; slug: string; city: string }>
   department: number | null
   role: number | null
   role_name: string | null
+  role_domain?: "crm" | "erp" | "both" | null
+  permissions: string[]
   preferred_language: Language
   is_active: boolean
   is_staff: boolean
@@ -537,4 +540,351 @@ export interface IntegrationHealth {
   celery_tasks: IntegrationHealthTask[]
   data_retention_days: number
   is_on_premise: boolean
+}
+
+// --- Emergency ---
+export interface Triage {
+  id: number
+  ed_visit: number
+  triage_category: "1_resuscitation" | "2_emergent" | "3_urgent" | "4_less_urgent" | "5_non_urgent"
+  vitals_summary: string
+  triaged_by: number | null
+  triaged_at: string
+}
+
+export interface EDVisit {
+  id: number
+  patient: number
+  patient_detail?: Patient
+  status: "triaged" | "in_treatment" | "admitted" | "discharged" | "referred_out" | "deceased"
+  chief_complaint: string
+  arrived_at: string
+  triage?: Triage
+  created_at: string
+  updated_at: string
+}
+
+// --- OT ---
+export interface PreOpChecklist {
+  id: number
+  surgery_request: number
+  consent_obtained: boolean
+  fasting_confirmed: boolean
+  site_marked: boolean
+  completed_by: number | null
+  completed_at: string | null
+}
+
+export interface OperativeNote {
+  id: number
+  ot_schedule: number
+  procedure_performed: string
+  findings: string
+  surgeon: number
+  started_at: string
+  ended_at: string
+  finalized_at: string | null
+  finalized_by: number | null
+}
+
+export interface AnaesthesiaRecord {
+  id: number
+  ot_schedule: number
+  anaesthesia_type: string
+  intra_op_notes: string
+  anaesthetist: number
+  finalized_at: string | null
+  finalized_by: number | null
+}
+
+export interface ConsumableUsage {
+  id: number
+  ot_schedule: number
+  item_name: string
+  quantity: number
+}
+
+export interface ImplantUsage {
+  id: number
+  ot_schedule: number
+  implant_name: string
+  serial_number: string
+  quantity: number
+}
+
+export interface OTSchedule {
+  id: number
+  surgery_request: number
+  operation_theatre_room: string
+  surgeon: number
+  surgeon_detail?: Doctor
+  anaesthetist: number | null
+  scheduled_start: string
+  scheduled_end: string
+  operative_note?: OperativeNote
+  anaesthesia_record?: AnaesthesiaRecord
+  consumable_usages?: ConsumableUsage[]
+  implant_usages?: ImplantUsage[]
+}
+
+export interface SurgeryRequest {
+  id: number
+  patient: number
+  patient_detail?: Patient
+  admission: number | null
+  requested_by: number | null
+  proposed_procedure: string
+  status: "requested" | "approved" | "scheduled" | "completed" | "cancelled"
+  schedule?: OTSchedule
+  preop_checklist?: PreOpChecklist
+  created_at: string
+}
+
+// --- ICU ---
+export interface VentilatorLog {
+  id: number
+  icu_admission: number
+  mode: string
+  ventilator_settings: Record<string, unknown>
+  recorded_by: number | null
+  recorded_at: string
+}
+
+export interface ICUDailyProgressNote {
+  id: number
+  icu_admission: number
+  doctor: number
+  doctor_detail?: Doctor
+  note: string
+  finalized_at: string | null
+  finalized_by: number | null
+  created_at: string
+}
+
+export interface ICUAdmission {
+  id: number
+  admission: number
+  admission_detail?: Record<string, unknown>
+  bed: number
+  ventilator_required: boolean
+  admitted_at: string
+  discharged_at: string | null
+  ventilator_logs?: VentilatorLog[]
+  progress_notes?: ICUDailyProgressNote[]
+}
+
+// --- Blood Bank ---
+export interface Donor {
+  id: number
+  name: string
+  blood_group: string
+  phone: string
+  last_donation_date: string | null
+}
+
+export interface BloodUnit {
+  id: number
+  donor: number | null
+  donor_detail?: Donor
+  blood_group: string
+  component: "whole_blood" | "prbc" | "ffp" | "platelets"
+  collection_date: string
+  expiry_date: string
+  status: "available" | "reserved" | "issued" | "discarded"
+}
+
+export interface CrossMatchRequest {
+  id: number
+  patient: number
+  patient_detail?: Patient
+  blood_group_required: string
+  component: "whole_blood" | "prbc" | "ffp" | "platelets"
+  requested_by: number | null
+  status: "pending" | "matched" | "failed"
+  created_at: string
+}
+
+export interface Transfusion {
+  id: number
+  blood_unit: number
+  blood_unit_detail?: BloodUnit
+  patient: number
+  patient_detail?: Patient
+  admission: number | null
+  issued_by: number | null
+  transfused_at: string
+  reaction_notes: string
+}
+
+// --- Finance ---
+export interface LedgerEntry {
+  id: number
+  entry_type: "revenue" | "expense"
+  category: string
+  amount: string
+  reference_type: string
+  reference_id: string
+  entry_date: string
+}
+
+export interface Expense {
+  id: number
+  category: string
+  amount: string
+  paid_to: string
+  paid_by: number
+  paid_by_name?: string
+  expense_date: string
+  approved_by: number | null
+  approved_by_name?: string
+}
+
+export interface Receivable {
+  id: number
+  source_type: "insurance_claim" | "corporate_billing"
+  source_id: string
+  amount: string
+  due_date: string
+  status: "pending" | "received" | "written_off"
+}
+
+// --- HR ---
+export interface Employee {
+  id: number
+  user: number | null
+  user_detail?: User
+  employee_code: string
+  department: number | null
+  department_detail?: Department
+  designation: string
+  date_of_joining: string
+  employment_type: "permanent" | "contract" | "visiting"
+  bank_account_number: string
+  pan_number: string
+}
+
+export interface Attendance {
+  id: number
+  employee: number
+  employee_code: string
+  date: string
+  check_in: string | null
+  check_out: string | null
+  status: "present" | "absent" | "half_day" | "leave"
+}
+
+export interface LeaveRequest {
+  id: number
+  employee: number
+  employee_code: string
+  leave_type: string
+  start_date: string
+  end_date: string
+  status: "pending" | "approved" | "rejected"
+  approved_by: number | null
+  approved_by_name?: string
+}
+
+export interface Shift {
+  id: number
+  employee: number
+  employee_code: string
+  shift_date: string
+  shift_type: "morning" | "evening" | "night"
+}
+
+export interface BillItem {
+  id: number
+  description: string
+  quantity: number
+  unit_price: string
+  total_price: string
+}
+
+export interface Payment {
+  id: number
+  bill: number
+  amount: string
+  payment_method: "cash" | "card" | "upi" | "bank_transfer"
+  transaction_id: string
+  paid_at: string
+}
+
+export interface InsuranceClaim {
+  id: number
+  bill: number
+  insurance_company: string
+  policy_number: string
+  claimed_amount: string
+  approved_amount: string
+  status: "submitted" | "under_review" | "approved" | "rejected" | "settled"
+}
+
+export interface Bill {
+  id: number
+  patient: number
+  patient_detail?: { first_name: string; last_name: string; mobile: string }
+  admission: number | null
+  total_amount: string
+  discount_amount: string
+  net_amount: string
+  status: "draft" | "unpaid" | "partially_paid" | "paid" | "cancelled"
+  created_at: string
+  items?: BillItem[]
+  payments?: Payment[]
+  insurance_claim?: InsuranceClaim
+}
+
+export interface ItemCategory {
+  id: number
+  name: string
+  code: string
+}
+
+export interface Item {
+  id: number
+  category: number
+  category_name?: string
+  name: string
+  code: string
+  unit_of_measure: string
+  min_stock_level: number
+}
+
+export interface StockLevel {
+  id: number
+  item: number
+  item_name?: string
+  batch_number: string
+  expiry_date: string | null
+  quantity_on_hand: number
+  unit_cost: string
+}
+
+export interface POItem {
+  id: number
+  item: number
+  item_name?: string
+  ordered_quantity: number
+  received_quantity: number
+  unit_cost: string
+}
+
+export interface PurchaseOrder {
+  id: number
+  po_number: string
+  vendor_name: string
+  status: "draft" | "submitted" | "received" | "cancelled"
+  ordered_at: string
+  po_items?: POItem[]
+}
+
+export interface StockTransaction {
+  id: number
+  item: number
+  item_name?: string
+  transaction_type: "receipt" | "issue" | "adjustment" | "return"
+  quantity: number
+  reference: string
+  transaction_date: string
 }

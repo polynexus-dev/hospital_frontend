@@ -3,13 +3,18 @@ import { Card } from "../../components/ui/Card"
 import { StatTile } from "../../components/ui/StatTile"
 import { ProgressBar } from "../../components/ui/ProgressBar"
 import { LoadingState, ErrorState } from "../../components/ui/QueryStates"
+import { useAuthStore } from "../../store/auth"
 import {
+  bedOccupancy,
   callPerformance,
   dailyMisPreview,
   departmentDoctorVolume,
   doctorRevenue,
   enquiryFunnel,
+  labTAT,
   noShowEffectiveness,
+  opdSnapshot,
+  pharmacyLowStock,
   revenueBySource,
 } from "../../api/analytics"
 
@@ -26,6 +31,19 @@ const STAGE_LABELS: Record<string, string> = {
 }
 
 export function DashboardPage() {
+  // ERP ops dashboard is CRM-nav-adjacent for now (see
+  // docs/erp/06-navigation-and-dashboards.md — a full CRM/ERP domain
+  // switcher is deferred until there's enough ERP-only screens to justify
+  // one). Gate this one OPD card on actually having opd access, so a
+  // receptionist role (no opd app permissions at all) doesn't see it.
+  const canSeeOPD = useAuthStore((s) => s.user?.permissions?.some((p) => p.startsWith("opd.")) ?? false)
+  const canSeeIPD = useAuthStore((s) => s.user?.permissions?.some((p) => p.startsWith("ipd.") || p.startsWith("facilities.")) ?? false)
+  const canSeeLab = useAuthStore((s) => s.user?.permissions?.some((p) => p.startsWith("laboratory.")) ?? false)
+  const canSeePharmacy = useAuthStore((s) => s.user?.permissions?.some((p) => p.startsWith("pharmacy.")) ?? false)
+  const opd = useQuery({ queryKey: ["reports", "opd-snapshot"], queryFn: opdSnapshot, enabled: canSeeOPD })
+  const beds = useQuery({ queryKey: ["reports", "bed-occupancy"], queryFn: bedOccupancy, enabled: canSeeIPD })
+  const lab = useQuery({ queryKey: ["reports", "lab-tat"], queryFn: labTAT, enabled: canSeeLab })
+  const pharmacy = useQuery({ queryKey: ["reports", "pharmacy-low-stock"], queryFn: pharmacyLowStock, enabled: canSeePharmacy })
   const calls = useQuery({ queryKey: ["reports", "call-performance"], queryFn: callPerformance })
   const funnel = useQuery({ queryKey: ["reports", "enquiry-funnel"], queryFn: enquiryFunnel })
   const deptVolume = useQuery({ queryKey: ["reports", "department-doctor-volume"], queryFn: departmentDoctorVolume })
@@ -66,6 +84,38 @@ export function DashboardPage() {
         <StatTile label="Booked → completed" value={`${conversionPct}%`} valueClassName="text-success" />
         <StatTile label="No-shows" value={noShow.data?.no_shows ?? "—"} sub={noShow.data ? `${noShow.data.recall_tasks_done} recalled` : undefined} />
       </div>
+
+      {canSeeOPD && opd.data && (
+        <div className="grid grid-cols-4 gap-3 min-w-[1020px]">
+          <StatTile label="OPD encounters today" value={opd.data.encounters_today} />
+          <StatTile label="Waiting" value={opd.data.waiting} />
+          <StatTile label="In consult" value={opd.data.in_consult} />
+          <StatTile label="Consultations completed" value={opd.data.completed_today} valueClassName="text-success" />
+        </div>
+      )}
+
+      {canSeeIPD && beds.data && (
+        <div className="grid grid-cols-3 gap-3 min-w-[1020px]">
+          <StatTile label="Beds occupied" value={`${beds.data.occupied_beds} / ${beds.data.total_beds}`} />
+          <StatTile label="Occupancy" value={`${beds.data.occupancy_pct}%`} valueClassName={beds.data.occupancy_pct >= 85 ? "text-danger" : ""} />
+          <StatTile label="Beds available" value={beds.data.total_beds - beds.data.occupied_beds} valueClassName="text-success" />
+        </div>
+      )}
+
+      {canSeeLab && lab.data && (
+        <div className="grid grid-cols-3 gap-3 min-w-[1020px]">
+          <StatTile label="Lab orders today" value={lab.data.orders_today} />
+          <StatTile label="Pending orders" value={lab.data.pending_orders} valueClassName={lab.data.pending_orders > 0 ? "text-warning" : ""} />
+          <StatTile label="Avg. turnaround" value={lab.data.avg_tat_minutes != null ? `${lab.data.avg_tat_minutes} min` : "—"} />
+        </div>
+      )}
+
+      {canSeePharmacy && pharmacy.data && (
+        <div className="grid grid-cols-2 gap-3 min-w-[1020px]">
+          <StatTile label="Medicines tracked" value={pharmacy.data.total_medicines} />
+          <StatTile label="Low stock" value={pharmacy.data.low_stock_count} valueClassName={pharmacy.data.low_stock_count > 0 ? "text-danger" : "text-success"} />
+        </div>
+      )}
 
       <div className="grid grid-cols-[1.3fr_1fr] gap-3.5 items-start">
         <Card padded>

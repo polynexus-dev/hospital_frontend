@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react"
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { useQuery } from "@tanstack/react-query"
-import { allNav, dailyWorkNav, growthNav } from "./navConfig"
+import { allNav, dailyWorkNav, erpNav, growthNav, hasNavAccess } from "./navConfig"
 import { useAuthStore } from "../store/auth"
 import { Avatar } from "../components/ui/Avatar"
 import { listCallbackTasks } from "../api/telephony"
@@ -108,29 +108,91 @@ export function Shell() {
     <div className="flex h-screen min-h-[760px] text-ink bg-page">
       <div className="w-[226px] shrink-0 bg-sidebar border-r border-border flex flex-col">
         <div className="px-[18px] pt-[18px] pb-[14px] border-b border-border-soft flex items-center gap-[10px]">
-          <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow-xs shrink-0">
-            🏥
+          <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-xs shrink-0">
+            {user?.email === "saas_owner@hospital-crm.com" ? "⚡" : "🏥"}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-[13px] font-bold text-ink truncate">{user?.hospital_name || "Polynexus Hospital"}</div>
-            <div className="text-[11px] text-ink-6 truncate">{user?.role_name ?? "Hospital Admin"}</div>
+            <div className="text-[13px] font-bold text-ink truncate">
+              {user?.email === "saas_owner@hospital-crm.com" ? "SaaS Vendor Platform" : user?.hospital_name || "Polynexus Hospital"}
+            </div>
+            <div className="text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold truncate">
+              {user?.email === "saas_owner@hospital-crm.com" ? "Global Superadmin" : user?.role_name ?? "Hospital Admin"}
+            </div>
           </div>
         </div>
 
         <div className="flex-1 overflow-y-auto px-[10px] pt-3 pb-5">
-          <div className="text-[10px] tracking-[.1em] uppercase text-ink-5 font-semibold px-2 pt-1.5 pb-2">
-            {t("nav.dailyWork")}
-          </div>
-          {dailyWorkNav.map((item) => (
-            <NavRow key={item.key} item={item} />
-          ))}
+          {user?.email === "saas_owner@hospital-crm.com" ? (
+            <>
+              <div className="text-[10px] tracking-[.1em] uppercase text-indigo-600 dark:text-indigo-400 font-bold px-2 pt-1.5 pb-2">
+                ⚡ SaaS Vendor Control Center
+              </div>
+              <NavLink
+                to="/admin"
+                className={({ isActive }) =>
+                  `flex items-center justify-between gap-2 px-[9px] py-[8px] rounded-control text-[13px] mb-[1px] ${
+                    isActive ? "font-semibold text-indigo-600 bg-indigo-50 dark:bg-indigo-950/30" : "font-normal text-ink-2 hover:bg-page"
+                  }`
+                }
+              >
+                <span className="flex items-center gap-[9px] min-w-0 font-medium">
+                  <span>🏢</span>
+                  <span className="truncate">Tenants & Subscriptions</span>
+                </span>
+              </NavLink>
+              <NavLink
+                to="/dashboard"
+                className={({ isActive }) =>
+                  `flex items-center justify-between gap-2 px-[9px] py-[8px] rounded-control text-[13px] mb-[1px] ${
+                    isActive ? "font-semibold text-indigo-600 bg-indigo-50 dark:bg-indigo-950/30" : "font-normal text-ink-2 hover:bg-page"
+                  }`
+                }
+              >
+                <span className="flex items-center gap-[9px] min-w-0 font-medium">
+                  <span>📊</span>
+                  <span className="truncate">Global Platform Metrics</span>
+                </span>
+              </NavLink>
 
-          <div className="text-[10px] tracking-[.1em] uppercase text-ink-5 font-semibold px-2 pt-[18px] pb-2">
-            {t("nav.growthRevenue")}
-          </div>
-          {growthNav.map((item) => (
-            <NavRow key={item.key} item={item} />
-          ))}
+              <div className="mt-4 p-3 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 rounded-lg text-[11px] text-emerald-800 dark:text-emerald-300">
+                <div className="font-bold flex items-center gap-1 mb-1">
+                  <span>🔒</span> DPDP Act Compliant
+                </div>
+                <div>Zero PHI exposure mode for SaaS Platform Owner. Patient medical records are strictly isolated per hospital tenant.</div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="text-[10px] tracking-[.1em] uppercase text-ink-5 font-semibold px-2 pt-1.5 pb-2">
+                {t("nav.dailyWork")}
+              </div>
+              {dailyWorkNav.filter((item) => hasNavAccess(item, user?.permissions, user?.hospital_enabled_modules)).map((item) => (
+                <NavRow key={item.key} item={item} />
+              ))}
+
+              <div className="text-[10px] tracking-[.1em] uppercase text-ink-5 font-semibold px-2 pt-[18px] pb-2">
+                {t("nav.growthRevenue")}
+              </div>
+              {growthNav.filter((item) => hasNavAccess(item, user?.permissions, user?.hospital_enabled_modules)).map((item) => (
+                <NavRow key={item.key} item={item} />
+              ))}
+
+              {(() => {
+                const visibleErpNav = erpNav.filter((item) => hasNavAccess(item, user?.permissions, user?.hospital_enabled_modules))
+                if (visibleErpNav.length === 0) return null
+                return (
+                  <>
+                    <div className="text-[10px] tracking-[.1em] uppercase text-ink-5 font-semibold px-2 pt-[18px] pb-2">
+                      {t("nav.wardCare")}
+                    </div>
+                    {visibleErpNav.map((item) => (
+                      <NavRow key={item.key} item={item} />
+                    ))}
+                  </>
+                )
+              })()}
+            </>
+          )}
         </div>
 
         <div className="px-3.5 py-3 border-t border-border-soft flex items-center gap-[9px]">

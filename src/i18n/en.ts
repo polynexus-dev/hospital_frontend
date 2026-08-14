@@ -2,6 +2,7 @@ export default {
   nav: {
     dailyWork: "Daily work",
     growthRevenue: "Growth & revenue",
+    wardCare: "Ward care",
     console: "Call console",
     callbacks: "Callbacks",
     enquiries: "Enquiries",
@@ -15,6 +16,7 @@ export default {
     feedback: "Feedback & NPS",
     workflows: "Workflows",
     admin: "Admin & audit",
+    ipd: "IPD",
   },
   screenSub: {
     console: "Screen-pop · every call logged, answered or not",
@@ -30,6 +32,7 @@ export default {
     feedback: "Reach the detractor before the public review",
     workflows: "Trigger · condition · action, with owners",
     admin: "Unlimited users · DPDP Act 2023 · on-premise",
+    ipd: "Admissions · bed board · nursing · discharge",
   },
 
   common: {

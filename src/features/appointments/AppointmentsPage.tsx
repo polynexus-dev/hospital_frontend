@@ -17,8 +17,12 @@ import {
 } from "../../api/appointments"
 import { reminderDelivery } from "../../api/analytics"
 import { listPatients } from "../../api/patients"
+import { useAuthStore } from "../../store/auth"
+import { ConsultationPanel } from "./ConsultationPanel"
 import type { Appointment, AppointmentStatus, Slot } from "../../types/api"
 import type { Tone } from "../../components/ui/tone"
+
+const CONSULTATION_VISIBLE_STATUSES: AppointmentStatus[] = ["checked_in", "in_consult", "diagnostics", "completed"]
 
 const STATUS_LABELS: Record<AppointmentStatus, string> = {
   booked: "Booked",
@@ -111,6 +115,7 @@ function cellTone(slot: Slot | undefined, appt: Appointment | undefined): CellTo
 
 export function AppointmentsPage() {
   const queryClient = useQueryClient()
+  const canSeeClinicalDetail = useAuthStore((s) => s.user?.permissions?.includes("patients.access_clinical_detail") ?? false)
   const [selectedDate, setSelectedDate] = useState<string>(todayIso())
   const [selectedApptId, setSelectedApptId] = useState<number | null>(null)
 
@@ -746,7 +751,12 @@ export function AppointmentsPage() {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4"
           onClick={() => setSelectedApptId(null)}
         >
-          <div className="bg-surface rounded-card p-5 w-full max-w-[380px]" onClick={(e) => e.stopPropagation()}>
+          <div
+            className={`bg-surface rounded-card p-5 w-full max-h-[85vh] overflow-y-auto ${
+              canSeeClinicalDetail && CONSULTATION_VISIBLE_STATUSES.includes(selectedAppt.status) ? "max-w-[560px]" : "max-w-[380px]"
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-start justify-between gap-2 mb-1">
               <div className="text-[15px] font-semibold">{patientName(selectedAppt.patient)}</div>
               <Pill tone={STATUS_TONE[selectedAppt.status]}>{STATUS_LABELS[selectedAppt.status]}</Pill>
@@ -760,7 +770,11 @@ export function AppointmentsPage() {
               {selectedAppt.reason && <NeutralTag>{selectedAppt.reason}</NeutralTag>}
             </div>
 
-            <div className="flex flex-wrap gap-1.5">
+            {canSeeClinicalDetail && CONSULTATION_VISIBLE_STATUSES.includes(selectedAppt.status) && (
+              <ConsultationPanel appointmentId={selectedAppt.id} />
+            )}
+
+            <div className="flex flex-wrap gap-1.5 mt-4">
               {selectedAppt.status === "booked" && (
                 <Button
                   size="sm"
