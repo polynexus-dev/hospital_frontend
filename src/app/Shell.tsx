@@ -6,7 +6,7 @@ import { allNav, dailyWorkNav, growthNav } from "./navConfig"
 import { useAuthStore } from "../store/auth"
 import { Avatar } from "../components/ui/Avatar"
 import { listCallbackTasks } from "../api/telephony"
-import { switchHospital } from "../api/auth"
+import { logoutRequest, switchHospital } from "../api/auth"
 import { AIChatbotWidget } from "../components/ui/AIChatbotWidget"
 
 function NavRow({ item }: { item: (typeof allNav)[number] }) {
@@ -32,7 +32,7 @@ export function Shell() {
   const location = useLocation()
   const navigate = useNavigate()
   const { t, i18n } = useTranslation()
-  const { user, logout } = useAuthStore()
+  const { user, refreshToken, logout } = useAuthStore()
   const [isBranchOpen, setIsBranchOpen] = useState(false)
   const [isCompactMode, setIsCompactMode] = useState(() => localStorage.getItem("crm_compact") === "true")
   const [isFabOpen, setIsFabOpen] = useState(false)
@@ -99,6 +99,7 @@ export function Shell() {
   })
 
   const handleLogout = () => {
+    if (refreshToken) void logoutRequest(refreshToken).catch(() => {})
     logout()
     navigate("/login")
   }

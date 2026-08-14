@@ -18,3 +18,10 @@ export function switchHospital(hospitalId: string) {
   return api.post<User>("/users/switch-hospital/", { hospital_id: hospitalId })
 }
 
+// Best-effort: blacklists the refresh token server-side so it can't be
+// replayed after logout. Callers should clear local state regardless of
+// whether this succeeds — a network failure here shouldn't block logout.
+export function logoutRequest(refreshToken: string) {
+  return api.post<void>("/auth/logout/", { refresh: refreshToken }, { skipAuth: true })
+}
+
