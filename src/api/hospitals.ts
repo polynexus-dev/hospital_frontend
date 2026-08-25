@@ -11,6 +11,10 @@ export interface Hospital {
   patient_count?: number
   appointment_count?: number
   total_revenue?: number
+  // Only present in the response to the POST that created this hospital —
+  // the auto-provisioned admin's password is generated server-side and
+  // returned exactly once, never stored in plaintext or retrievable again.
+  provisioned_admin?: { email: string; password: string }
 }
 
 export async function listHospitals() {
@@ -18,7 +22,7 @@ export async function listHospitals() {
   return (Array.isArray(data) ? data : data?.results ?? []) as Hospital[]
 }
 
-export function createHospital(data: Partial<Hospital>) {
+export function createHospital(data: Partial<Hospital> & { admin_email?: string }) {
   return api.post<Hospital>("/hospitals/", data)
 }
 

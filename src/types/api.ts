@@ -35,6 +35,7 @@ export interface User {
   preferred_language: Language
   is_active: boolean
   is_staff: boolean
+  is_saas_admin: boolean
   date_joined: string
 }
 

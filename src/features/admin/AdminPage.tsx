@@ -9,21 +9,60 @@ import { listRoles, listUsers } from "../../api/accounts"
 import { listAuditLogs } from "../../api/core"
 import { listHospitals, createHospital, updateHospitalModules, toggleHospitalStatus, type Hospital } from "../../api/hospitals"
 import { integrationHealth } from "../../api/integrations"
+import {
+  listSubscriptions, createSubscription, updateSubscription,
+  listInvoices, createInvoice, markInvoicePaid,
+  listSaasTickets, resolveTicket, assignTicket,
+  listMyTickets, createTicket,
+  getPlatformAnalytics,
+  type TenantSubscription, type TenantInvoice, type SupportTicket, type TicketCategory, type TicketPriority,
+} from "../../api/saasAdmin"
 import { API_BASE_URL } from "../../api/client"
 import { useAuthStore } from "../../store/auth"
 import type { AuditLog } from "../../types/api"
 import type { Tone } from "../../components/ui/tone"
 
-type TabKey = "subscriptions" | "audit" | "integrations" | "users" | "roles" | "export"
+type TabKey = "subscriptions" | "billing" | "analytics" | "tickets" | "audit" | "integrations" | "users" | "roles" | "export"
 
-const TABS: { key: TabKey; label: string }[] = [
-  { key: "subscriptions", label: "🏢 Subscribed Hospital Tenants & Subscriptions" },
+// Tabs are SaaS-platform-only (is_saas_admin), staff-only (is_staff — this
+// codebase's existing "platform ops" flag, which is_saas_admin always
+// implies, see apps.core.permissions.IsSaaSAdmin's docstring on the
+// backend), or open to any hospital user — matches exactly what each
+// underlying endpoint actually allows, not a frontend-only guess.
+const SAAS_ADMIN_TABS: { key: TabKey; label: string }[] = [
+  { key: "billing", label: "💳 Billing & Subscriptions" },
+  { key: "analytics", label: "📊 Platform Analytics" },
+]
+const STAFF_TABS: { key: TabKey; label: string }[] = [
+  { key: "subscriptions", label: "🏢 Hospital Tenants & Modules" },
   { key: "audit", label: "🔒 Security Audit Trail" },
   { key: "integrations", label: "🔌 Integration Health" },
+]
+const OPEN_TABS: { key: TabKey; label: string }[] = [
+  { key: "tickets", label: "🎫 Support Tickets" },
   { key: "users", label: "👥 Hospital Staff Users" },
   { key: "roles", label: "🛡️ Roles & RBAC" },
   { key: "export", label: "📦 Data Exporters" },
 ]
+
+const TICKET_CATEGORIES: { value: TicketCategory; label: string }[] = [
+  { value: "bug", label: "Bug report" },
+  { value: "feature_request", label: "Feature request" },
+  { value: "billing", label: "Billing" },
+  { value: "general", label: "General" },
+]
+const TICKET_PRIORITIES: { value: TicketPriority; label: string }[] = [
+  { value: "low", label: "Low" },
+  { value: "medium", label: "Medium" },
+  { value: "high", label: "High" },
+  { value: "urgent", label: "Urgent" },
+]
+const TICKET_STATUS_TONE: Record<SupportTicket["status"], Tone> = {
+  open: "info",
+  in_progress: "warn",
+  resolved: "ok",
+  closed: "neutral",
+}
 
 const ALL_MODULES = [
   { key: "crm", label: "CRM & OPD Lead Management", desc: "Enquiries, Patients, Appointments, Callbacks" },
@@ -69,7 +108,7 @@ function auditDetail(log: AuditLog): string {
 }
 
 export function AdminPage() {
-  const [activeTab, setActiveTab] = useState<TabKey>("subscriptions")
+  const [activeTab, setActiveTab] = useState<TabKey>("tickets")
   const [selectedHosp, setSelectedHosp] = useState<Hospital | null>(null)
   const [filterHospitalId, setFilterHospitalId] = useState<string>("all")
   const [searchQuery, setSearchQuery] = useState<string>("")
@@ -77,9 +116,21 @@ export function AdminPage() {
   const [newHospName, setNewHospName] = useState("")
   const [newHospCity, setNewHospCity] = useState("")
   const [newHospState, setNewHospState] = useState("")
-  
+  const [newHospAdminEmail, setNewHospAdminEmail] = useState("")
+  const [provisionedAdmin, setProvisionedAdmin] = useState<{ email: string; password: string } | null>(null)
+
   const { user } = useAuthStore()
   const queryClient = useQueryClient()
+
+  // Which tabs this account can actually use — mirrors the backend
+  // permission on each tab's underlying endpoint exactly (IsSaaSAdmin for
+  // SAAS_ADMIN_TABS, IsAdminUser/is_staff for STAFF_TABS, open to any
+  // authenticated hospital user for OPEN_TABS) rather than guessing.
+  const TABS = [
+    ...(user?.is_saas_admin ? SAAS_ADMIN_TABS : []),
+    ...(user?.is_staff ? STAFF_TABS : []),
+    ...OPEN_TABS,
+  ]
 
   const { data: usersData, isLoading: isUsersLoading, isError: isUsersError } = useQuery({
     queryKey: ["admin-users"],
@@ -96,8 +147,44 @@ export function AdminPage() {
   const { data: hospitalsData, isLoading: isHospitalsLoading } = useQuery({
     queryKey: ["admin-hospitals"],
     queryFn: () => listHospitals(),
-    enabled: activeTab === "subscriptions",
+    enabled: activeTab === "subscriptions" || activeTab === "billing",
   })
+
+  const { data: subscriptionsData, isLoading: isSubscriptionsLoading } = useQuery({
+    queryKey: ["admin-subscriptions"],
+    queryFn: () => listSubscriptions(),
+    enabled: activeTab === "billing",
+  })
+
+  const { data: invoicesData, isLoading: isInvoicesLoading } = useQuery({
+    queryKey: ["admin-invoices"],
+    queryFn: () => listInvoices(),
+    enabled: activeTab === "billing",
+  })
+
+  const { data: analyticsData, isLoading: isAnalyticsLoading, isError: isAnalyticsError } = useQuery({
+    queryKey: ["admin-platform-analytics"],
+    queryFn: () => getPlatformAnalytics(),
+    enabled: activeTab === "analytics",
+  })
+
+  const { data: ticketsData, isLoading: isTicketsLoading, isError: isTicketsError } = useQuery({
+    queryKey: ["admin-tickets", user?.is_saas_admin],
+    queryFn: () => (user?.is_saas_admin ? listSaasTickets() : listMyTickets()),
+    enabled: activeTab === "tickets",
+  })
+
+  // Assignee pool for the "assign ticket" action — SaaS admins don't
+  // belong to any hospital's Role/Group, so there's no permission-based
+  // way to list them; filtering the platform-ops user pool (no home
+  // hospital) client-side is the practical option without a dedicated
+  // backend list-endpoint just for this.
+  const { data: allUsersData } = useQuery({
+    queryKey: ["admin-all-users-for-assignment"],
+    queryFn: () => listUsers(),
+    enabled: activeTab === "tickets" && !!user?.is_saas_admin,
+  })
+  const saasAdminUsers = (allUsersData?.results ?? []).filter((u) => u.is_saas_admin)
 
   const { data: auditData, isLoading: isAuditLoading, isError: isAuditError } = useQuery({
     queryKey: ["admin-audit-logs"],
@@ -136,18 +223,70 @@ export function AdminPage() {
   })
 
   const createHospitalMutation = useMutation({
-    mutationFn: (data: Partial<Hospital>) => createHospital(data),
-    onSuccess: () => {
+    mutationFn: (data: Partial<Hospital> & { admin_email?: string }) => createHospital(data),
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["admin-hospitals"] })
       setIsAddModalOpen(false)
       setNewHospName("")
       setNewHospCity("")
       setNewHospState("")
-      alert("New Hospital Tenant Onboarded Successfully!")
+      setNewHospAdminEmail("")
+      if (data.provisioned_admin) setProvisionedAdmin(data.provisioned_admin)
     },
     onError: (err: any) => {
       alert("Failed to onboard hospital: " + (err.response?.data?.error || err.message))
     },
+  })
+
+  const createSubscriptionMutation = useMutation({
+    mutationFn: (data: Partial<TenantSubscription>) => createSubscription(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-subscriptions"] })
+      alert("Subscription created.")
+    },
+    onError: (err: any) => alert("Failed to create subscription: " + (err.body?.hospital?.[0] || err.message)),
+  })
+
+  const updateSubscriptionMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<TenantSubscription> }) => updateSubscription(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-subscriptions"] }),
+    onError: (err: any) => alert("Failed to update subscription: " + err.message),
+  })
+
+  const createInvoiceMutation = useMutation({
+    mutationFn: (data: Partial<TenantInvoice>) => createInvoice(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-invoices"] })
+      alert("Invoice created.")
+    },
+    onError: (err: any) => alert("Failed to create invoice: " + (err.body?.invoice_number?.[0] || err.body?.non_field_errors?.[0] || err.message)),
+  })
+
+  const markInvoicePaidMutation = useMutation({
+    mutationFn: (id: number) => markInvoicePaid(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-invoices"] }),
+    onError: (err: any) => alert("Failed to mark invoice paid: " + err.message),
+  })
+
+  const createTicketMutation = useMutation({
+    mutationFn: (data: { subject: string; description: string; category: TicketCategory; priority: TicketPriority }) => createTicket(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-tickets"] })
+      alert("Support ticket raised. The platform team will follow up.")
+    },
+    onError: (err: any) => alert("Failed to raise ticket: " + err.message),
+  })
+
+  const resolveTicketMutation = useMutation({
+    mutationFn: ({ id, notes }: { id: number; notes: string }) => resolveTicket(id, notes),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-tickets"] }),
+    onError: (err: any) => alert("Failed to resolve ticket: " + err.message),
+  })
+
+  const assignTicketMutation = useMutation({
+    mutationFn: ({ id, assignedTo }: { id: number; assignedTo: number }) => assignTicket(id, assignedTo),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-tickets"] }),
+    onError: (err: any) => alert("Failed to assign ticket: " + (err.body?.error || err.message)),
   })
 
   const handleCsvExport = (modelName: string) => {
@@ -167,6 +306,7 @@ export function AdminPage() {
       state: newHospState.trim() || "Maharashtra",
       is_active: true,
       enabled_modules: ALL_MODULES.map((m) => m.key),
+      admin_email: newHospAdminEmail.trim() || undefined,
     })
   }
 
@@ -174,6 +314,10 @@ export function AdminPage() {
   const roles = rolesData?.results ?? []
   const hospitals = Array.isArray(hospitalsData) ? hospitalsData : (hospitalsData as any)?.results ?? []
   const auditLogs = auditData?.results ?? []
+  const subscriptions = subscriptionsData?.results ?? []
+  const invoices = invoicesData?.results ?? []
+  const tickets = ticketsData?.results ?? []
+  const hospitalsWithoutSubscription = hospitals.filter((h: Hospital) => !subscriptions.some((s) => s.hospital === h.id))
 
   const isStubConnector = healthData?.his_connector === "stub"
   const connectorLabel = healthData ? (isStubConnector ? "Stub (not connected)" : healthData.his_connector) : "—"
@@ -207,7 +351,7 @@ export function AdminPage() {
                   </div>
                   <div className="text-[12px] text-ink-4">SaaS Platform Vendor Control — View all subscribed hospital tenants, toggle module entitlements, or suspend/activate SaaS access.</div>
                 </div>
-                {user?.email === "saas_owner@hospital-crm.com" && (
+                {user?.is_saas_admin && (
                   <Button
                     size="sm"
                     variant="primary"
@@ -547,6 +691,20 @@ export function AdminPage() {
                     </div>
                   </div>
 
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Admin email (optional)
+                    </label>
+                    <input
+                      type="email"
+                      placeholder={`defaults to admin@<slug>.example`}
+                      value={newHospAdminEmail}
+                      onChange={(e) => setNewHospAdminEmail(e.target.value)}
+                      className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:ring-2 focus:ring-indigo-500 bg-surface"
+                    />
+                    <p className="text-[11px] text-ink-4 mt-1">A random password is generated and shown once — hand it off to the hospital's admin yourself.</p>
+                  </div>
+
                   <div className="pt-3 border-t border-border flex items-center justify-end gap-2">
                     <Button type="button" variant="secondary" onClick={() => setIsAddModalOpen(false)}>
                       Cancel
@@ -559,6 +717,266 @@ export function AdminPage() {
               </div>
             </div>
           )}
+
+          {/* Provisioned admin credentials — shown exactly once, right after onboarding */}
+          {provisionedAdmin && (
+            <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+              <div className="bg-surface border border-border rounded-xl shadow-2xl w-full max-w-md p-6 space-y-4">
+                <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+                  <span className="text-xl">✅</span>
+                  <h3 className="text-base font-bold">Hospital tenant onboarded</h3>
+                </div>
+                <p className="text-[12.5px] text-ink-4">
+                  This password is generated once and cannot be retrieved again — copy it now and hand it to the hospital's admin.
+                </p>
+                <div className="space-y-2">
+                  <div>
+                    <div className="text-[11px] font-semibold text-ink-4 uppercase">Admin email</div>
+                    <div className="font-mono text-sm bg-page border border-border rounded-control px-2.5 py-1.5 select-all">{provisionedAdmin.email}</div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] font-semibold text-ink-4 uppercase">Password</div>
+                    <div className="font-mono text-sm bg-page border border-border rounded-control px-2.5 py-1.5 select-all">{provisionedAdmin.password}</div>
+                  </div>
+                </div>
+                <div className="pt-2 flex justify-end">
+                  <Button variant="primary" onClick={() => setProvisionedAdmin(null)}>Done</Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === "billing" && (
+        <div className="space-y-4 pb-16">
+          <Card>
+            <CardHeader>
+              <div>
+                <div className="font-bold text-[14px]">Tenant Subscriptions</div>
+                <div className="text-[12px] text-ink-4">Plan tier, billing cycle and staff-seat limit per hospital</div>
+              </div>
+            </CardHeader>
+            <div className="p-3.5">
+              <CreateSubscriptionForm
+                hospitals={hospitalsWithoutSubscription}
+                isPending={createSubscriptionMutation.isPending}
+                onCreate={(data) => createSubscriptionMutation.mutate(data)}
+              />
+            </div>
+            {isSubscriptionsLoading ? (
+              <LoadingState />
+            ) : subscriptions.length === 0 ? (
+              <EmptyState message="No subscriptions configured yet" />
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-[13px] border-collapse">
+                  <thead>
+                    <tr className="border-b border-border-soft text-ink-5 text-[11px] font-semibold uppercase">
+                      <th className="py-2 px-3">Hospital</th>
+                      <th className="py-2 px-3">Tier</th>
+                      <th className="py-2 px-3">Billing cycle</th>
+                      <th className="py-2 px-3">Base price</th>
+                      <th className="py-2 px-3">Staff seats</th>
+                      <th className="py-2 px-3">Status</th>
+                      <th className="py-2 px-3">Next billing</th>
+                      <th className="py-2 px-3"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border-soft">
+                    {subscriptions.map((s) => (
+                      <tr key={s.id} className="hover:bg-page/50">
+                        <td className="py-2.5 px-3 font-semibold">{s.hospital_name}</td>
+                        <td className="py-2.5 px-3 capitalize">{s.tier}</td>
+                        <td className="py-2.5 px-3 capitalize text-ink-4">{s.billing_cycle}</td>
+                        <td className="py-2.5 px-3">₹{Number(s.base_price).toLocaleString("en-IN")}</td>
+                        <td className="py-2.5 px-3">{s.max_staff_users || "Unlimited"}</td>
+                        <td className="py-2.5 px-3">
+                          <Pill tone={s.status === "active" ? "ok" : s.status === "suspended" ? "warn" : "bad"}>{s.status}</Pill>
+                        </td>
+                        <td className="py-2.5 px-3 text-ink-5 text-[12px]">{s.next_billing_date ?? "—"}</td>
+                        <td className="py-2.5 px-3 text-right">
+                          <select
+                            value={s.status}
+                            onChange={(e) => updateSubscriptionMutation.mutate({ id: s.id, data: { status: e.target.value as TenantSubscription["status"] } })}
+                            className="text-[11px] px-1.5 py-1 border border-border-strong rounded-control bg-surface"
+                          >
+                            <option value="active">active</option>
+                            <option value="suspended">suspended</option>
+                            <option value="cancelled">cancelled</option>
+                          </select>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div>
+                <div className="font-bold text-[14px]">SaaS Invoices</div>
+                <div className="text-[12px] text-ink-4">Per-hospital billing-period invoices and payment status</div>
+              </div>
+            </CardHeader>
+            <div className="p-3.5">
+              <CreateInvoiceForm
+                hospitals={hospitals}
+                isPending={createInvoiceMutation.isPending}
+                onCreate={(data) => createInvoiceMutation.mutate(data)}
+              />
+            </div>
+            {isInvoicesLoading ? (
+              <LoadingState />
+            ) : invoices.length === 0 ? (
+              <EmptyState message="No invoices raised yet" />
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-[13px] border-collapse">
+                  <thead>
+                    <tr className="border-b border-border-soft text-ink-5 text-[11px] font-semibold uppercase">
+                      <th className="py-2 px-3">Invoice #</th>
+                      <th className="py-2 px-3">Hospital</th>
+                      <th className="py-2 px-3">Period</th>
+                      <th className="py-2 px-3">Amount</th>
+                      <th className="py-2 px-3">Due</th>
+                      <th className="py-2 px-3">Status</th>
+                      <th className="py-2 px-3"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border-soft">
+                    {invoices.map((inv) => (
+                      <tr key={inv.id} className="hover:bg-page/50">
+                        <td className="py-2.5 px-3 font-mono text-[12px]">{inv.invoice_number}</td>
+                        <td className="py-2.5 px-3 font-semibold">{inv.hospital_name}</td>
+                        <td className="py-2.5 px-3 text-ink-5 text-[12px]">{inv.billing_period_start} → {inv.billing_period_end}</td>
+                        <td className="py-2.5 px-3">₹{Number(inv.amount).toLocaleString("en-IN")}</td>
+                        <td className="py-2.5 px-3 text-ink-5 text-[12px]">{inv.due_date}</td>
+                        <td className="py-2.5 px-3">
+                          <Pill tone={inv.status === "paid" ? "ok" : inv.status === "overdue" ? "bad" : "warn"}>{inv.status}</Pill>
+                        </td>
+                        <td className="py-2.5 px-3 text-right">
+                          {inv.status !== "paid" && (
+                            <Button size="sm" variant="secondary" disabled={markInvoicePaidMutation.isPending} onClick={() => markInvoicePaidMutation.mutate(inv.id)}>
+                              Mark paid
+                            </Button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
+        </div>
+      )}
+
+      {activeTab === "analytics" && (
+        <div className="space-y-4 pb-16">
+          {isAnalyticsLoading ? (
+            <LoadingState />
+          ) : isAnalyticsError ? (
+            <ErrorState message="Failed to load platform analytics" />
+          ) : analyticsData ? (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <StatTile label="Total hospitals" value={analyticsData.total_hospitals} />
+                <StatTile label="Active hospitals" value={analyticsData.active_hospitals} valueClassName="text-success" />
+                <StatTile label="Platform revenue" value={`₹${analyticsData.total_revenue.toLocaleString("en-IN")}`} sub="Across every hospital's billing" />
+                <StatTile label="Patients served" value={analyticsData.total_patients.toLocaleString("en-IN")} sub="Across every hospital" />
+              </div>
+              <Card>
+                <CardHeader>
+                  <div>
+                    <div className="font-bold text-[14px]">Module adoption</div>
+                    <div className="text-[12px] text-ink-4">% of active hospitals with each module enabled</div>
+                  </div>
+                </CardHeader>
+                <div className="p-4 space-y-2.5">
+                  {Object.entries(analyticsData.module_adoption_percent).map(([moduleKey, pct]) => (
+                    <div key={moduleKey} className="flex items-center gap-3">
+                      <div className="w-28 text-[12px] font-semibold text-ink-3 capitalize shrink-0">{moduleKey}</div>
+                      <div className="flex-1 h-[7px] bg-chip-bg rounded-full overflow-hidden">
+                        <div className="h-full bg-brand rounded-full" style={{ width: `${pct}%` }} />
+                      </div>
+                      <div className="w-12 text-right text-[12px] text-ink-4 shrink-0">{pct}%</div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            </>
+          ) : null}
+        </div>
+      )}
+
+      {activeTab === "tickets" && (
+        <div className="space-y-4 pb-16">
+          {!user?.is_saas_admin && (
+            <Card>
+              <CardHeader>
+                <div>
+                  <div className="font-bold text-[14px]">Raise a support ticket</div>
+                  <div className="text-[12px] text-ink-4">Bugs, feature requests, or billing questions go to the platform team</div>
+                </div>
+              </CardHeader>
+              <div className="p-3.5">
+                <RaiseTicketForm isPending={createTicketMutation.isPending} onCreate={(data) => createTicketMutation.mutate(data)} />
+              </div>
+            </Card>
+          )}
+
+          <Card>
+            <CardHeader>
+              <div>
+                <div className="font-bold text-[14px]">{user?.is_saas_admin ? "All hospitals' tickets" : "Your hospital's tickets"}</div>
+                <div className="text-[12px] text-ink-4">
+                  {user?.is_saas_admin ? "Triage and resolve support requests across every tenant" : "Status updates from the platform team appear here"}
+                </div>
+              </div>
+            </CardHeader>
+            {isTicketsLoading ? (
+              <LoadingState />
+            ) : isTicketsError ? (
+              <ErrorState message="Failed to load tickets" />
+            ) : tickets.length === 0 ? (
+              <EmptyState message="No support tickets yet" />
+            ) : (
+              <div className="divide-y divide-border-soft">
+                {tickets.map((ticket) => (
+                  <div key={ticket.id} className="p-3.5 flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-semibold text-[13.5px]">{ticket.subject}</span>
+                        <Pill tone={TICKET_STATUS_TONE[ticket.status]}>{ticket.status.replace("_", " ")}</Pill>
+                        <NeutralTag>{ticket.category.replace("_", " ")}</NeutralTag>
+                        <NeutralTag>{ticket.priority}</NeutralTag>
+                        {user?.is_saas_admin && ticket.hospital_name && <NeutralTag>{ticket.hospital_name}</NeutralTag>}
+                      </div>
+                      <span className="text-[11px] text-ink-5">{new Date(ticket.created_at).toLocaleString()}</span>
+                    </div>
+                    <p className="text-[12.5px] text-ink-3">{ticket.description}</p>
+                    {ticket.resolution_notes && (
+                      <div className="text-[12px] bg-page border border-border-soft rounded-control p-2 text-ink-3">
+                        <span className="font-semibold">Resolution: </span>{ticket.resolution_notes}
+                      </div>
+                    )}
+                    {user?.is_saas_admin && ticket.status !== "resolved" && ticket.status !== "closed" && (
+                      <TicketActions
+                        ticket={ticket}
+                        saasAdminUsers={saasAdminUsers}
+                        onResolve={(notes) => resolveTicketMutation.mutate({ id: ticket.id, notes })}
+                        onAssign={(assignedTo) => assignTicketMutation.mutate({ id: ticket.id, assignedTo })}
+                        isPending={resolveTicketMutation.isPending || assignTicketMutation.isPending}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
         </div>
       )}
 
@@ -793,6 +1211,182 @@ export function AdminPage() {
           </Card>
         </div>
       )}
+    </div>
+  )
+}
+
+function CreateSubscriptionForm({ hospitals, onCreate, isPending }: { hospitals: Hospital[]; onCreate: (data: Partial<TenantSubscription>) => void; isPending: boolean }) {
+  const [hospitalId, setHospitalId] = useState("")
+  const [tier, setTier] = useState<TenantSubscription["tier"]>("starter")
+  const [maxStaff, setMaxStaff] = useState(10)
+  const [startedAt, setStartedAt] = useState(() => new Date().toISOString().slice(0, 10))
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!hospitalId) return
+    onCreate({ hospital: hospitalId, tier, max_staff_users: maxStaff, started_at: startedAt })
+    setHospitalId("")
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-2 p-3 bg-page/50 rounded-lg border border-border-soft">
+      <div>
+        <label className="block text-[11px] font-semibold text-ink-4 mb-1">Hospital</label>
+        <select value={hospitalId} onChange={(e) => setHospitalId(e.target.value)} className="text-xs px-2 py-1.5 border border-border-strong rounded-control bg-surface min-w-[160px]" required>
+          <option value="">{hospitals.length === 0 ? "No un-subscribed hospitals" : "Select hospital…"}</option>
+          {hospitals.map((h) => <option key={h.id} value={h.id}>{h.name}</option>)}
+        </select>
+      </div>
+      <div>
+        <label className="block text-[11px] font-semibold text-ink-4 mb-1">Tier</label>
+        <select value={tier} onChange={(e) => setTier(e.target.value as TenantSubscription["tier"])} className="text-xs px-2 py-1.5 border border-border-strong rounded-control bg-surface">
+          <option value="starter">Starter</option>
+          <option value="pro">Pro</option>
+          <option value="enterprise">Enterprise</option>
+        </select>
+      </div>
+      <div>
+        <label className="block text-[11px] font-semibold text-ink-4 mb-1">Max staff seats</label>
+        <input type="number" min={0} value={maxStaff} onChange={(e) => setMaxStaff(Number(e.target.value))} className="w-24 text-xs px-2 py-1.5 border border-border-strong rounded-control bg-surface" />
+      </div>
+      <div>
+        <label className="block text-[11px] font-semibold text-ink-4 mb-1">Started</label>
+        <input type="date" value={startedAt} onChange={(e) => setStartedAt(e.target.value)} className="text-xs px-2 py-1.5 border border-border-strong rounded-control bg-surface" />
+      </div>
+      <Button type="submit" variant="primary" size="sm" disabled={isPending || !hospitalId}>
+        {isPending ? "Creating…" : "Create subscription"}
+      </Button>
+    </form>
+  )
+}
+
+function CreateInvoiceForm({ hospitals, onCreate, isPending }: { hospitals: Hospital[]; onCreate: (data: Partial<TenantInvoice>) => void; isPending: boolean }) {
+  const today = () => new Date().toISOString().slice(0, 10)
+  const [hospitalId, setHospitalId] = useState("")
+  const [invoiceNumber, setInvoiceNumber] = useState("")
+  const [periodStart, setPeriodStart] = useState(today())
+  const [periodEnd, setPeriodEnd] = useState(today())
+  const [amount, setAmount] = useState("")
+  const [dueDate, setDueDate] = useState(today())
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!hospitalId || !invoiceNumber.trim() || !amount) return
+    onCreate({
+      hospital: hospitalId, invoice_number: invoiceNumber.trim(),
+      billing_period_start: periodStart, billing_period_end: periodEnd,
+      amount, due_date: dueDate,
+    })
+    setInvoiceNumber("")
+    setAmount("")
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-2 p-3 bg-page/50 rounded-lg border border-border-soft">
+      <div>
+        <label className="block text-[11px] font-semibold text-ink-4 mb-1">Hospital</label>
+        <select value={hospitalId} onChange={(e) => setHospitalId(e.target.value)} className="text-xs px-2 py-1.5 border border-border-strong rounded-control bg-surface min-w-[160px]" required>
+          <option value="">Select hospital…</option>
+          {hospitals.map((h) => <option key={h.id} value={h.id}>{h.name}</option>)}
+        </select>
+      </div>
+      <div>
+        <label className="block text-[11px] font-semibold text-ink-4 mb-1">Invoice #</label>
+        <input type="text" placeholder="INV-0001" value={invoiceNumber} onChange={(e) => setInvoiceNumber(e.target.value)} className="w-28 text-xs px-2 py-1.5 border border-border-strong rounded-control bg-surface" required />
+      </div>
+      <div>
+        <label className="block text-[11px] font-semibold text-ink-4 mb-1">Period start</label>
+        <input type="date" value={periodStart} onChange={(e) => setPeriodStart(e.target.value)} className="text-xs px-2 py-1.5 border border-border-strong rounded-control bg-surface" />
+      </div>
+      <div>
+        <label className="block text-[11px] font-semibold text-ink-4 mb-1">Period end</label>
+        <input type="date" value={periodEnd} onChange={(e) => setPeriodEnd(e.target.value)} className="text-xs px-2 py-1.5 border border-border-strong rounded-control bg-surface" />
+      </div>
+      <div>
+        <label className="block text-[11px] font-semibold text-ink-4 mb-1">Amount (₹)</label>
+        <input type="number" min={0} step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} className="w-24 text-xs px-2 py-1.5 border border-border-strong rounded-control bg-surface" required />
+      </div>
+      <div>
+        <label className="block text-[11px] font-semibold text-ink-4 mb-1">Due date</label>
+        <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="text-xs px-2 py-1.5 border border-border-strong rounded-control bg-surface" />
+      </div>
+      <Button type="submit" variant="primary" size="sm" disabled={isPending}>
+        {isPending ? "Creating…" : "Create invoice"}
+      </Button>
+    </form>
+  )
+}
+
+function RaiseTicketForm({ onCreate, isPending }: { onCreate: (data: { subject: string; description: string; category: TicketCategory; priority: TicketPriority }) => void; isPending: boolean }) {
+  const [subject, setSubject] = useState("")
+  const [description, setDescription] = useState("")
+  const [category, setCategory] = useState<TicketCategory>("general")
+  const [priority, setPriority] = useState<TicketPriority>("medium")
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!subject.trim() || !description.trim()) return
+    onCreate({ subject: subject.trim(), description: description.trim(), category, priority })
+    setSubject("")
+    setDescription("")
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-2.5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+        <input
+          type="text" placeholder="Subject" value={subject} onChange={(e) => setSubject(e.target.value)}
+          className="sm:col-span-3 text-sm px-3 py-2 border border-border-strong rounded-control bg-surface" required
+        />
+        <select value={category} onChange={(e) => setCategory(e.target.value as TicketCategory)} className="text-xs px-2 py-1.5 border border-border-strong rounded-control bg-surface">
+          {TICKET_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+        </select>
+        <select value={priority} onChange={(e) => setPriority(e.target.value as TicketPriority)} className="text-xs px-2 py-1.5 border border-border-strong rounded-control bg-surface">
+          {TICKET_PRIORITIES.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
+        </select>
+      </div>
+      <textarea
+        placeholder="Describe the issue or request…" value={description} onChange={(e) => setDescription(e.target.value)}
+        rows={3} className="w-full text-sm px-3 py-2 border border-border-strong rounded-control bg-surface" required
+      />
+      <Button type="submit" variant="primary" size="sm" disabled={isPending}>
+        {isPending ? "Submitting…" : "Raise ticket"}
+      </Button>
+    </form>
+  )
+}
+
+function TicketActions({
+  ticket, saasAdminUsers, onResolve, onAssign, isPending,
+}: {
+  ticket: SupportTicket
+  saasAdminUsers: { id: number; email: string }[]
+  onResolve: (notes: string) => void
+  onAssign: (assignedTo: number) => void
+  isPending: boolean
+}) {
+  const [notes, setNotes] = useState("")
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 pt-1.5 border-t border-border-soft mt-1">
+      <select
+        defaultValue=""
+        onChange={(e) => {
+          if (e.target.value) onAssign(Number(e.target.value))
+        }}
+        className="text-[11px] px-1.5 py-1 border border-border-strong rounded-control bg-surface"
+        disabled={isPending}
+      >
+        <option value="">{ticket.assigned_to_email ? `Assigned: ${ticket.assigned_to_email}` : "Assign to…"}</option>
+        {saasAdminUsers.map((u) => <option key={u.id} value={u.id}>{u.email}</option>)}
+      </select>
+      <input
+        type="text" placeholder="Resolution notes…" value={notes} onChange={(e) => setNotes(e.target.value)}
+        className="flex-1 min-w-[160px] text-[12px] px-2 py-1 border border-border-strong rounded-control bg-surface"
+      />
+      <Button size="sm" variant="secondary" disabled={isPending} onClick={() => onResolve(notes)}>
+        Mark resolved
+      </Button>
     </div>
   )
 }
