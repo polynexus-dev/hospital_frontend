@@ -95,6 +95,23 @@ async function request<T>(path: string, options: RequestOptions = {}, isRetry = 
   return res.json() as Promise<T>
 }
 
+async function requestBlob(path: string, isRetry = false): Promise<Blob> {
+  const { accessToken } = useAuthStore.getState()
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+  })
+
+  if (res.status === 401 && !isRetry) {
+    const newToken = await refreshAccessToken()
+    if (newToken) return requestBlob(path, true)
+  }
+
+  if (!res.ok) {
+    throw new ApiError(res.status, null, `Request to ${path} failed with ${res.status}`)
+  }
+  return res.blob()
+}
+
 export const api = {
   get: <T>(path: string, options?: RequestOptions) => request<T>(path, { ...options, method: "GET" }),
   post: <T>(path: string, body?: unknown, options?: RequestOptions) =>
@@ -104,4 +121,19 @@ export const api = {
   put: <T>(path: string, body?: unknown, options?: RequestOptions) =>
     request<T>(path, { ...options, method: "PUT", body }),
   delete: <T>(path: string, options?: RequestOptions) => request<T>(path, { ...options, method: "DELETE" }),
+  // For authenticated binary downloads (PDFs, etc.) — window.open()/a[href]
+  // can't attach an Authorization header, so the caller fetches the blob
+  // here and triggers the save itself (see triggerBlobDownload below).
+  getBlob: (path: string) => requestBlob(path),
+}
+
+export function triggerBlobDownload(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement("a")
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
 }

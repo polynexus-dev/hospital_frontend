@@ -1,4 +1,4 @@
-import { api } from "./client"
+import { api, triggerBlobDownload } from "./client"
 import type { Paginated } from "../types/api"
 
 export interface TenantSubscription {
@@ -106,6 +106,11 @@ export function createInvoice(data: Partial<TenantInvoice>) {
 
 export function markInvoicePaid(id: number) {
   return api.post<TenantInvoice>(`/saas-admin/invoices/${id}/mark-paid/`, {})
+}
+
+export async function downloadInvoicePdf(id: number, invoiceNumber: string) {
+  const blob = await api.getBlob(`/saas-admin/invoices/${id}/download/`)
+  triggerBlobDownload(blob, `${invoiceNumber}.pdf`)
 }
 
 // --- Usage snapshots (read-only) ----------------------------------------

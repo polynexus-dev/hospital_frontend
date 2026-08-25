@@ -11,7 +11,7 @@ import { listHospitals, createHospital, updateHospitalModules, toggleHospitalSta
 import { integrationHealth } from "../../api/integrations"
 import {
   listSubscriptions, createSubscription, updateSubscription,
-  listInvoices, createInvoice, markInvoicePaid,
+  listInvoices, createInvoice, markInvoicePaid, downloadInvoicePdf,
   listSaasTickets, resolveTicket, assignTicket,
   listMyTickets, createTicket,
   getPlatformAnalytics,
@@ -118,6 +118,7 @@ export function AdminPage() {
   const [newHospState, setNewHospState] = useState("")
   const [newHospAdminEmail, setNewHospAdminEmail] = useState("")
   const [provisionedAdmin, setProvisionedAdmin] = useState<{ email: string; password: string } | null>(null)
+  const [downloadingInvoiceId, setDownloadingInvoiceId] = useState<number | null>(null)
 
   const { user } = useAuthStore()
   const queryClient = useQueryClient()
@@ -295,6 +296,17 @@ export function AdminPage() {
 
   const handleFhirExport = (resourceType: string) => {
     window.open(`${API_BASE_URL}/export/fhir/${resourceType}/`, "_blank")
+  }
+
+  const handleDownloadInvoice = async (invoiceId: number, invoiceNumber: string) => {
+    setDownloadingInvoiceId(invoiceId)
+    try {
+      await downloadInvoicePdf(invoiceId, invoiceNumber)
+    } catch (err: any) {
+      alert("Failed to download invoice: " + err.message)
+    } finally {
+      setDownloadingInvoiceId(null)
+    }
   }
 
   const handleAddHospitalSubmit = (e: React.FormEvent) => {
@@ -857,9 +869,16 @@ export function AdminPage() {
                         <td className="py-2.5 px-3">
                           <Pill tone={inv.status === "paid" ? "ok" : inv.status === "overdue" ? "bad" : "warn"}>{inv.status}</Pill>
                         </td>
-                        <td className="py-2.5 px-3 text-right">
+                        <td className="py-2.5 px-3 text-right whitespace-nowrap">
+                          <Button
+                            size="sm" variant="ghost"
+                            disabled={downloadingInvoiceId === inv.id}
+                            onClick={() => handleDownloadInvoice(inv.id, inv.invoice_number)}
+                          >
+                            {downloadingInvoiceId === inv.id ? "Preparing…" : "⬇ PDF"}
+                          </Button>
                           {inv.status !== "paid" && (
-                            <Button size="sm" variant="secondary" disabled={markInvoicePaidMutation.isPending} onClick={() => markInvoicePaidMutation.mutate(inv.id)}>
+                            <Button size="sm" variant="secondary" className="ml-1.5" disabled={markInvoicePaidMutation.isPending} onClick={() => markInvoicePaidMutation.mutate(inv.id)}>
                               Mark paid
                             </Button>
                           )}
@@ -1263,7 +1282,6 @@ function CreateSubscriptionForm({ hospitals, onCreate, isPending }: { hospitals:
 function CreateInvoiceForm({ hospitals, onCreate, isPending }: { hospitals: Hospital[]; onCreate: (data: Partial<TenantInvoice>) => void; isPending: boolean }) {
   const today = () => new Date().toISOString().slice(0, 10)
   const [hospitalId, setHospitalId] = useState("")
-  const [invoiceNumber, setInvoiceNumber] = useState("")
   const [periodStart, setPeriodStart] = useState(today())
   const [periodEnd, setPeriodEnd] = useState(today())
   const [amount, setAmount] = useState("")
@@ -1271,13 +1289,15 @@ function CreateInvoiceForm({ hospitals, onCreate, isPending }: { hospitals: Hosp
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!hospitalId || !invoiceNumber.trim() || !amount) return
+    if (!hospitalId || !amount) return
+    // invoice_number is deliberately not sent — the backend generates it
+    // (INV-<financial year>-NNNNN, atomic + gapless), see
+    // apps.saas_admin.services.generate_invoice_number.
     onCreate({
-      hospital: hospitalId, invoice_number: invoiceNumber.trim(),
+      hospital: hospitalId,
       billing_period_start: periodStart, billing_period_end: periodEnd,
       amount, due_date: dueDate,
     })
-    setInvoiceNumber("")
     setAmount("")
   }
 
@@ -1289,10 +1309,6 @@ function CreateInvoiceForm({ hospitals, onCreate, isPending }: { hospitals: Hosp
           <option value="">Select hospital…</option>
           {hospitals.map((h) => <option key={h.id} value={h.id}>{h.name}</option>)}
         </select>
-      </div>
-      <div>
-        <label className="block text-[11px] font-semibold text-ink-4 mb-1">Invoice #</label>
-        <input type="text" placeholder="INV-0001" value={invoiceNumber} onChange={(e) => setInvoiceNumber(e.target.value)} className="w-28 text-xs px-2 py-1.5 border border-border-strong rounded-control bg-surface" required />
       </div>
       <div>
         <label className="block text-[11px] font-semibold text-ink-4 mb-1">Period start</label>
