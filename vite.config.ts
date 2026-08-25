@@ -12,10 +12,12 @@ export default defineConfig({
   server: {
     port: 8002,
     host: true,
+    allowedHosts: true,
   },
   preview: {
     port: 8002,
     host: true,
+    allowedHosts: true,
   },
   test: {
     environment: 'jsdom',
