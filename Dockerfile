@@ -12,7 +12,7 @@ RUN npm ci
 COPY . .
 
 # Build-time environment variable
-ARG VITE_API_BASE_URL=http://13.235.143.251:8001/api/v1
+ARG VITE_API_BASE_URL=/api/v1
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
 # Build application
