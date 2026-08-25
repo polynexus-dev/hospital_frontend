@@ -1,6 +1,15 @@
 import { useAuthStore } from "../store/auth"
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000/api/v1"
+export function getApiBaseUrl(): string {
+  const envUrl = import.meta.env.VITE_API_BASE_URL
+  if (envUrl && envUrl.startsWith("http")) return envUrl
+  if (typeof window !== "undefined") {
+    return `${window.location.protocol}//${window.location.host}/api/v1`
+  }
+  return "http://localhost:8000/api/v1"
+}
+
+export const API_BASE_URL = getApiBaseUrl()
 
 export class ApiError extends Error {
   status: number
