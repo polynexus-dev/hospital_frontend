@@ -10,7 +10,12 @@ export default defineConfig({
     postcss: {},
   },
   server: {
-    port: 3000,
+    port: 8002,
+    host: true,
+  },
+  preview: {
+    port: 8002,
+    host: true,
   },
   test: {
     environment: 'jsdom',
