@@ -1,8 +1,10 @@
 export default {
   nav: {
-    dailyWork: "Daily work",
-    growthRevenue: "Growth & revenue",
-    wardCare: "Ward care",
+    care: "Care",
+    business: "Business",
+    administration: "Administration",
+    newPatient: "New Patient",
+    helpCenter: "Help Center",
     console: "Call console",
     callbacks: "Callbacks",
     enquiries: "Enquiries",
@@ -15,8 +17,9 @@ export default {
     tpa: "TPA & pre-auth desk",
     feedback: "Feedback & NPS",
     workflows: "Workflows",
-    admin: "Admin & audit",
-    ipd: "IPD",
+    admin: "Administration",
+    ipd: "Clinical Care",
+    settings: "Settings",
   },
   screenSub: {
     console: "Screen-pop · every call logged, answered or not",
@@ -31,8 +34,9 @@ export default {
     tpa: "TPA directory · pre-auth desk · TAT tracking",
     feedback: "Reach the detractor before the public review",
     workflows: "Trigger · condition · action, with owners",
-    admin: "Unlimited users · DPDP Act 2023 · on-premise",
+    admin: "Staff users · roles & RBAC · support tickets",
     ipd: "Admissions · bed board · nursing · discharge",
+    settings: "Account and hospital details",
   },
 
   common: {

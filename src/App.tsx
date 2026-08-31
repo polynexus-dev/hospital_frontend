@@ -36,6 +36,7 @@ const FinancePage = lazy(() => import("./features/finance/FinancePage").then((m)
 const HRPage = lazy(() => import("./features/hr/HRPage").then((m) => ({ default: m.HRPage })))
 const BillingPage = lazy(() => import("./features/billing/BillingPage").then((m) => ({ default: m.BillingPage })))
 const InventoryPage = lazy(() => import("./features/inventory/InventoryPage").then((m) => ({ default: m.InventoryPage })))
+const SettingsPage = lazy(() => import("./features/settings/SettingsPage").then((m) => ({ default: m.SettingsPage })))
 
 function App() {
   return (
@@ -47,6 +48,7 @@ function App() {
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Suspense fallback={<LoadingState />}><DashboardPage /></Suspense>} />
           <Route path="/admin" element={<Suspense fallback={<LoadingState />}><AdminPage /></Suspense>} />
+          <Route path="/settings" element={<Suspense fallback={<LoadingState />}><SettingsPage /></Suspense>} />
 
           {/* Hospital Clinical & Patient PHI Routes — Gated by RequireHospitalContext for DPDP Act Compliance */}
           <Route element={<RequireHospitalContext />}>

@@ -4,6 +4,7 @@ import type {
   DailyMisPreview,
   DepartmentDoctorVolumeRow,
   DoctorRevenueReport,
+  EnquiriesByDepartmentRow,
   EnquiryFunnelReport,
   NoShowEffectivenessReport,
   ReminderDeliveryReport,
@@ -20,6 +21,10 @@ export function enquiryFunnel() {
 
 export function departmentDoctorVolume() {
   return api.get<{ rows: DepartmentDoctorVolumeRow[] }>("/reports/department-doctor-volume/")
+}
+
+export function enquiriesByDepartment() {
+  return api.get<{ rows: EnquiriesByDepartmentRow[] }>("/reports/enquiries-by-department/")
 }
 
 export function noShowEffectiveness() {

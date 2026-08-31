@@ -437,6 +437,12 @@ export interface DepartmentDoctorVolumeRow {
   no_show: number
 }
 
+export interface EnquiriesByDepartmentRow {
+  department__name: string | null
+  enquiry_count: number
+  conversion_count: number
+}
+
 export interface NoShowEffectivenessReport {
   no_shows: number
   recall_tasks_done: number

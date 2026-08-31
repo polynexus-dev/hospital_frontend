@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useEffect, useState } from "react"
+import { useLocation, useNavigate } from "react-router-dom"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Card } from "../../components/ui/Card"
 import { Button } from "../../components/ui/Button"
@@ -8,11 +8,29 @@ import { ErrorState, LoadingState } from "../../components/ui/QueryStates"
 import { createPatient, listPatients } from "../../api/patients"
 import type { Patient } from "../../types/api"
 
+interface NavState {
+  openNewPatient?: boolean
+  search?: string
+}
+
 export function PatientsListPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const queryClient = useQueryClient()
-  const [search, setSearch] = useState("")
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const navState = location.state as NavState | null
+  const [search, setSearch] = useState(navState?.search ?? "")
+  const [isModalOpen, setIsModalOpen] = useState(navState?.openNewPatient ?? false)
+
+  // The sidebar "New Patient" button and topbar search hand off here via
+  // router state (rather than query params) so they can pre-open the modal
+  // or seed the search box without a page reload. Clear the state right
+  // after reading it so a browser back/forward doesn't replay it.
+  useEffect(() => {
+    if (navState?.openNewPatient || navState?.search) {
+      navigate(location.pathname, { replace: true, state: {} })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   const [formData, setFormData] = useState<Partial<Patient>>({
     first_name: "",
     last_name: "",
