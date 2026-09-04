@@ -26,7 +26,9 @@ jobs:
         run: npm run build
 
       - name: Run tests
-        run: npm test -- --run
+        run: |
+          set -o pipefail
+          npm test -- --run 2>&1 | tee vitest-output.log
 
       - name: Dependency vulnerability scan (npm audit)
         # Same non-blocking posture as the backend's pip-audit step — a new
@@ -34,3 +36,27 @@ jobs:
         # for a human to triage, rather than failing unrelated PRs.
         run: npm audit --audit-level=high
         continue-on-error: true
+
+      - name: Email test report
+        # Same reasoning as the backend workflow's identical step: covers
+        # the "what actually happened" report, on top of GitHub's own
+        # native pass/fail notification email. Never blocks the build.
+        if: always()
+        continue-on-error: true
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: mail.polynexus.in
+          server_port: 587
+          username: reports@polynexus.in
+          password: ${{ secrets.SMTP_PASSWORD }}
+          from: Polynexus CI <reports@polynexus.in>
+          to: aniket@polynexus.in
+          subject: "Frontend CI ${{ job.status }}: ${{ github.repository }} #${{ github.run_number }}"
+          body: |
+            Frontend CI run ${{ job.status }} for ${{ github.repository }} on branch ${{ github.ref_name }} (${{ github.sha }}).
+
+            Full test output is attached.
+
+            Triggered by: ${{ github.actor }}
+            Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          attachments: vitest-output.log
