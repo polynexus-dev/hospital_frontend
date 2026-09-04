@@ -18,6 +18,7 @@ export function AIChatbotWidget() {
   const [requiresInput, setRequiresInput] = useState<string[] | null>(null)
   const [pendingSlotId, setPendingSlotId] = useState<number | null>(null)
   const [formValues, setFormValues] = useState<{ name: string; mobile: string }>({ name: "", mobile: "" })
+  const [freeText, setFreeText] = useState("")
 
   const actionMutation = useMutation({
     mutationFn: postInteractiveChatAction,
@@ -55,6 +56,17 @@ export function AIChatbotWidget() {
     )
   }
 
+  // "classify_free_text" hands the typed message to the backend's Ollama
+  // router, which only decides which existing scripted branch applies
+  // (book_opd, view_doctors, ...) — same safety guarantees as clicking a
+  // button, see apps/communications/ai_chatbot.py.
+  const submitFreeText = () => {
+    const text = freeText.trim()
+    if (!text) return
+    triggerAction("classify_free_text", text, { message: text })
+    setFreeText("")
+  }
+
   const handleLanguageChange = (newLang: "en" | "mr" | "hi") => {
     setLanguage(newLang)
     setChatHistory([])
@@ -71,7 +83,7 @@ export function AIChatbotWidget() {
           className="flex items-center gap-2.5 bg-brand hover:bg-brand-hover text-white font-semibold px-4 py-3 rounded-full shadow-lg transition-colors"
         >
           <span className="w-2 h-2 rounded-full bg-white/80" />
-          <span className="text-[13px]">24x7 Hospital Assistant</span>
+          <span className="text-[13px]">Polynexus HMS Bot</span>
         </button>
       )}
 
@@ -81,8 +93,8 @@ export function AIChatbotWidget() {
           {/* Header */}
           <div className="bg-brand text-white p-3.5 flex justify-between items-center">
             <div>
-              <h3 className="font-semibold text-[13px]">24x7 Hospital Assistant</h3>
-              <span className="text-[10.5px] opacity-80 block">Instant OPD booking & information</span>
+              <h3 className="font-semibold text-[13px]">Polynexus HMS Bot</h3>
+              <span className="text-[10.5px] opacity-80 block">24x7 · Instant OPD booking & information</span>
             </div>
             <button onClick={() => setIsOpen(false)} className="text-white hover:opacity-75 text-lg px-2">
               ✕
@@ -189,9 +201,32 @@ export function AIChatbotWidget() {
             )}
           </div>
 
+          {/* Free-text input — routed through the Ollama-backed classifier
+              instead of only accepting button taps */}
+          {!requiresInput && (
+            <div className="p-2 border-t border-border-soft bg-surface flex gap-1.5">
+              <input
+                type="text"
+                placeholder="Type your question…"
+                value={freeText}
+                onChange={(e) => setFreeText(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && !actionMutation.isPending && submitFreeText()}
+                disabled={actionMutation.isPending}
+                className="flex-1 min-w-0 px-3 py-2 text-xs border border-border-strong rounded-control bg-surface disabled:opacity-50"
+              />
+              <button
+                onClick={submitFreeText}
+                disabled={actionMutation.isPending || !freeText.trim()}
+                className="px-3 py-2 bg-brand hover:bg-brand-hover disabled:opacity-50 text-white font-semibold rounded-control transition-colors text-xs shrink-0"
+              >
+                Send
+              </button>
+            </div>
+          )}
+
           {/* Footer Reset button */}
           <div className="p-2 border-t border-border-soft bg-page flex justify-between items-center text-xs">
-            <span className="text-[11px] text-ink-5">{hospitalName || "Hospital Assistant"}</span>
+            <span className="text-[11px] text-ink-5">{hospitalName || "Your Hospital"}</span>
             <button
               onClick={() => triggerAction("main_menu")}
               className="text-xs text-brand font-semibold hover:underline"

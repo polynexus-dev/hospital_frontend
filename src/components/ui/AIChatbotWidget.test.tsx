@@ -26,7 +26,7 @@ describe("AIChatbotWidget", () => {
 
   it("starts closed, showing only the floating toggle button", () => {
     renderWidget()
-    expect(screen.getByText("24x7 Hospital Assistant")).toBeInTheDocument()
+    expect(screen.getByText("Polynexus HMS Bot")).toBeInTheDocument()
     expect(screen.queryByText("Instant OPD booking & information")).not.toBeInTheDocument()
   })
 
@@ -37,7 +37,7 @@ describe("AIChatbotWidget", () => {
     vi.mocked(postInteractiveChatAction).mockResolvedValue({ text: "Hello!", options: [], step: "main_menu", reply: "Hello!" })
 
     renderWidget()
-    await userEvent.click(screen.getByText("24x7 Hospital Assistant"))
+    await userEvent.click(screen.getByText("Polynexus HMS Bot"))
 
     expect(await screen.findByText("Swasthyam Superspeciality Hospital")).toBeInTheDocument()
   })
@@ -47,9 +47,9 @@ describe("AIChatbotWidget", () => {
     vi.mocked(postInteractiveChatAction).mockResolvedValue({ text: "Hello!", options: [], step: "main_menu", reply: "Hello!" })
 
     renderWidget()
-    await userEvent.click(screen.getByText("24x7 Hospital Assistant"))
+    await userEvent.click(screen.getByText("Polynexus HMS Bot"))
 
-    expect(await screen.findByText("Hospital Assistant")).toBeInTheDocument()
+    expect(await screen.findByText("Your Hospital")).toBeInTheDocument()
   })
 
   it("triggers the main_menu action on open and renders the returned options", async () => {
@@ -62,7 +62,7 @@ describe("AIChatbotWidget", () => {
     })
 
     renderWidget()
-    await userEvent.click(screen.getByText("24x7 Hospital Assistant"))
+    await userEvent.click(screen.getByText("Polynexus HMS Bot"))
 
     expect(await screen.findByText("Please select an option below:")).toBeInTheDocument()
     expect(await screen.findByText("Book OPD Appointment")).toBeInTheDocument()
@@ -84,7 +84,7 @@ describe("AIChatbotWidget", () => {
     })
 
     renderWidget()
-    await userEvent.click(screen.getByText("24x7 Hospital Assistant"))
+    await userEvent.click(screen.getByText("Polynexus HMS Bot"))
 
     expect(await screen.findByPlaceholderText("Patient name")).toBeInTheDocument()
     expect(screen.getByPlaceholderText("Mobile number")).toBeInTheDocument()
@@ -96,7 +96,7 @@ describe("AIChatbotWidget", () => {
     vi.mocked(postInteractiveChatAction).mockResolvedValue({ text: "Hello!", options: [], step: "main_menu", reply: "" })
 
     renderWidget()
-    await userEvent.click(screen.getByText("24x7 Hospital Assistant"))
+    await userEvent.click(screen.getByText("Polynexus HMS Bot"))
     await waitFor(() => expect(postInteractiveChatAction).toHaveBeenCalledTimes(1))
 
     await userEvent.click(screen.getByText("मराठी"))
