@@ -11,14 +11,20 @@ import { integrationHealth } from "../../api/integrations"
 import { API_BASE_URL } from "../../api/client"
 import type { AuditLog } from "../../types/api"
 import type { Tone } from "../../components/ui/tone"
+import { EmergencyAccessTab } from "./EmergencyAccessTab"
+import { DataRightsTab } from "./DataRightsTab"
+import { GrievancesTab } from "./GrievancesTab"
 
-type TabKey = "users" | "roles" | "export" | "audit" | "integrations"
+type TabKey = "users" | "roles" | "export" | "audit" | "integrations" | "emergency_access" | "data_rights" | "grievances"
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "users", label: "User Directory" },
   { key: "roles", label: "Roles & RBAC" },
   { key: "export", label: "CSV & FHIR Exporter" },
   { key: "audit", label: "Audit Trail" },
+  { key: "emergency_access", label: "Emergency Access" },
+  { key: "data_rights", label: "Data Rights" },
+  { key: "grievances", label: "Grievances" },
   { key: "integrations", label: "Integration Health" },
 ]
 
@@ -43,6 +49,7 @@ const ACTION_TONE: Record<AuditLog["action"], Tone> = {
   delete: "bad",
   read: "neutral",
   request: "neutral",
+  export: "warn",
 }
 
 function auditDetail(log: AuditLog): string {
@@ -283,6 +290,15 @@ export function AdminPage() {
           </div>
         </Card>
       )}
+
+      {/* Emergency Access (break-glass review) */}
+      {activeTab === "emergency_access" && <EmergencyAccessTab />}
+
+      {/* Data Rights (DPDP access/correction/erasure/nomination) */}
+      {activeTab === "data_rights" && <DataRightsTab />}
+
+      {/* Grievances (DPDP §2.5) */}
+      {activeTab === "grievances" && <GrievancesTab />}
 
       {/* Integration Health */}
       {activeTab === "integrations" && (

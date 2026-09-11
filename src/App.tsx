@@ -2,6 +2,7 @@ import { Suspense, lazy } from "react"
 import { Navigate, Route, Routes } from "react-router-dom"
 import { Shell } from "./app/Shell"
 import { ProtectedRoute } from "./app/ProtectedRoute"
+import { RequireSaaSAdmin } from "./app/RequireSaaSAdmin"
 import { LoginPage } from "./features/auth/LoginPage"
 import { LoadingState } from "./components/ui/QueryStates"
 
@@ -23,6 +24,7 @@ const TPAPage = lazy(() => import("./features/tpa/TPAPage").then((m) => ({ defau
 const FeedbackPage = lazy(() => import("./features/feedback/FeedbackPage").then((m) => ({ default: m.FeedbackPage })))
 const WorkflowsPage = lazy(() => import("./features/workflows/WorkflowsPage").then((m) => ({ default: m.WorkflowsPage })))
 const AdminPage = lazy(() => import("./features/admin/AdminPage").then((m) => ({ default: m.AdminPage })))
+const SaaSConsolePage = lazy(() => import("./features/saas/SaaSConsolePage").then((m) => ({ default: m.SaaSConsolePage })))
 
 function App() {
   return (
@@ -46,6 +48,10 @@ function App() {
           <Route path="/feedback" element={<Suspense fallback={<LoadingState />}><FeedbackPage /></Suspense>} />
           <Route path="/workflows" element={<Suspense fallback={<LoadingState />}><WorkflowsPage /></Suspense>} />
           <Route path="/admin" element={<Suspense fallback={<LoadingState />}><AdminPage /></Suspense>} />
+
+          <Route element={<RequireSaaSAdmin />}>
+            <Route path="/saas" element={<Suspense fallback={<LoadingState />}><SaaSConsolePage /></Suspense>} />
+          </Route>
         </Route>
       </Route>
 

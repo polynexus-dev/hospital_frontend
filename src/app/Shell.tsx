@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react"
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { useQuery } from "@tanstack/react-query"
-import { allNav, dailyWorkNav, growthNav } from "./navConfig"
+import { allNav, dailyWorkNav, growthNav, saasNav } from "./navConfig"
 import { useAuthStore } from "../store/auth"
 import { Avatar } from "../components/ui/Avatar"
 import { listCallbackTasks } from "../api/telephony"
@@ -117,6 +117,20 @@ export function Shell() {
         </div>
 
         <div className="flex-1 overflow-y-auto px-[10px] pt-3 pb-5">
+          {/* Platform operators only — an ordinary hospital user never
+              sees this section, and RequireSaaSAdmin blocks the route
+              even if they type the URL. */}
+          {(user?.is_saas_admin || user?.is_superuser) && (
+            <>
+              <div className="text-[10px] tracking-[.1em] uppercase text-ink-5 font-semibold px-2 pt-1.5 pb-2">
+                Platform
+              </div>
+              {saasNav.map((item) => (
+                <NavRow key={item.key} item={item} />
+              ))}
+            </>
+          )}
+
           <div className="text-[10px] tracking-[.1em] uppercase text-ink-5 font-semibold px-2 pt-1.5 pb-2">
             {t("nav.dailyWork")}
           </div>

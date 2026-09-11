@@ -35,7 +35,10 @@ export interface User {
   preferred_language: Language
   is_active: boolean
   is_staff: boolean
+  is_superuser: boolean
   is_saas_admin: boolean
+  is_2fa_enabled: boolean
+  requires_mfa: boolean
   date_joined: string
 }
 
@@ -520,7 +523,7 @@ export interface AuditLog {
   id: number
   actor: number | null
   actor_email: string | null
-  action: "create" | "update" | "delete" | "read" | "request"
+  action: "create" | "update" | "delete" | "read" | "request" | "export"
   model_name: string
   object_id: string
   object_repr: string
@@ -530,6 +533,79 @@ export interface AuditLog {
   status_code: number | null
   ip_address: string | null
   created_at: string
+}
+
+export interface EmergencyAccessLog {
+  id: number
+  actor: number | null
+  actor_email: string | null
+  model_name: string
+  object_id: string
+  reason: string
+  accessed_at: string
+  reviewed: boolean
+  reviewed_by: number | null
+  reviewed_by_email: string | null
+  reviewed_at: string | null
+  review_notes: string
+}
+
+export type DataRightsRequestType = "access" | "correction" | "erasure" | "nomination"
+export type DataRightsRequestStatus = "submitted" | "verified" | "in_progress" | "completed" | "rejected"
+
+export interface DataRightsRequest {
+  id: number
+  patient: number
+  patient_name: string
+  request_type: DataRightsRequestType
+  status: DataRightsRequestStatus
+  channel: "phone" | "email" | "written" | "portal"
+  details: string
+  submitted_at: string
+  sla_due_at: string
+  verified_at: string | null
+  verified_by: number | null
+  handled_by: number | null
+  resolution_notes: string
+  resolved_at: string | null
+}
+
+export interface PatientDataExport {
+  patient: Record<string, unknown>
+  documents: Array<Record<string, unknown>>
+  prescriptions: Array<Record<string, unknown>>
+  appointments: Array<Record<string, unknown>>
+  generated_at: string
+}
+
+export type GrievanceStatus = "open" | "in_progress" | "resolved" | "escalated"
+export type GrievancePriority = "low" | "normal" | "high" | "urgent"
+
+export interface GrievanceTicket {
+  id: number
+  patient: number | null
+  patient_name: string | null
+  subject: string
+  description: string
+  status: GrievanceStatus
+  priority: GrievancePriority
+  assigned_to: number | null
+  submitted_at: string
+  sla_due_at: string
+  resolution: string
+  resolved_at: string | null
+}
+
+export interface Nominee {
+  id: number
+  patient: number
+  name: string
+  relationship: string
+  phone: string
+  email: string
+  is_active: boolean
+  verified_at: string | null
+  verified_by: number | null
 }
 
 export interface IntegrationHealthTask {
@@ -894,4 +970,81 @@ export interface StockTransaction {
   quantity: number
   reference: string
   transaction_date: string
+}
+
+// --- SaaS admin (apps.saas_admin) — platform-operator surface, visible
+// only to is_saas_admin/is_superuser accounts. Every one of these spans
+// all tenants, unlike the rest of this file.
+
+export interface TenantSubscription {
+  id: number
+  hospital: string
+  hospital_name?: string
+  tier: "starter" | "pro" | "enterprise"
+  billing_cycle: "monthly" | "annual"
+  base_price: string
+  max_staff_users: number
+  status: "active" | "suspended" | "cancelled"
+  started_at: string
+  next_billing_date: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface TenantInvoice {
+  id: number
+  hospital: string
+  hospital_name?: string
+  subscription: number | null
+  invoice_number: string
+  billing_period_start: string
+  billing_period_end: string
+  amount: string
+  status: "unpaid" | "paid" | "overdue"
+  due_date: string
+  paid_at: string | null
+  payment_receipt: string | null
+  notes: string
+  created_at: string
+  updated_at: string
+}
+
+export interface TenantUsageSnapshot {
+  id: number
+  hospital: string
+  hospital_name?: string
+  period_start: string
+  period_end: string
+  active_staff_count: number
+  patients_registered_count: number
+  bills_generated_count: number
+  storage_bytes_used: number
+  created_at: string
+}
+
+export interface SaaSSupportTicket {
+  id: number
+  hospital: string
+  hospital_name?: string
+  raised_by: number | null
+  raised_by_email: string | null
+  subject: string
+  description: string
+  category: "bug" | "feature_request" | "billing" | "general"
+  priority: "low" | "medium" | "high" | "urgent"
+  status: "open" | "in_progress" | "resolved" | "closed"
+  assigned_to: number | null
+  assigned_to_email: string | null
+  resolution_notes: string
+  resolved_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface PlatformAnalytics {
+  total_hospitals: number
+  active_hospitals: number
+  total_revenue: number
+  total_patients: number
+  module_adoption_percent: Record<string, number>
 }

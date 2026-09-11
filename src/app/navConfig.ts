@@ -7,9 +7,15 @@ export interface NavItem {
   requiredPermission?: string
 }
 
+// Platform-operator nav — rendered only for is_saas_admin/is_superuser
+// accounts (see Shell.tsx) and route-guarded by RequireSaaSAdmin. These
+// two entries pointed at /admin and /dashboard (ordinary hospital pages)
+// for as long as there was no SaaS console to link to, and nothing
+// rendered them; they now point at the real one. `requiredPermission` is
+// deliberately unset — this surface is gated by a user flag, not a Django
+// model permission (no role template grants one; see RequireSaaSAdmin).
 export const saasNav: NavItem[] = [
-  { key: "saas-tenants", path: "/admin", labelKey: "Tenants & Module Packages", subKey: "Manage SaaS Subscriptions" },
-  { key: "saas-analytics", path: "/dashboard", labelKey: "Global Platform Metrics", subKey: "Cross-Tenant Analytics" },
+  { key: "saas-console", path: "/saas", labelKey: "SaaS Console", subKey: "Tenants · subscriptions · invoices · usage" },
 ]
 
 export const dailyWorkNav: NavItem[] = [
