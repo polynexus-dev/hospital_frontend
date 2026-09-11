@@ -10,26 +10,7 @@ export default defineConfig({
     postcss: {},
   },
   server: {
-    port: 8002,
-    host: true,
-    allowedHosts: true,
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8001',
-        changeOrigin: true,
-      },
-    },
-  },
-  preview: {
-    port: 8002,
-    host: true,
-    allowedHosts: true,
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8001',
-        changeOrigin: true,
-      },
-    },
+    port: 3000,
   },
   test: {
     environment: 'jsdom',

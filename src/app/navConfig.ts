@@ -13,13 +13,13 @@ export const saasNav: NavItem[] = [
 ]
 
 export const dailyWorkNav: NavItem[] = [
-  { key: "dashboard", path: "/dashboard", labelKey: "nav.dashboard", subKey: "screenSub.dashboard" },
+  { key: "console", path: "/console", labelKey: "nav.console", subKey: "screenSub.console" },
+  { key: "callbacks", path: "/callbacks", labelKey: "nav.callbacks", subKey: "screenSub.callbacks" },
+  { key: "enquiries", path: "/enquiries", labelKey: "nav.enquiries", subKey: "screenSub.enquiries" },
   { key: "patients", path: "/patients", labelKey: "nav.patients", subKey: "screenSub.patients" },
   { key: "appointments", path: "/appointments", labelKey: "nav.appointments", subKey: "screenSub.appointments" },
   { key: "inbox", path: "/inbox", labelKey: "nav.inbox", subKey: "screenSub.inbox" },
-  { key: "call-console", path: "/console", labelKey: "nav.console", subKey: "screenSub.console" },
-  { key: "callbacks", path: "/callbacks", labelKey: "nav.callbacks", subKey: "screenSub.callbacks" },
-  { key: "enquiries", path: "/enquiries", labelKey: "nav.enquiries", subKey: "screenSub.enquiries" },
+  { key: "dashboard", path: "/dashboard", labelKey: "nav.dashboard", subKey: "screenSub.dashboard" },
 ]
 
 export const careNav: NavItem[] = [
@@ -32,12 +32,16 @@ export const careNav: NavItem[] = [
   { key: "bloodbank", moduleKey: "bloodbank", path: "/bloodbank", labelKey: "Blood Bank", subKey: "Blood Units & Transfusion", requiredPermission: "bloodbank.view_bloodunit" },
 ]
 
-export const businessNav: NavItem[] = [
+export const growthNav: NavItem[] = [
   { key: "referrals", path: "/referrals", labelKey: "nav.referrals", subKey: "screenSub.referrals" },
   { key: "packages", path: "/packages", labelKey: "nav.packages", subKey: "screenSub.packages" },
   { key: "tpa", path: "/tpa", labelKey: "nav.tpa", subKey: "screenSub.tpa" },
   { key: "feedback", path: "/feedback", labelKey: "nav.feedback", subKey: "screenSub.feedback" },
   { key: "workflows", path: "/workflows", labelKey: "nav.workflows", subKey: "screenSub.workflows" },
+]
+
+export const businessNav: NavItem[] = [
+  ...growthNav,
   { key: "finance", moduleKey: "finance", path: "/finance", labelKey: "Finance", subKey: "Ledger & Expenses", requiredPermission: "finance.view_ledger" },
   { key: "billing", moduleKey: "billing", path: "/billing", labelKey: "Billing & Claims", subKey: "Invoices & TPA Claims", requiredPermission: "billing.view_bill" },
   { key: "hr", moduleKey: "hr", path: "/hr", labelKey: "HR & Roster", subKey: "Staff Directory & Attendance", requiredPermission: "hr.view_employee" },
@@ -59,3 +63,4 @@ export function hasNavAccess(item: NavItem, permissions: string[] | undefined, e
   }
   return !item.requiredPermission || (permissions ?? []).includes(item.requiredPermission)
 }
+

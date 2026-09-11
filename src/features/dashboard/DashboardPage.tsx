@@ -1,29 +1,19 @@
 import { useQuery } from "@tanstack/react-query"
 import { Card } from "../../components/ui/Card"
 import { StatTile } from "../../components/ui/StatTile"
-import { DonutChart } from "../../components/ui/DonutChart"
-import { BarChart } from "../../components/ui/BarChart"
+import { ProgressBar } from "../../components/ui/ProgressBar"
 import { LoadingState, ErrorState } from "../../components/ui/QueryStates"
 import {
   callPerformance,
   dailyMisPreview,
   departmentDoctorVolume,
   doctorRevenue,
-  enquiriesByDepartment,
   enquiryFunnel,
   noShowEffectiveness,
   revenueBySource,
 } from "../../api/analytics"
 
 const INR = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })
-
-function formatINRCompact(n: number): string {
-  if (n >= 100000) return `₹${(n / 100000).toFixed(n % 100000 === 0 ? 0 : 1)}L`
-  if (n >= 1000) return `₹${Math.round(n / 1000)}k`
-  return `₹${Math.round(n)}`
-}
-
-const DEPT_COLORS = ["#1d4e89", "#6366f1", "#0ea5e9", "#14b8a6", "#f59e0b"]
 
 const STAGE_LABELS: Record<string, string> = {
   new: "New",
@@ -39,7 +29,6 @@ export function DashboardPage() {
   const calls = useQuery({ queryKey: ["reports", "call-performance"], queryFn: callPerformance })
   const funnel = useQuery({ queryKey: ["reports", "enquiry-funnel"], queryFn: enquiryFunnel })
   const deptVolume = useQuery({ queryKey: ["reports", "department-doctor-volume"], queryFn: departmentDoctorVolume })
-  const deptLeads = useQuery({ queryKey: ["reports", "enquiries-by-department"], queryFn: enquiriesByDepartment })
   const noShow = useQuery({ queryKey: ["reports", "no-show-effectiveness"], queryFn: noShowEffectiveness })
   const mis = useQuery({ queryKey: ["reports", "daily-mis-preview"], queryFn: dailyMisPreview })
   const revenue = useQuery({ queryKey: ["reports", "revenue-by-source"], queryFn: revenueBySource })
@@ -52,6 +41,7 @@ export function DashboardPage() {
   const answeredPct = c.received ? Math.round((c.answered / c.received) * 100) : 0
   const enquiryTotal = funnel.data ? Object.values(funnel.data).reduce((a, b) => a + b, 0) : 0
   const funnelEntries = funnel.data ? Object.entries(funnel.data) : []
+  const funnelMax = Math.max(1, ...funnelEntries.map(([, n]) => n))
 
   const deptRows = deptVolume.data?.rows ?? []
   const byDept = new Map<string, number>()
@@ -60,25 +50,11 @@ export function DashboardPage() {
     byDept.set(key, (byDept.get(key) ?? 0) + row.booked)
   }
   const deptEntries = [...byDept.entries()].sort((a, b) => b[1] - a[1])
+  const deptMax = Math.max(1, ...deptEntries.map(([, n]) => n))
 
   const totalBooked = deptRows.reduce((sum, r) => sum + r.booked, 0)
   const totalCompleted = deptRows.reduce((sum, r) => sum + r.completed, 0)
   const conversionPct = totalBooked ? Math.round((totalCompleted / totalBooked) * 100) : 0
-
-  const topDepts = deptEntries.slice(0, 4)
-  const otherDeptTotal = deptEntries.slice(4).reduce((sum, [, n]) => sum + n, 0)
-  const deptDonutData = [
-    ...topDepts.map(([name, n], i) => ({ label: name, value: n, color: DEPT_COLORS[i % DEPT_COLORS.length] })),
-    ...(otherDeptTotal > 0 ? [{ label: "Other", value: otherDeptTotal, color: "#c7ccd1" }] : []),
-  ]
-
-  const funnelBars = funnelEntries.map(([stage, n]) => ({ label: STAGE_LABELS[stage] ?? stage, value: n }))
-  const revenueBars = (revenue.data?.rows ?? []).map((r) => ({ label: r.source, value: Number(r.billed_amount) }))
-
-  const deptLeadRows = deptLeads.data?.rows ?? []
-  const deptLeadBars = deptLeadRows
-    .map((r) => ({ label: r.department__name ?? "Unassigned", value: r.enquiry_count }))
-    .sort((a, b) => b.value - a.value)
 
   return (
     <div className="flex flex-col gap-3.5">
@@ -94,46 +70,43 @@ export function DashboardPage() {
       <div className="grid grid-cols-[1.3fr_1fr] gap-3.5 items-start">
         <Card padded>
           <div className="flex items-baseline gap-2.5 mb-3.5">
-            <div className="text-[13px] font-semibold">Enquiry status</div>
-            <div className="text-[12px] text-ink-4">current pipeline</div>
+            <div className="text-[13px] font-semibold">Enquiry pipeline by stage</div>
+            <div className="text-[12px] text-ink-4">current snapshot</div>
           </div>
-          <BarChart data={funnelBars} height={170} />
+          <div className="flex flex-col gap-2.5">
+            {funnelEntries.map(([stage, n]) => (
+              <div key={stage} className="flex items-center gap-3">
+                <div className="flex-none w-[132px] text-[12.5px] text-ink-3">{STAGE_LABELS[stage] ?? stage}</div>
+                <div className="flex-1">
+                  <ProgressBar pct={(n / funnelMax) * 100} height={22} color="var(--color-brand)" />
+                </div>
+                <div className="flex-none w-[44px] text-right text-[13px] font-semibold">{n}</div>
+              </div>
+            ))}
+            {funnelEntries.length === 0 && <div className="text-[13px] text-ink-4">No enquiries yet.</div>}
+          </div>
         </Card>
 
         <Card padded>
           <div className="text-[13px] font-semibold mb-3">Department volume</div>
-          <DonutChart data={deptDonutData} centerValue={totalBooked} centerLabel="Total bookings" />
+          <div className="flex flex-col gap-2.5">
+            {deptEntries.map(([name, n]) => (
+              <div key={name}>
+                <div className="flex justify-between text-[12.5px] mb-1">
+                  <span className="text-ink-3">{name}</span>
+                  <span className="font-semibold">{n}</span>
+                </div>
+                <ProgressBar pct={(n / deptMax) * 100} color="var(--color-brand)" />
+              </div>
+            ))}
+            {deptEntries.length === 0 && <div className="text-[13px] text-ink-4">No appointment data yet.</div>}
+          </div>
         </Card>
       </div>
 
       <Card padded>
-        <div className="flex items-baseline gap-2.5 mb-3.5">
-          <div className="text-[13px] font-semibold">Leads by department</div>
-          <div className="text-[12px] text-ink-4">enquiries this window, incl. Diagnostics/Lab</div>
-        </div>
-        <BarChart data={deptLeadBars} height={160} />
-        <div className="grid grid-cols-[1.6fr_0.7fr_0.7fr] gap-2 pb-2 mt-4 border-b border-border-soft text-[11px] tracking-[.06em] uppercase text-ink-4 font-semibold">
-          <div>Department</div>
-          <div className="text-right">Enq</div>
-          <div className="text-right">Conv</div>
-        </div>
-        {deptLeadRows.map((r) => (
-          <div key={r.department__name ?? "unassigned"} className="grid grid-cols-[1.6fr_0.7fr_0.7fr] gap-2 py-2 border-b border-border-faint text-[13px] items-center">
-            <div>{r.department__name ?? "Unassigned"}</div>
-            <div className="text-right text-ink-3">{r.enquiry_count}</div>
-            <div className="text-right text-ink-3">{r.conversion_count}</div>
-          </div>
-        ))}
-        {!deptLeadRows.length && <div className="text-[13px] text-ink-4 py-2">No department-tagged enquiries yet.</div>}
-        <div className="text-[11.5px] text-ink-4 mt-2 leading-relaxed">
-          Counts enquiries tagged to a department — not a confirmed lab/OPD booking, since there's no direct link from a lab order back to the enquiry that led to it yet.
-        </div>
-      </Card>
-
-      <Card padded>
-        <div className="text-[13px] font-semibold mb-3.5">Revenue by source</div>
-        <BarChart data={revenueBars} height={180} formatValue={formatINRCompact} />
-        <div className="grid grid-cols-[1.4fr_0.7fr_0.7fr_1fr] gap-2 pb-2 mt-4 border-b border-border-soft text-[11px] tracking-[.06em] uppercase text-ink-4 font-semibold">
+        <div className="text-[13px] font-semibold mb-3">Revenue by source</div>
+        <div className="grid grid-cols-[1.4fr_0.7fr_0.7fr_1fr] gap-2 pb-2 border-b border-border-soft text-[11px] tracking-[.06em] uppercase text-ink-4 font-semibold">
           <div>Source</div>
           <div className="text-right">Enq</div>
           <div className="text-right">Conv</div>

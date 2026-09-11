@@ -2,109 +2,29 @@ import { useState, useMemo, useEffect } from "react"
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { useQuery } from "@tanstack/react-query"
-import {
-  LayoutDashboard,
-  Users,
-  CalendarDays,
-  Inbox as InboxIcon,
-  Phone,
-  PhoneCall,
-  MessageSquareText,
-  Stethoscope,
-  FlaskConical,
-  Pill,
-  Siren,
-  Scissors,
-  HeartPulse,
-  Droplet,
-  Share2,
-  Gift,
-  ShieldCheck,
-  Star,
-  Workflow,
-  Landmark,
-  Receipt,
-  IdCard,
-  Boxes,
-  ShieldQuestion,
-  Settings as SettingsIcon,
-  UserPlus,
-  Search,
-  Bell,
-  History,
-  LogOut,
-  HelpCircle,
-} from "lucide-react"
-import type { LucideIcon } from "lucide-react"
-import { saasNav, administrationNav, businessNav, careNav, dailyWorkNav, type NavItem, hasNavAccess } from "./navConfig"
+import { allNav, dailyWorkNav, growthNav } from "./navConfig"
 import { useAuthStore } from "../store/auth"
 import { Avatar } from "../components/ui/Avatar"
-import { Button } from "../components/ui/Button"
 import { listCallbackTasks } from "../api/telephony"
-import { logoutRequest, switchHospital } from "../api/auth"
+import { switchHospital } from "../api/auth"
 import { AIChatbotWidget } from "../components/ui/AIChatbotWidget"
 
-const NAV_ICONS: Record<string, LucideIcon> = {
-  dashboard: LayoutDashboard,
-  patients: Users,
-  appointments: CalendarDays,
-  inbox: InboxIcon,
-  "call-console": Phone,
-  callbacks: PhoneCall,
-  enquiries: MessageSquareText,
-  ipd: Stethoscope,
-  diagnostics: FlaskConical,
-  pharmacy: Pill,
-  emergency: Siren,
-  ot: Scissors,
-  icu: HeartPulse,
-  bloodbank: Droplet,
-  referrals: Share2,
-  packages: Gift,
-  tpa: ShieldCheck,
-  feedback: Star,
-  workflows: Workflow,
-  finance: Landmark,
-  billing: Receipt,
-  hr: IdCard,
-  inventory: Boxes,
-  admin: ShieldQuestion,
-  settings: SettingsIcon,
-}
-
-function NavRow({ item }: { item: NavItem }) {
+function NavRow({ item }: { item: (typeof allNav)[number] }) {
   const { t } = useTranslation()
-  const Icon = NAV_ICONS[item.key]
   return (
     <NavLink
       to={item.path}
       className={({ isActive }) =>
-        `flex items-center gap-[9px] px-[9px] py-[8px] rounded-control text-[13px] mb-[1px] ${
+        `flex items-center justify-between gap-2 px-[9px] py-[8px] rounded-control text-[13px] mb-[1px] ${
           isActive ? "font-semibold text-brand bg-brand-tint-strong" : "font-normal text-ink-2 hover:bg-page"
         }`
       }
     >
-      {Icon && <Icon size={15} className="shrink-0 opacity-80" />}
-      <span className="truncate">{t(item.labelKey)}</span>
+      <span className="flex items-center gap-[9px] min-w-0">
+        <span className="w-[5px] h-[5px] rounded-full bg-current opacity-55 shrink-0" />
+        <span className="truncate">{t(item.labelKey)}</span>
+      </span>
     </NavLink>
-  )
-}
-
-function NavGroup({ label, items, permissions, enabledModules }: {
-  label: string
-  items: NavItem[]
-  permissions: string[] | undefined
-  enabledModules: string[] | undefined
-}) {
-  const visible = items.filter((item) => hasNavAccess(item, permissions, enabledModules))
-  if (visible.length === 0) return null
-  return (
-    <>
-      <div className="text-[10px] tracking-[.1em] uppercase text-ink-5 font-semibold px-2 pt-[18px] pb-2">{label}</div>
-      {visible.map((item) => (
-        <NavRow key={item.key} item={item} />
-      ))}
-    </>
   )
 }
 
@@ -112,15 +32,12 @@ export function Shell() {
   const location = useLocation()
   const navigate = useNavigate()
   const { t, i18n } = useTranslation()
-  const { user, refreshToken, logout } = useAuthStore()
+  const { user, logout } = useAuthStore()
   const [isBranchOpen, setIsBranchOpen] = useState(false)
   const [isCompactMode, setIsCompactMode] = useState(() => localStorage.getItem("crm_compact") === "true")
   const [isFabOpen, setIsFabOpen] = useState(false)
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
-  const [searchValue, setSearchValue] = useState("")
-
-  const isSaasOwner = user?.email === "saas_owner@hospital-crm.com"
 
   // Listen for Global Hotkeys (Alt+N, Alt+A, Alt+C, Alt+H, ?, Esc)
   useEffect(() => {
@@ -169,21 +86,11 @@ export function Shell() {
     showToast(next ? "📐 Compact View Enabled for 13-inch OPD Screens" : "📐 Standard View Enabled")
   }
 
-  const runGlobalSearch = () => {
-    if (!searchValue.trim()) return
-    navigate("/patients", { state: { search: searchValue.trim() } })
-  }
 
-  // /admin (and other paths) can appear in both saasNav and the hospital
-  // nav groups with different labels — search only the list that matches
-  // who's actually signed in, so the SaaS owner's breadcrumb never leaks
-  // into a hospital admin's screen (or vice versa).
-  const active = useMemo(() => {
-    const candidates: NavItem[] = isSaasOwner
-      ? saasNav
-      : [...dailyWorkNav, ...careNav, ...businessNav, ...administrationNav]
-    return candidates.find((n) => location.pathname === n.path || location.pathname.startsWith(n.path + "/"))
-  }, [location.pathname, isSaasOwner])
+  const active = useMemo(
+    () => allNav.find((n) => location.pathname === n.path || location.pathname.startsWith(n.path + "/")),
+    [location.pathname],
+  )
 
   const { data: pendingCallbacks } = useQuery({
     queryKey: ["callback-tasks", "pending-count"],
@@ -192,7 +99,6 @@ export function Shell() {
   })
 
   const handleLogout = () => {
-    if (refreshToken) void logoutRequest(refreshToken).catch(() => {})
     logout()
     navigate("/login")
   }
@@ -201,99 +107,30 @@ export function Shell() {
     <div className="flex h-screen min-h-[760px] text-ink bg-page">
       <div className="w-[226px] shrink-0 bg-sidebar border-r border-border flex flex-col">
         <div className="px-[18px] pt-[18px] pb-[14px] border-b border-border-soft flex items-center gap-[10px]">
-          <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-xs shrink-0">
-            {isSaasOwner ? "⚡" : "🏥"}
+          <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow-xs shrink-0">
+            🏥
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-[13px] font-bold text-ink truncate">
-              {isSaasOwner ? "SaaS Vendor Platform" : user?.hospital_name || "Polynexus Hospital"}
-            </div>
-            <div className="text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold truncate">
-              {isSaasOwner ? "Global Superadmin" : user?.role_name ?? "Hospital Admin"}
-            </div>
+            <div className="text-[13px] font-bold text-ink truncate">{user?.hospital_name || "Polynexus Hospital"}</div>
+            <div className="text-[11px] text-ink-6 truncate">{user?.role_name ?? "Hospital Admin"}</div>
           </div>
         </div>
 
         <div className="flex-1 overflow-y-auto px-[10px] pt-3 pb-5">
-          {isSaasOwner ? (
-            <>
-              <div className="text-[10px] tracking-[.1em] uppercase text-indigo-600 dark:text-indigo-400 font-bold px-2 pt-1.5 pb-2">
-                ⚡ SaaS Vendor Control Center
-              </div>
-              <NavLink
-                to="/admin"
-                className={({ isActive }) =>
-                  `flex items-center justify-between gap-2 px-[9px] py-[8px] rounded-control text-[13px] mb-[1px] ${
-                    isActive ? "font-semibold text-indigo-600 bg-indigo-50 dark:bg-indigo-950/30" : "font-normal text-ink-2 hover:bg-page"
-                  }`
-                }
-              >
-                <span className="flex items-center gap-[9px] min-w-0 font-medium">
-                  <span>🏢</span>
-                  <span className="truncate">Tenants & Subscriptions</span>
-                </span>
-              </NavLink>
-              <NavLink
-                to="/dashboard"
-                className={({ isActive }) =>
-                  `flex items-center justify-between gap-2 px-[9px] py-[8px] rounded-control text-[13px] mb-[1px] ${
-                    isActive ? "font-semibold text-indigo-600 bg-indigo-50 dark:bg-indigo-950/30" : "font-normal text-ink-2 hover:bg-page"
-                  }`
-                }
-              >
-                <span className="flex items-center gap-[9px] min-w-0 font-medium">
-                  <span>📊</span>
-                  <span className="truncate">Global Platform Metrics</span>
-                </span>
-              </NavLink>
-
-              <div className="mt-4 p-3 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 rounded-lg text-[11px] text-emerald-800 dark:text-emerald-300">
-                <div className="font-bold flex items-center gap-1 mb-1">
-                  <span>🔒</span> DPDP Act Compliant
-                </div>
-                <div>Zero PHI exposure mode for SaaS Platform Owner. Patient medical records are strictly isolated per hospital tenant.</div>
-              </div>
-            </>
-          ) : (
-            <>
-              <Button
-                variant="primary"
-                className="w-full mb-1"
-                onClick={() => navigate("/patients", { state: { openNewPatient: true } })}
-              >
-                <UserPlus size={15} />
-                {t("nav.newPatient")}
-              </Button>
-
-              {dailyWorkNav.filter((item) => hasNavAccess(item, user?.permissions, user?.hospital_enabled_modules)).map((item) => (
-                <NavRow key={item.key} item={item} />
-              ))}
-
-              <NavGroup label={t("nav.care")} items={careNav} permissions={user?.permissions} enabledModules={user?.hospital_enabled_modules} />
-              <NavGroup label={t("nav.business")} items={businessNav} permissions={user?.permissions} enabledModules={user?.hospital_enabled_modules} />
-              <NavGroup label={t("nav.administration")} items={administrationNav} permissions={user?.permissions} enabledModules={user?.hospital_enabled_modules} />
-            </>
-          )}
-        </div>
-
-        {!isSaasOwner && (
-          <div className="px-[10px] pt-2 pb-1 border-t border-border-soft">
-            <button
-              onClick={() => setIsShortcutsOpen(true)}
-              className="w-full flex items-center gap-[9px] px-[9px] py-[8px] rounded-control text-[13px] text-ink-2 hover:bg-page"
-            >
-              <HelpCircle size={15} className="shrink-0 opacity-80" />
-              <span>{t("nav.helpCenter")}</span>
-            </button>
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center gap-[9px] px-[9px] py-[8px] rounded-control text-[13px] text-ink-2 hover:bg-danger-bg hover:text-danger-text"
-            >
-              <LogOut size={15} className="shrink-0 opacity-80" />
-              <span>{t("common.logout")}</span>
-            </button>
+          <div className="text-[10px] tracking-[.1em] uppercase text-ink-5 font-semibold px-2 pt-1.5 pb-2">
+            {t("nav.dailyWork")}
           </div>
-        )}
+          {dailyWorkNav.map((item) => (
+            <NavRow key={item.key} item={item} />
+          ))}
+
+          <div className="text-[10px] tracking-[.1em] uppercase text-ink-5 font-semibold px-2 pt-[18px] pb-2">
+            {t("nav.growthRevenue")}
+          </div>
+          {growthNav.map((item) => (
+            <NavRow key={item.key} item={item} />
+          ))}
+        </div>
 
         <div className="px-3.5 py-3 border-t border-border-soft flex items-center gap-[9px]">
           <Avatar name={user?.email ?? "?"} size={26} />
@@ -301,11 +138,9 @@ export function Shell() {
             <div className="text-[12px] font-semibold truncate">{user?.first_name || user?.email}</div>
             <div className="text-[10.5px] text-ink-6 truncate">{user?.role_name ?? ""}</div>
           </div>
-          {isSaasOwner && (
-            <button onClick={handleLogout} title={t("common.logout")} className="text-ink-5 hover:text-danger-text text-[11px]">
-              ⏻
-            </button>
-          )}
+          <button onClick={handleLogout} title={t("common.logout")} className="text-ink-5 hover:text-danger-text text-[11px]">
+            ⏻
+          </button>
         </div>
       </div>
 
@@ -318,16 +153,10 @@ export function Shell() {
             {active ? t(active.subKey) : ""}
           </div>
           <div className="flex-1 min-w-2" />
-
-          <div className="flex items-center gap-[7px] h-8 px-2.5 border border-border rounded-control flex-none w-[240px] min-w-0 text-ink-5 text-[13px] focus-within:border-brand focus-within:text-ink">
-            <Search size={13} className="shrink-0" />
-            <input
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && runGlobalSearch()}
-              placeholder={t("common.search")}
-              className="flex-1 min-w-0 bg-transparent outline-none placeholder:text-ink-5 text-ink"
-            />
+          
+          <div className="flex items-center gap-[7px] h-8 px-2.5 border border-border rounded-control flex-none w-[220px] min-w-0 overflow-hidden text-ink-5 text-[13px]">
+            <div className="w-[11px] h-[11px] border-[1.5px] border-ink-5 rounded-full shrink-0" />
+            <span className="truncate">{t("common.search")}</span>
           </div>
 
           {/* Premium Branch Switcher in Top Header */}
@@ -387,13 +216,24 @@ export function Shell() {
           <button
             onClick={toggleCompactMode}
             title="Toggle Compact View Density (Alt+C)"
-            className={`h-8 w-8 flex items-center justify-center border rounded-control text-xs font-semibold transition-colors ${
+            className={`h-8 px-2.5 border rounded-control text-xs font-semibold flex items-center gap-1.5 transition-colors ${
               isCompactMode
                 ? "bg-brand text-white border-brand shadow-xs"
                 : "border-border text-ink-3 hover:bg-page"
             }`}
           >
-            📐
+            <span>📐</span>
+            <span>{isCompactMode ? "Compact" : "Standard"}</span>
+          </button>
+
+          {/* Keyboard Shortcuts Helper Button */}
+          <button
+            onClick={() => setIsShortcutsOpen(true)}
+            title="View Keyboard Shortcuts (Alt+H or ?)"
+            className="h-8 px-2.5 border border-border text-ink-3 hover:bg-page hover:text-ink rounded-control text-xs font-semibold flex items-center gap-1.5 transition-colors"
+          >
+            <span>⌨️</span>
+            <span>Shortcuts</span>
           </button>
 
           <div className="flex flex-none min-w-[86px] border border-border rounded-control overflow-hidden">
@@ -415,34 +255,17 @@ export function Shell() {
             </button>
           </div>
 
-          <button
-            onClick={() => navigate("/callbacks")}
-            title={pendingCallbacks?.count ? `${pendingCallbacks.count} calls waiting` : "No pending callbacks"}
-            className="relative h-8 w-8 flex items-center justify-center border border-border rounded-control text-ink-3 hover:bg-page"
-          >
-            <Bell size={15} />
-            {!!pendingCallbacks?.count && (
-              <span className="absolute -top-1 -right-1 min-w-[15px] h-[15px] px-[3px] rounded-full bg-amber-500 text-white text-[9px] font-bold flex items-center justify-center">
-                {pendingCallbacks.count}
-              </span>
-            )}
-          </button>
+          {!!pendingCallbacks?.count && (
+            <button
+              onClick={() => navigate("/callbacks")}
 
-          <button
-            onClick={() => navigate("/console")}
-            title="Call history"
-            className="h-8 w-8 flex items-center justify-center border border-border rounded-control text-ink-3 hover:bg-page"
-          >
-            <History size={15} />
-          </button>
+              className="flex items-center gap-2 h-8 px-3 rounded-control text-xs font-bold text-amber-700 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 animate-pulse"
+            >
+              <span className="w-2 h-2 rounded-full bg-amber-500" />
+              <span>• {pendingCallbacks.count} calls waiting</span>
+            </button>
+          )}
 
-          <button
-            onClick={() => navigate("/settings")}
-            title={user?.first_name || user?.email || "Account"}
-            className="shrink-0"
-          >
-            <Avatar name={user?.email ?? "?"} size={30} />
-          </button>
         </div>
 
         {/* Global Toast Notification */}
@@ -575,3 +398,4 @@ export function Shell() {
     </div>
   )
 }
+
