@@ -30,7 +30,7 @@ export function LoginPage() {
   const completeLogin = async () => {
     const me = await fetchMe()
     setUser(me)
-    if (me.is_saas_admin || me.is_superuser) {
+    if ((me.is_saas_admin || me.is_superuser) && !me.hospital) {
       navigate("/saas")
     } else {
       navigate("/dashboard")

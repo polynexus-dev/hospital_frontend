@@ -15,6 +15,6 @@ import { useAuthStore } from "../store/auth"
 export function RequireSaaSAdmin() {
   const user = useAuthStore((s) => s.user)
   if (!user) return null // ProtectedRoute (outer) already handles "not logged in"
-  if (!user.is_saas_admin && !user.is_superuser) return <Navigate to="/dashboard" replace />
+  if ((!user.is_saas_admin && !user.is_superuser) || user.hospital) return <Navigate to="/dashboard" replace />
   return <Outlet />
 }

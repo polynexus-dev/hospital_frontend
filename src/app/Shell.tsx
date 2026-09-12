@@ -188,7 +188,7 @@ export function Shell() {
           {/* Platform operators only — an ordinary hospital user never
               sees this section, and RequireSaaSAdmin blocks the route
               even if they type the URL. */}
-          {(user?.is_saas_admin || user?.is_superuser) && (
+          {((user?.is_saas_admin || user?.is_superuser) && !user?.hospital) && (
             <>
               <div className="text-[10px] tracking-[.1em] uppercase text-ink-5 font-semibold px-2 pt-1.5 pb-2">
                 Platform

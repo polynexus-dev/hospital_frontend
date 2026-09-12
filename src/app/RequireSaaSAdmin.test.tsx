@@ -51,17 +51,24 @@ describe("RequireSaaSAdmin", () => {
     expect(screen.queryByText("SaaS console content")).not.toBeInTheDocument()
   })
 
-  it("lets an is_saas_admin user through", () => {
-    useAuthStore.setState({ user: { ...baseUser, is_saas_admin: true } })
+  it("redirects a tenant owner/admin who has a hospital to the dashboard even if is_superuser is true", () => {
+    useAuthStore.setState({ user: { ...baseUser, is_superuser: true, hospital: "h1" } })
+    renderGuarded()
+    expect(screen.getByText("Dashboard content")).toBeInTheDocument()
+    expect(screen.queryByText("SaaS console content")).not.toBeInTheDocument()
+  })
+
+  it("lets a platform is_saas_admin user through", () => {
+    useAuthStore.setState({ user: { ...baseUser, is_saas_admin: true, hospital: null } })
     renderGuarded()
     expect(screen.getByText("SaaS console content")).toBeInTheDocument()
   })
 
-  it("lets a superuser through even without is_saas_admin set", () => {
+  it("lets a platform superuser through even without is_saas_admin set", () => {
     // Mirrors apps.core.permissions.IsSaaSAdmin, which is
     // `is_superuser or is_saas_admin` — a superuser created before
     // createsuperuser started setting the flag must still get in.
-    useAuthStore.setState({ user: { ...baseUser, is_superuser: true, is_saas_admin: false } })
+    useAuthStore.setState({ user: { ...baseUser, is_superuser: true, is_saas_admin: false, hospital: null } })
     renderGuarded()
     expect(screen.getByText("SaaS console content")).toBeInTheDocument()
   })
