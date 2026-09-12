@@ -1,10 +1,10 @@
 export interface NavItem {
   key: string
-  moduleKey?: string
+  moduleKey?: string | string[]
   path: string
   labelKey: string
   subKey: string
-  requiredPermission?: string
+  requiredPermission?: string | string[]
 }
 
 // Platform-operator nav — rendered only for is_saas_admin/is_superuser
@@ -30,7 +30,17 @@ export const dailyWorkNav: NavItem[] = [
 
 export const careNav: NavItem[] = [
   { key: "ipd", moduleKey: "ipd", path: "/ipd", labelKey: "nav.ipd", subKey: "screenSub.ipd", requiredPermission: "ipd.view_admission" },
-  { key: "diagnostics", moduleKey: "diagnostics", path: "/diagnostics", labelKey: "Diagnostics", subKey: "Lab & Radiology Orders", requiredPermission: "laboratory.view_laborder" },
+  {
+    key: "diagnostics",
+    // Combined lab+radiology screen — gated on either module being
+    // enabled and either role's view permission, not "diagnostics"
+    // (never a real module key, so this was permanently hidden before).
+    moduleKey: ["laboratory", "radiology"],
+    path: "/diagnostics",
+    labelKey: "Diagnostics",
+    subKey: "Lab & Radiology Orders",
+    requiredPermission: ["laboratory.view_laborder", "radiology.view_radiologyorder"],
+  },
   { key: "pharmacy", moduleKey: "pharmacy", path: "/pharmacy", labelKey: "Pharmacy", subKey: "Medicines & Dispensing", requiredPermission: "pharmacy.view_medicine" },
   { key: "emergency", moduleKey: "emergency", path: "/emergency", labelKey: "Emergency / Triage", subKey: "Emergency Department", requiredPermission: "emergency.view_edvisit" },
   { key: "ot", moduleKey: "ot", path: "/ot", labelKey: "Operation Theatre", subKey: "OT Schedules & Notes", requiredPermission: "ot.view_surgeryrequest" },
@@ -46,8 +56,10 @@ export const growthNav: NavItem[] = [
   { key: "workflows", path: "/workflows", labelKey: "nav.workflows", subKey: "screenSub.workflows" },
 ]
 
-export const businessNav: NavItem[] = [
-  ...growthNav,
+// Pure-ERP finance/ops group — deliberately does NOT spread growthNav in.
+// It used to, which meant CRM's Referrals/Packages/TPA/Feedback/Workflows
+// silently reappeared under what's supposed to be an ERP-only section.
+export const erpOpsNav: NavItem[] = [
   { key: "finance", moduleKey: "finance", path: "/finance", labelKey: "Finance", subKey: "Ledger & Expenses", requiredPermission: "finance.view_ledger" },
   { key: "billing", moduleKey: "billing", path: "/billing", labelKey: "Billing & Claims", subKey: "Invoices & TPA Claims", requiredPermission: "billing.view_bill" },
   { key: "hr", moduleKey: "hr", path: "/hr", labelKey: "HR & Roster", subKey: "Staff Directory & Attendance", requiredPermission: "hr.view_employee" },
@@ -55,18 +67,34 @@ export const businessNav: NavItem[] = [
 ]
 
 export const administrationNav: NavItem[] = [
-  { key: "admin", path: "/admin", labelKey: "nav.admin", subKey: "screenSub.admin" },
+  { key: "admin", path: "/admin", labelKey: "nav.admin", subKey: "screenSub.admin", requiredPermission: "accounts.view_role" },
   { key: "settings", path: "/settings", labelKey: "nav.settings", subKey: "screenSub.settings" },
 ]
 
-export const allNav = [...saasNav, ...dailyWorkNav, ...careNav, ...businessNav, ...administrationNav]
+export const allNav = [...saasNav, ...dailyWorkNav, ...growthNav, ...careNav, ...erpOpsNav, ...administrationNav]
+
+// The real set of ERP module keys, derived from the nav items that
+// actually gate on one — not hardcoded, so it can't drift from
+// careNav/erpOpsNav. Hospital.enabled_modules can hold non-module flags
+// too (e.g. a CRM-only tier stores `["crm"]`, no ERP keys at all), so
+// "the array is non-empty" is not the same question as "this hospital's
+// subscription includes at least one ERP module" — this answers the
+// second question precisely.
+export const erpModuleKeys: string[] = Array.from(
+  new Set(
+    [...careNav, ...erpOpsNav].flatMap((item) => (item.moduleKey ? (Array.isArray(item.moduleKey) ? item.moduleKey : [item.moduleKey]) : [])),
+  ),
+)
 
 export function hasNavAccess(item: NavItem, permissions: string[] | undefined, enabledModules?: string[] | undefined): boolean {
   if (item.moduleKey && enabledModules && enabledModules.length > 0) {
-    if (!enabledModules.includes(item.moduleKey)) {
+    const keys = Array.isArray(item.moduleKey) ? item.moduleKey : [item.moduleKey]
+    if (!keys.some((k) => enabledModules.includes(k))) {
       return false
     }
   }
-  return !item.requiredPermission || (permissions ?? []).includes(item.requiredPermission)
+  if (!item.requiredPermission) return true
+  const required = Array.isArray(item.requiredPermission) ? item.requiredPermission : [item.requiredPermission]
+  return required.some((p) => (permissions ?? []).includes(p))
 }
 

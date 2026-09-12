@@ -15,6 +15,8 @@ export default {
     feedback: "Feedback & NPS",
     workflows: "Workflows",
     admin: "Admin & audit",
+    ipd: "IPD / Admissions",
+    settings: "Settings",
   },
   screenSub: {
     console: "Screen-pop · every call logged, answered or not",
@@ -30,6 +32,8 @@ export default {
     feedback: "Reach the detractor before the public review",
     workflows: "Trigger · condition · action, with owners",
     admin: "Unlimited users · DPDP Act 2023 · on-premise",
+    ipd: "Bed board · admissions · discharge",
+    settings: "Your account, hospital & security",
   },
 
   common: {

@@ -2,12 +2,31 @@ import { useState, useMemo, useEffect } from "react"
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { useQuery } from "@tanstack/react-query"
-import { allNav, dailyWorkNav, growthNav, saasNav } from "./navConfig"
+import {
+  allNav,
+  dailyWorkNav,
+  growthNav,
+  careNav,
+  erpOpsNav,
+  administrationNav,
+  saasNav,
+  hasNavAccess,
+  erpModuleKeys,
+  type NavItem,
+} from "./navConfig"
 import { useAuthStore } from "../store/auth"
 import { Avatar } from "../components/ui/Avatar"
 import { listCallbackTasks } from "../api/telephony"
 import { switchHospital } from "../api/auth"
 import { AIChatbotWidget } from "../components/ui/AIChatbotWidget"
+
+type Domain = "crm" | "erp"
+const ACTIVE_DOMAIN_KEY = "hms_active_domain"
+
+interface NavSection {
+  heading: string
+  items: NavItem[]
+}
 
 function NavRow({ item }: { item: (typeof allNav)[number] }) {
   const { t } = useTranslation()
@@ -38,6 +57,55 @@ export function Shell() {
   const [isFabOpen, setIsFabOpen] = useState(false)
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
+
+  // Role.domain (crm/erp/both, see docs/erp/03-rbac-and-roles.md §2d) drives
+  // which product(s) this user's sidebar can show; a hospital not
+  // subscribed to any ERP module (Hospital.enabled_modules) never offers
+  // HMS even to a domain=erp/both role. Missing role_domain (e.g. a bare
+  // superuser with no Role at all) conservatively defaults to CRM-only,
+  // matching this app's behavior before the switch existed.
+  const roleDomain = user?.role_domain ?? "crm"
+  const hasErpModules = !!user?.hospital_enabled_modules?.some((m) => erpModuleKeys.includes(m))
+  const canSeeCRM = roleDomain !== "erp"
+  const canSeeERP = roleDomain !== "crm" && hasErpModules
+  const showDomainSwitcher = canSeeCRM && canSeeERP
+
+  const [activeDomain, setActiveDomain] = useState<Domain>(() => {
+    if (!canSeeCRM) return "erp"
+    if (!canSeeERP) return "crm"
+    try {
+      const saved = localStorage.getItem(ACTIVE_DOMAIN_KEY)
+      if (saved === "erp" || saved === "crm") return saved
+    } catch {
+      // localStorage unavailable (private browsing, etc.) — fall through to the default below
+    }
+    return "crm"
+  })
+
+  const switchDomain = (domain: Domain) => {
+    setActiveDomain(domain)
+    try {
+      localStorage.setItem(ACTIVE_DOMAIN_KEY, domain)
+    } catch {
+      // best-effort persistence only
+    }
+  }
+
+  const crmSections: NavSection[] = [
+    { heading: t("nav.dailyWork"), items: dailyWorkNav },
+    { heading: t("nav.growthRevenue"), items: growthNav },
+  ]
+  const erpSections: NavSection[] = [
+    { heading: "Clinical care", items: careNav },
+    { heading: "Finance & operations", items: erpOpsNav },
+  ]
+  const visibleSections = (activeDomain === "crm" ? crmSections : erpSections)
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => hasNavAccess(item, user?.permissions, user?.hospital_enabled_modules)),
+    }))
+    .filter((section) => section.items.length > 0)
+  const visibleAdminItems = administrationNav.filter((item) => hasNavAccess(item, user?.permissions, user?.hospital_enabled_modules))
 
   // Listen for Global Hotkeys (Alt+N, Alt+A, Alt+C, Alt+H, ?, Esc)
   useEffect(() => {
@@ -131,19 +199,55 @@ export function Shell() {
             </>
           )}
 
-          <div className="text-[10px] tracking-[.1em] uppercase text-ink-5 font-semibold px-2 pt-1.5 pb-2">
-            {t("nav.dailyWork")}
-          </div>
-          {dailyWorkNav.map((item) => (
-            <NavRow key={item.key} item={item} />
+          {/* CRM ⇄ HMS product switcher — only shown when this user's role
+              (Role.domain) grants both, and the hospital's subscription
+              actually enables at least one ERP module. A domain-locked
+              role (crm-only or erp-only) just never sees this; their nav
+              below is that one domain's sections, permanently. */}
+          {showDomainSwitcher && (
+            <div className="flex items-center gap-[3px] p-[3px] mb-3 bg-page rounded-control border border-border-soft">
+              <button
+                onClick={() => switchDomain("crm")}
+                className={`flex-1 h-7 rounded-[6px] text-[12px] font-semibold flex items-center justify-center gap-1.5 transition-colors ${
+                  activeDomain === "crm" ? "bg-surface text-brand shadow-2xs" : "text-ink-4 hover:text-ink-2"
+                }`}
+              >
+                <span>💼</span>
+                <span>CRM</span>
+              </button>
+              <button
+                onClick={() => switchDomain("erp")}
+                className={`flex-1 h-7 rounded-[6px] text-[12px] font-semibold flex items-center justify-center gap-1.5 transition-colors ${
+                  activeDomain === "erp" ? "bg-surface text-brand shadow-2xs" : "text-ink-4 hover:text-ink-2"
+                }`}
+              >
+                <span>🏥</span>
+                <span>HMS</span>
+              </button>
+            </div>
+          )}
+
+          {visibleSections.map((section) => (
+            <div key={section.heading}>
+              <div className="text-[10px] tracking-[.1em] uppercase text-ink-5 font-semibold px-2 pt-1.5 pb-2">
+                {section.heading}
+              </div>
+              {section.items.map((item) => (
+                <NavRow key={item.key} item={item} />
+              ))}
+            </div>
           ))}
 
-          <div className="text-[10px] tracking-[.1em] uppercase text-ink-5 font-semibold px-2 pt-[18px] pb-2">
-            {t("nav.growthRevenue")}
-          </div>
-          {growthNav.map((item) => (
-            <NavRow key={item.key} item={item} />
-          ))}
+          {visibleAdminItems.length > 0 && (
+            <div>
+              <div className="text-[10px] tracking-[.1em] uppercase text-ink-5 font-semibold px-2 pt-[18px] pb-2">
+                Administration
+              </div>
+              {visibleAdminItems.map((item) => (
+                <NavRow key={item.key} item={item} />
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="px-3.5 py-3 border-t border-border-soft flex items-center gap-[9px]">
