@@ -11,10 +11,12 @@ import { getPatient, getPatientTimeline, listPatientDocuments, updatePatient, up
 import { listAppointments, listDoctors } from "../../api/appointments"
 import { createConsent, listConsent, listMessages, setConsent } from "../../api/communications"
 import { listHisBilling } from "../../api/integrations"
-import { listPrescriptions, createPrescription } from "../../api/prescriptions"
-import type { Prescription, Medication } from "../../api/prescriptions"
+import { createPrescription, downloadPrescriptionPdf, listPrescriptions } from "../../api/prescriptions"
+import type { Medication, Prescription } from "../../api/prescriptions"
+import { triggerBlobDownload } from "../../api/client"
 import type { AppointmentStatus, Channel, ConsentOptOut, Patient } from "../../types/api"
 import { useAuthStore } from "../../store/auth"
+
 
 const INR = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })
 
@@ -650,10 +652,27 @@ export function PatientDetailPage() {
 
                   <div className="flex items-center justify-between pt-2 border-t border-border-faint text-xs">
                     <span className="text-ink-5 font-medium">Doctor: {rx.doctor_name || "OPD Consultant"}</span>
-                    <Button size="sm" variant="secondary" onClick={() => setViewingRx(rx)}>
-                      🖨️ View & Print Prescription PDF
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={async () => {
+                          try {
+                            const blob = await downloadPrescriptionPdf(rx.id)
+                            triggerBlobDownload(blob, `Prescription_${patient?.uhid || rx.id}.pdf`)
+                          } catch {
+                            alert("Failed to download prescription PDF.")
+                          }
+                        }}
+                      >
+                        📄 Download PDF
+                      </Button>
+                      <Button size="sm" variant="secondary" onClick={() => setViewingRx(rx)}>
+                        👁️ Preview
+                      </Button>
+                    </div>
                   </div>
+
                 </div>
               ))}
             </div>
@@ -1156,10 +1175,25 @@ export function PatientDetailPage() {
               <Button variant="secondary" onClick={() => setViewingRx(null)}>
                 Close
               </Button>
+              <Button
+                variant="secondary"
+                onClick={async () => {
+                  if (!viewingRx) return
+                  try {
+                    const blob = await downloadPrescriptionPdf(viewingRx.id)
+                    triggerBlobDownload(blob, `Prescription_${patient?.uhid || viewingRx.id}.pdf`)
+                  } catch {
+                    alert("Failed to download prescription PDF.")
+                  }
+                }}
+              >
+                📄 Download Official PDF
+              </Button>
               <Button variant="primary" onClick={() => window.print()}>
-                🖨️ Print Prescription PDF
+                🖨️ Print
               </Button>
             </div>
+
           </div>
         </div>
       )}

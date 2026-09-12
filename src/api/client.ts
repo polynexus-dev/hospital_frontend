@@ -3,16 +3,25 @@ import { decryptPayload, encryptPayload, getSessionId, isSessionReady } from "./
 
 export function getSubdomain(): string | null {
   if (typeof window === "undefined") return null
+  const urlParams = new URLSearchParams(window.location.search)
+  const querySub = urlParams.get("subdomain") || urlParams.get("hospital")
+  if (querySub) return querySub.toLowerCase()
+
   const host = window.location.hostname.toLowerCase()
   const parts = host.split(".")
-  if (parts.length >= 3 && parts[0] !== "www" && parts[0] !== "api") {
+  const reserved = new Set(["www", "api", "hms", "crm", "admin", "app", "hospital"])
+
+  // e.g. apollo.hms.polynexus.in -> apollo
+  if (parts.length >= 3 && !reserved.has(parts[0])) {
     return parts[0]
   }
-  if (parts.length === 2 && parts[1] === "localhost") {
+  // e.g. apollo.localhost -> apollo
+  if (parts.length === 2 && parts[1] === "localhost" && !reserved.has(parts[0])) {
     return parts[0]
   }
   return null
 }
+
 
 export function getApiBaseUrl(): string {
   if (typeof window !== "undefined") {

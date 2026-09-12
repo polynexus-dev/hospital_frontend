@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react"
-import { addBillItem, createBill, createInsuranceClaim, listBills, listInsuranceClaims, listPayments, recordPayment } from "../../api/billing"
+import { addBillItem, createBill, createInsuranceClaim, downloadBillPdf, listBills, listInsuranceClaims, listPayments, recordPayment } from "../../api/billing"
+import { triggerBlobDownload } from "../../api/client"
 import type { Bill, InsuranceClaim, Payment } from "../../types/api"
+
 
 export function BillingPage() {
   const [activeTab, setActiveTab] = useState<"bills" | "payments" | "claims">("bills")
@@ -216,6 +218,20 @@ export function BillingPage() {
                     </td>
                     <td className="px-4 py-3 text-right space-x-1">
                       <button
+                        onClick={async () => {
+                          try {
+                            const blob = await downloadBillPdf(b.id)
+                            triggerBlobDownload(blob, `Bill_${b.id}.pdf`)
+                          } catch {
+                            alert("Failed to download bill PDF.")
+                          }
+                        }}
+                        className="px-2 py-1 text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 rounded hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+                        title="Download itemized PDF invoice"
+                      >
+                        📄 PDF
+                      </button>
+                      <button
                         onClick={() => setSelectedBillForAddItem(b)}
                         className="px-2 py-1 text-xs font-semibold bg-indigo-100 text-indigo-800 rounded hover:bg-indigo-200"
                       >
@@ -240,6 +256,7 @@ export function BillingPage() {
                         + Claim
                       </button>
                     </td>
+
                   </tr>
                 ))
               )}

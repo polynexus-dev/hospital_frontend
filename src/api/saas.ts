@@ -1,12 +1,16 @@
 import { api } from "./client"
 import type {
+  OnboardTenantPayload,
   Paginated,
   PlatformAnalytics,
+  PublicTenantBranding,
+  SaaSHospital,
   SaaSSupportTicket,
   TenantInvoice,
   TenantSubscription,
   TenantUsageSnapshot,
 } from "../types/api"
+
 
 // apps.saas_admin — every endpoint here is gated server-side by
 // apps.core.permissions.IsSaaSAdmin (is_saas_admin OR is_superuser) and
@@ -55,3 +59,25 @@ export function listSaaSTickets(params: Record<string, string> = {}) {
 export function resolveTicket(id: number, resolutionNotes: string) {
   return api.post<SaaSSupportTicket>(`/saas-admin/tickets/${id}/resolve/`, { resolution_notes: resolutionNotes })
 }
+
+export function listHospitals(params: Record<string, string> = {}) {
+  return api.get<Paginated<SaaSHospital>>(`/saas-admin/hospitals/${qs(params)}`)
+}
+
+export function onboardHospital(data: OnboardTenantPayload) {
+  return api.post<SaaSHospital>("/saas-admin/hospitals/", data)
+}
+
+export function updateHospitalModules(id: string, enabledModules: string[]) {
+  return api.post<SaaSHospital>(`/saas-admin/hospitals/${id}/modules/`, { enabled_modules: enabledModules })
+}
+
+export function toggleHospitalStatus(id: string) {
+  return api.post<SaaSHospital>(`/saas-admin/hospitals/${id}/toggle-status/`)
+}
+
+export function getPublicTenantBranding(subdomain?: string | null) {
+  const query = subdomain ? `?subdomain=${encodeURIComponent(subdomain)}` : ""
+  return api.get<PublicTenantBranding>(`/public/tenant-branding/${query}`)
+}
+

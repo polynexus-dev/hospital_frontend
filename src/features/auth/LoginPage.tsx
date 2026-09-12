@@ -1,9 +1,11 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { login, verifyMfa, fetchMe, isMfaChallenge } from "../../api/auth"
 import { useAuthStore } from "../../store/auth"
 import { ApiError, getSubdomain } from "../../api/client"
+import { getPublicTenantBranding } from "../../api/saas"
+import type { PublicTenantBranding } from "../../types/api"
 import { Button } from "../../components/ui/Button"
 
 export function LoginPage() {
@@ -13,12 +15,25 @@ export function LoginPage() {
   const setUser = useAuthStore((s) => s.setUser)
 
   const subdomain = getSubdomain()
-  const isSaasPortal = subdomain === "app"
+  const isSaasPortal = subdomain === "app" || subdomain === "admin"
+  const [tenantBranding, setTenantBranding] = useState<PublicTenantBranding | null>(null)
+
+  useEffect(() => {
+    if (subdomain && !isSaasPortal) {
+      getPublicTenantBranding(subdomain)
+        .then((res) => setTenantBranding(res))
+        .catch(() => setTenantBranding(null))
+    }
+  }, [subdomain, isSaasPortal])
+
   const tenantTitle = isSaasPortal
     ? "SaaS Admin Console"
+    : tenantBranding?.name
+    ? tenantBranding.name
     : subdomain
     ? `${subdomain.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}`
     : t("login.title")
+
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -91,12 +106,20 @@ export function LoginPage() {
           <>
             <div className="text-[19px] font-semibold mb-1">{tenantTitle}</div>
             <div className="text-[13px] text-ink-4 mb-6">
-              {isSaasPortal
-                ? "Platform operator & tenant management access"
-                : subdomain
-                ? "Hospital staff & provider portal"
-                : t("login.subtitle")}
+              {isSaasPortal ? (
+                "Platform operator & tenant management access"
+              ) : tenantBranding?.is_tenant ? (
+                <span className="flex items-center gap-1.5 text-teal-600 dark:text-teal-400 font-medium">
+                  <span>📍</span>
+                  <span>{[tenantBranding.city, tenantBranding.state].filter(Boolean).join(", ") || "Hospital Staff Portal"}</span>
+                </span>
+              ) : subdomain ? (
+                "Hospital staff & provider portal"
+              ) : (
+                t("login.subtitle")
+              )}
             </div>
+
 
             <form onSubmit={handleCredentialsSubmit} className="flex flex-col gap-3">
               <div>

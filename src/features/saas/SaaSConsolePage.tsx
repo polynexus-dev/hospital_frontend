@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useSearchParams } from "react-router-dom"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Card, CardHeader } from "../../components/ui/Card"
@@ -7,19 +7,27 @@ import { Button } from "../../components/ui/Button"
 import { NeutralTag, Pill } from "../../components/ui/Pill"
 import { ErrorState, EmptyState, LoadingState } from "../../components/ui/QueryStates"
 import { triggerBlobDownload } from "../../api/client"
+import { switchHospital } from "../../api/auth"
+import { useAuthStore } from "../../store/auth"
 import {
   downloadInvoicePdf,
+  listHospitals,
   listInvoices,
   listSaaSTickets,
   listSubscriptions,
   listUsageSnapshots,
   markInvoicePaid,
+  onboardHospital,
   platformAnalytics,
   resolveTicket,
+  updateHospitalModules,
   updateSubscription,
 } from "../../api/saas"
-import type { SaaSSupportTicket, TenantInvoice, TenantSubscription } from "../../types/api"
+import type { OnboardTenantPayload, SaaSHospital, SaaSSupportTicket, TenantInvoice, TenantSubscription } from "../../types/api"
 import type { Tone } from "../../components/ui/tone"
+import { TenantModulesModal } from "./TenantModulesModal"
+import { TenantOnboardModal } from "./TenantOnboardModal"
+
 
 type TabKey = "overview" | "subscriptions" | "invoices" | "usage" | "tickets"
 
@@ -155,23 +163,68 @@ function InvoiceRow({ invoice }: { invoice: TenantInvoice }) {
   )
 }
 
-function SubscriptionRow({ subscription }: { subscription: TenantSubscription }) {
+function SubscriptionRow({
+  subscription,
+  hospital,
+  onInspect,
+  onConfigureModules,
+}: {
+  subscription: TenantSubscription
+  hospital?: SaaSHospital
+  onInspect?: (hospitalId: number) => void
+  onConfigureModules?: (hospital: SaaSHospital) => void
+}) {
   const queryClient = useQueryClient()
 
   const setStatus = useMutation({
     mutationFn: (status: TenantSubscription["status"]) => updateSubscription(subscription.id, { status }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["saas-subscriptions"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["saas-subscriptions"] })
+      queryClient.invalidateQueries({ queryKey: ["saas-hospitals"] })
+    },
   })
 
+  const moduleCount = hospital?.enabled_modules?.length ?? 14
+
   return (
-    <div className="grid grid-cols-[1.4fr_0.8fr_0.8fr_0.9fr_0.8fr_0.9fr_1fr] gap-2.5 py-2.5 border-b border-border-faint items-center text-[13px] min-w-[1000px]">
-      <div className="font-semibold truncate">{subscription.hospital_name ?? subscription.hospital}</div>
+    <div className="grid grid-cols-[1.5fr_0.7fr_0.7fr_0.8fr_0.7fr_0.8fr_0.8fr_1.8fr] gap-2.5 py-2.5 border-b border-border-faint items-center text-[13px] min-w-[1150px]">
+      <div className="min-w-0">
+        <div className="font-semibold truncate">{subscription.hospital_name ?? hospital?.name ?? subscription.hospital}</div>
+        {hospital?.slug && (
+          <div className="text-[11px] font-mono text-teal-600 dark:text-teal-400 truncate">
+            {hospital.slug}.hms.polynexus.in
+          </div>
+        )}
+      </div>
       <div className="uppercase"><NeutralTag>{subscription.tier}</NeutralTag></div>
-      <div className="text-ink-3">{subscription.billing_cycle}</div>
+      <div className="text-ink-3 capitalize">{subscription.billing_cycle}</div>
       <div className="font-semibold">{INR.format(Number(subscription.base_price))}</div>
       <div className="text-ink-3">{subscription.max_staff_users || "∞"}</div>
-      <div><Pill tone={SUBSCRIPTION_TONE[subscription.status]}>{subscription.status}</Pill></div>
       <div>
+        <Pill tone="info">{moduleCount} Modules</Pill>
+      </div>
+      <div><Pill tone={SUBSCRIPTION_TONE[subscription.status]}>{subscription.status}</Pill></div>
+      <div className="flex items-center gap-1.5">
+        {hospital && onConfigureModules && (
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => onConfigureModules(hospital)}
+            title="Configure active clinical and operational modules"
+          >
+            ⚙️ Modules
+          </Button>
+        )}
+        {onInspect && (
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => onInspect(Number(subscription.hospital))}
+            title="Switch context and inspect this hospital in Hospital Operations mode"
+          >
+            👁️ Inspect
+          </Button>
+        )}
         {subscription.status === "active" ? (
           <Button size="sm" variant="danger" disabled={setStatus.isPending} onClick={() => setStatus.mutate("suspended")}>
             Suspend
@@ -188,15 +241,44 @@ function SubscriptionRow({ subscription }: { subscription: TenantSubscription })
   )
 }
 
+
 export function SaaSConsolePage() {
+  const { user } = useAuthStore()
   const [searchParams, setSearchParams] = useSearchParams()
   const tabParam = searchParams.get("tab") as TabKey | null
   const activeTab: TabKey = tabParam && TABS.some((t) => t.key === tabParam) ? tabParam : "overview"
   const [unresolvedOnly, setUnresolvedOnly] = useState(true)
 
+  const urlQuery = searchParams.get("q") || ""
+  const [searchQuery, setSearchQuery] = useState(urlQuery)
+  const [selectedHospitalId, setSelectedHospitalId] = useState<string>("all")
+
+  useEffect(() => {
+    if (urlQuery) {
+      setSearchQuery(urlQuery)
+    }
+  }, [urlQuery])
+
   const setActiveTab = (key: TabKey) => {
-    setSearchParams({ tab: key })
+    setSearchParams((prev) => {
+      prev.set("tab", key)
+      return prev
+    })
   }
+
+  const handleInspect = async (hospitalId: string | number) => {
+    try {
+      await switchHospital(String(hospitalId))
+      localStorage.setItem("platform_mode", "hospital")
+      window.location.href = "/dashboard"
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const queryClient = useQueryClient()
+  const [isOnboardModalOpen, setIsOnboardModalOpen] = useState(false)
+  const [modulesHospital, setModulesHospital] = useState<SaaSHospital | null>(null)
 
   const analytics = useQuery({
     queryKey: ["saas-analytics"],
@@ -207,7 +289,29 @@ export function SaaSConsolePage() {
   const subscriptions = useQuery({
     queryKey: ["saas-subscriptions"],
     queryFn: () => listSubscriptions(),
-    enabled: activeTab === "subscriptions",
+  })
+
+  const hospitals = useQuery({
+    queryKey: ["saas-hospitals"],
+    queryFn: () => listHospitals(),
+  })
+
+  const hospitalsMap = useMemo(() => {
+    const map = new Map<string, SaaSHospital>()
+    ;(hospitals.data?.results ?? []).forEach((h) => {
+      map.set(String(h.id), h)
+      if (h.name) map.set(h.name, h)
+      if (h.slug) map.set(h.slug, h)
+    })
+    return map
+  }, [hospitals.data])
+
+  const updateModulesMutation = useMutation({
+    mutationFn: ({ id, modules }: { id: string; modules: string[] }) => updateHospitalModules(id, modules),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["saas-hospitals"] })
+      setModulesHospital(null)
+    },
   })
 
   const invoices = useQuery({
@@ -228,6 +332,85 @@ export function SaaSConsolePage() {
     enabled: activeTab === "tickets",
   })
 
+
+  const hospitalList = useMemo(() => {
+    if (user?.available_hospitals && user.available_hospitals.length > 0) {
+      return user.available_hospitals
+    }
+    const map = new Map<number | string, { id: number | string; name: string }>()
+    subscriptions.data?.results.forEach((s) => {
+      map.set(s.hospital, { id: s.hospital, name: s.hospital_name || `Hospital #${s.hospital}` })
+    })
+    return Array.from(map.values())
+  }, [user, subscriptions.data])
+
+  const filteredSubscriptions = useMemo(() => {
+    const list = subscriptions.data?.results ?? []
+    return list.filter((s) => {
+      if (selectedHospitalId !== "all" && String(s.hospital) !== selectedHospitalId) {
+        return false
+      }
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase()
+        const name = (s.hospital_name || "").toLowerCase()
+        const tier = (s.tier || "").toLowerCase()
+        const id = String(s.hospital)
+        return name.includes(q) || tier.includes(q) || id.includes(q)
+      }
+      return true
+    })
+  }, [subscriptions.data?.results, selectedHospitalId, searchQuery])
+
+  const filteredInvoices = useMemo(() => {
+    const list = invoices.data?.results ?? []
+    return list.filter((inv) => {
+      if (selectedHospitalId !== "all" && String(inv.hospital) !== selectedHospitalId) {
+        return false
+      }
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase()
+        const name = (inv.hospital_name || "").toLowerCase()
+        const invNum = (inv.invoice_number || "").toLowerCase()
+        const id = String(inv.hospital)
+        return name.includes(q) || invNum.includes(q) || id.includes(q)
+      }
+      return true
+    })
+  }, [invoices.data?.results, selectedHospitalId, searchQuery])
+
+  const filteredUsage = useMemo(() => {
+    const list = usage.data?.results ?? []
+    return list.filter((u) => {
+      if (selectedHospitalId !== "all" && String(u.hospital) !== selectedHospitalId) {
+        return false
+      }
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase()
+        const name = (u.hospital_name || "").toLowerCase()
+        const id = String(u.hospital)
+        return name.includes(q) || id.includes(q)
+      }
+      return true
+    })
+  }, [usage.data?.results, selectedHospitalId, searchQuery])
+
+  const filteredTickets = useMemo(() => {
+    const list = tickets.data?.results ?? []
+    return list.filter((t) => {
+      if (selectedHospitalId !== "all" && String(t.hospital) !== selectedHospitalId) {
+        return false
+      }
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase()
+        const name = (t.hospital_name || "").toLowerCase()
+        const subject = (t.subject || "").toLowerCase()
+        const id = String(t.hospital)
+        return name.includes(q) || subject.includes(q) || id.includes(q)
+      }
+      return true
+    })
+  }, [tickets.data?.results, selectedHospitalId, searchQuery])
+
   const moduleAdoption = Object.entries(analytics.data?.module_adoption_percent ?? {})
     .sort(([, a], [, b]) => b - a)
 
@@ -245,6 +428,72 @@ export function SaaSConsolePage() {
             {tab.label}
           </button>
         ))}
+      </div>
+
+      {/* Universal SaaS Hospital Search & Filter Bar */}
+      <div className="bg-surface border border-border rounded-xl p-3 shadow-2xs flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2 flex-1 min-w-[280px]">
+          <div className="relative flex-1">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-4 text-xs pointer-events-none">🔍</span>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search hospital by name, slug, ID, or invoice..."
+              className="w-full h-9 pl-8 pr-8 border border-border-strong rounded-control text-[12.5px] bg-page outline-none focus:border-brand transition-colors"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-4 hover:text-ink text-xs p-1"
+                title="Clear search"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          <select
+            value={selectedHospitalId}
+            onChange={(e) => setSelectedHospitalId(e.target.value)}
+            className="h-9 px-3 border border-border-strong rounded-control text-[12px] bg-page font-semibold outline-none focus:border-brand shrink-0"
+          >
+            <option value="all">All Hospitals ({hospitalList.length || subscriptions.data?.count || 3})</option>
+            {hospitalList.map((h) => (
+              <option key={h.id} value={String(h.id)}>
+                {h.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {(searchQuery || selectedHospitalId !== "all") && (
+            <div className="flex items-center gap-2 text-xs">
+              <span className="text-ink-4">
+                Filter active {selectedHospitalId !== "all" ? `(${hospitalList.find((h) => String(h.id) === selectedHospitalId)?.name})` : ""}
+              </span>
+              <button
+                onClick={() => {
+                  setSearchQuery("")
+                  setSelectedHospitalId("all")
+                }}
+                className="px-2 py-1 rounded bg-page border border-border text-brand font-semibold hover:bg-brand-tint text-xs"
+              >
+                Reset filter
+              </button>
+            </div>
+          )}
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setIsOnboardModalOpen(true)}
+            className="flex items-center gap-1.5 shrink-0 shadow-sm"
+          >
+            <span>✨</span>
+            <span>+ Onboard Hospital</span>
+          </Button>
+        </div>
       </div>
 
       {activeTab === "overview" && (
@@ -286,28 +535,56 @@ export function SaaSConsolePage() {
       {activeTab === "subscriptions" && (
         <Card>
           <CardHeader>
-            <div>
-              <div className="text-[13px] font-semibold">Tenant subscriptions</div>
-              <div className="text-[12px] text-ink-4">one plan per hospital — suspending blocks that tenant's users at login</div>
+            <div className="flex items-center justify-between w-full">
+              <div>
+                <div className="text-[13px] font-semibold">Tenant Subscriptions & Hospital Modules</div>
+                <div className="text-[12px] text-ink-4">
+                  hospital accounts, subscription plans, module entitlements & tenant operational controls
+                </div>
+              </div>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setIsOnboardModalOpen(true)}
+                className="flex items-center gap-1.5"
+              >
+                <span>✨</span>
+                <span>+ Onboard Hospital</span>
+              </Button>
             </div>
           </CardHeader>
           <div className="px-3.5 overflow-x-auto">
-            <div className="grid grid-cols-[1.4fr_0.8fr_0.8fr_0.9fr_0.8fr_0.9fr_1fr] gap-2.5 py-2.5 border-b border-border-soft text-[11px] tracking-[.06em] uppercase text-ink-4 font-semibold min-w-[1000px]">
-              <div>Hospital</div>
+            <div className="grid grid-cols-[1.5fr_0.7fr_0.7fr_0.8fr_0.7fr_0.8fr_0.8fr_1.8fr] gap-2.5 py-2.5 border-b border-border-soft text-[11px] tracking-[.06em] uppercase text-ink-4 font-semibold min-w-[1150px]">
+              <div>Hospital / Subdomain</div>
               <div>Tier</div>
               <div>Cycle</div>
               <div>Base price</div>
               <div>Seats</div>
+              <div>Modules</div>
               <div>Status</div>
-              <div>Action</div>
+              <div>Actions</div>
             </div>
             {subscriptions.isLoading && <LoadingState />}
             {subscriptions.isError && <ErrorState />}
-            {subscriptions.data?.results.map((s) => <SubscriptionRow key={s.id} subscription={s} />)}
-            {subscriptions.data?.results.length === 0 && <EmptyState message="No tenant subscriptions yet." />}
+            {filteredSubscriptions.map((s) => {
+              const matchedHosp = hospitalsMap.get(String(s.hospital)) || hospitalsMap.get(s.hospital_name || "")
+              return (
+                <SubscriptionRow
+                  key={s.id}
+                  subscription={s}
+                  hospital={matchedHosp}
+                  onInspect={handleInspect}
+                  onConfigureModules={(h) => setModulesHospital(h)}
+                />
+              )
+            })}
+            {filteredSubscriptions.length === 0 && (
+              <EmptyState message={searchQuery || selectedHospitalId !== "all" ? "No tenant subscriptions matching your search." : "No tenant subscriptions yet."} />
+            )}
           </div>
         </Card>
       )}
+
 
       {activeTab === "invoices" && (
         <Card>
@@ -328,8 +605,10 @@ export function SaaSConsolePage() {
             </div>
             {invoices.isLoading && <LoadingState />}
             {invoices.isError && <ErrorState />}
-            {invoices.data?.results.map((inv) => <InvoiceRow key={inv.id} invoice={inv} />)}
-            {invoices.data?.results.length === 0 && <EmptyState message="No invoices raised yet." />}
+            {filteredInvoices.map((inv) => <InvoiceRow key={inv.id} invoice={inv} />)}
+            {filteredInvoices.length === 0 && (
+              <EmptyState message={searchQuery || selectedHospitalId !== "all" ? "No tenant invoices matching your search." : "No invoices raised yet."} />
+            )}
           </div>
         </Card>
       )}
@@ -353,7 +632,7 @@ export function SaaSConsolePage() {
             </div>
             {usage.isLoading && <LoadingState />}
             {usage.isError && <ErrorState />}
-            {usage.data?.results.map((u) => (
+            {filteredUsage.map((u) => (
               <div key={u.id} className="grid grid-cols-[1.4fr_1fr_0.8fr_0.9fr_0.8fr_0.8fr] gap-2.5 py-2.5 border-b border-border-faint items-center text-[13px] min-w-[900px]">
                 <div className="font-semibold truncate">{u.hospital_name ?? u.hospital}</div>
                 <div className="text-ink-4 text-[12px]">{formatDate(u.period_start)}</div>
@@ -363,7 +642,9 @@ export function SaaSConsolePage() {
                 <div className="tabular-nums">{formatBytes(u.storage_bytes_used)}</div>
               </div>
             ))}
-            {usage.data?.results.length === 0 && <EmptyState message="No usage snapshots computed yet." />}
+            {filteredUsage.length === 0 && (
+              <EmptyState message={searchQuery || selectedHospitalId !== "all" ? "No usage records matching your search." : "No usage snapshots computed yet."} />
+            )}
           </div>
         </Card>
       )}
@@ -394,13 +675,38 @@ export function SaaSConsolePage() {
             </div>
             {tickets.isLoading && <LoadingState />}
             {tickets.isError && <ErrorState />}
-            {tickets.data?.results.map((t) => <TicketRow key={t.id} ticket={t} />)}
-            {tickets.data?.results.length === 0 && (
-              <EmptyState message={unresolvedOnly ? "No open tickets." : "No support tickets raised yet."} />
+            {filteredTickets.map((t) => <TicketRow key={t.id} ticket={t} />)}
+            {filteredTickets.length === 0 && (
+              <EmptyState message={searchQuery || selectedHospitalId !== "all" ? "No support tickets matching your search." : unresolvedOnly ? "No open tickets." : "No support tickets raised yet."} />
             )}
           </div>
         </Card>
       )}
+
+      {isOnboardModalOpen && (
+        <TenantOnboardModal
+          onClose={() => setIsOnboardModalOpen(false)}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ["saas-subscriptions"] })
+            queryClient.invalidateQueries({ queryKey: ["saas-hospitals"] })
+          }}
+          onSubmit={async (payload: OnboardTenantPayload) => {
+            return await onboardHospital(payload)
+          }}
+        />
+      )}
+
+      {modulesHospital && (
+        <TenantModulesModal
+          hospital={modulesHospital}
+          onClose={() => setModulesHospital(null)}
+          onSave={async (modules: string[]) => {
+            await updateModulesMutation.mutateAsync({ id: modulesHospital.id, modules })
+          }}
+          isSaving={updateModulesMutation.isPending}
+        />
+      )}
     </div>
   )
 }
+

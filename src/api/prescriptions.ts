@@ -29,3 +29,8 @@ export function listPrescriptions(patientId?: number) {
 export function createPrescription(payload: Partial<Prescription>) {
   return api.post<Prescription>("/prescriptions/", payload)
 }
+
+export function downloadPrescriptionPdf(id: number) {
+  return api.getBlob(`/prescriptions/${id}/download/`)
+}
+

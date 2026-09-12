@@ -1,8 +1,10 @@
 import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { MemoryRouter } from "react-router-dom"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { SaaSConsolePage } from "./SaaSConsolePage"
+
 import type { Paginated, SaaSSupportTicket, TenantInvoice, TenantSubscription } from "../../types/api"
 
 vi.mock("../../api/saas", () => ({
@@ -15,7 +17,13 @@ vi.mock("../../api/saas", () => ({
   listUsageSnapshots: vi.fn(),
   listSaaSTickets: vi.fn(),
   resolveTicket: vi.fn(),
+  listHospitals: vi.fn().mockResolvedValue({ count: 0, next: null, previous: null, results: [] }),
+  onboardHospital: vi.fn(),
+  updateHospitalModules: vi.fn(),
+  toggleHospitalStatus: vi.fn(),
+  getPublicTenantBranding: vi.fn(),
 }))
+
 
 function page<T>(results: T[]): Paginated<T> {
   return { count: results.length, next: null, previous: null, results }
@@ -76,11 +84,14 @@ const ticket: SaaSSupportTicket = {
 function renderConsole() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
-    <QueryClientProvider client={queryClient}>
-      <SaaSConsolePage />
-    </QueryClientProvider>
+    <MemoryRouter>
+      <QueryClientProvider client={queryClient}>
+        <SaaSConsolePage />
+      </QueryClientProvider>
+    </MemoryRouter>
   )
 }
+
 
 describe("SaaSConsolePage", () => {
   beforeEach(() => {
@@ -117,10 +128,11 @@ describe("SaaSConsolePage", () => {
     renderConsole()
     await user.click(screen.getByRole("button", { name: /tenants & subscriptions/i }))
 
-    await waitFor(() => expect(screen.getByText("Apollo Nagpur")).toBeInTheDocument())
+    await waitFor(() => expect(screen.getAllByText("Apollo Nagpur")[0]).toBeInTheDocument())
     await user.click(screen.getByRole("button", { name: /suspend/i }))
 
     expect(updateSubscription).toHaveBeenCalledWith(1, { status: "suspended" })
+
   })
 
   it("marks an unpaid invoice as paid", async () => {
@@ -176,4 +188,21 @@ describe("SaaSConsolePage", () => {
     await user.click(screen.getByRole("button", { name: /^all$/i }))
     await waitFor(() => expect(listSaaSTickets).toHaveBeenCalledWith({}))
   })
+
+  it("opens tenant onboarding wizard modal on clicking '+ Onboard Hospital'", async () => {
+    const { platformAnalytics } = await import("../../api/saas")
+    vi.mocked(platformAnalytics).mockResolvedValue({
+      total_hospitals: 1, active_hospitals: 1, total_revenue: 0, total_patients: 0, module_adoption_percent: {},
+    })
+
+    const user = userEvent.setup()
+    renderConsole()
+
+    const onboardBtn = screen.getAllByRole("button", { name: /\+ onboard hospital/i })[0]
+    await user.click(onboardBtn)
+
+    await waitFor(() => expect(screen.getByText(/onboard new hospital tenant/i)).toBeInTheDocument())
+    expect(screen.getByText(/1\. hospital profile/i)).toBeInTheDocument()
+  })
 })
+
