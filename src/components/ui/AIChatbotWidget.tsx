@@ -18,6 +18,7 @@ export function AIChatbotWidget() {
   const [requiresInput, setRequiresInput] = useState<string[] | null>(null)
   const [pendingSlotId, setPendingSlotId] = useState<number | null>(null)
   const [formValues, setFormValues] = useState<{ name: string; mobile: string }>({ name: "", mobile: "" })
+  const [freeText, setFreeText] = useState("")
 
   const actionMutation = useMutation({
     mutationFn: postInteractiveChatAction,
@@ -60,6 +61,13 @@ export function AIChatbotWidget() {
     setChatHistory([])
     setRequiresInput(null)
     actionMutation.mutate({ action: "main_menu", language: newLang })
+  }
+
+  const submitFreeText = () => {
+    const text = freeText.trim()
+    if (!text) return
+    setFreeText("")
+    triggerAction("free_text", text, { message: text })
   }
 
   return (
@@ -187,6 +195,29 @@ export function AIChatbotWidget() {
                 Updating options...
               </div>
             )}
+          </div>
+
+          {/* Free-text input — routed through the backend's intent
+              classifier, so a patient isn't limited to the button menu. */}
+          <div className="p-2.5 border-t border-border-soft bg-surface flex items-center gap-1.5">
+            <input
+              type="text"
+              value={freeText}
+              onChange={(e) => setFreeText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") submitFreeText()
+              }}
+              placeholder="Type your question..."
+              disabled={actionMutation.isPending}
+              className="flex-1 min-w-0 px-3 py-2 text-xs border border-border-strong rounded-control bg-page disabled:opacity-60"
+            />
+            <button
+              onClick={submitFreeText}
+              disabled={actionMutation.isPending || !freeText.trim()}
+              className="shrink-0 px-3 py-2 bg-brand hover:bg-brand-hover disabled:opacity-50 text-white font-semibold rounded-control transition-colors text-xs"
+            >
+              Send
+            </button>
           </div>
 
           {/* Footer Reset button */}

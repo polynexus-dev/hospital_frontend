@@ -23,6 +23,8 @@ import { CreateTreatmentEstimateModal } from "./CreateTreatmentEstimateModal"
 import { InboundWebhookModal } from "./InboundWebhookModal"
 import { Lead360Modal } from "./Lead360Modal"
 import { SurgicalPipelineTab } from "./SurgicalPipelineTab"
+import { PrintableOPDSlipModal } from "./PrintableOPDSlipModal"
+import { MultiBranchChainAggregator } from "./MultiBranchChainAggregator"
 
 
 const INR = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })
@@ -743,12 +745,14 @@ function EnquiryCard({
   users,
   onCreateEstimate,
   onOpen360,
+  onOpenOpdSlip,
 }: {
   enquiry: Enquiry
   ownerName: string | null
   users: User[]
   onCreateEstimate: () => void
   onOpen360: (enquiry: Enquiry) => void
+  onOpenOpdSlip?: (enquiry: Enquiry) => void
 }) {
   const queryClient = useQueryClient()
   const [isReassigning, setIsReassigning] = useState(false)
@@ -866,6 +870,13 @@ function EnquiryCard({
         >
           <span>🔍 360°</span>
         </button>
+        <button
+          onClick={() => onOpenOpdSlip?.(enquiry)}
+          className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:text-brand flex items-center gap-0.5"
+          title="Print official OPD Consultation Token / Slip"
+        >
+          <span>🖨️ Slip</span>
+        </button>
         {enquiry.duplicate_of && (
           <button onClick={() => merge.mutate()} disabled={merge.isPending} className="text-[11px] font-semibold text-brand hover:underline">
             Merge into #{enquiry.duplicate_of}
@@ -888,7 +899,7 @@ function EnquiryCard({
 
 export function EnquiriesPage() {
   const queryClient = useQueryClient()
-  const [activeTab, setActiveTab] = useState<"leads" | "surgical">("leads")
+  const [activeTab, setActiveTab] = useState<"leads" | "surgical" | "chain">("leads")
   const [showNew, setShowNew] = useState(false)
   const [showWebhookModal, setShowWebhookModal] = useState(false)
   const [showEstimateModal, setShowEstimateModal] = useState(false)
@@ -900,6 +911,7 @@ export function EnquiriesPage() {
   const [slaOnly, setSlaOnly] = useState(false)
   const [callbacksOnly, setCallbacksOnly] = useState(false)
   const [selected360Enquiry, setSelected360Enquiry] = useState<Enquiry | null>(null)
+  const [selectedOpdSlipEnquiry, setSelectedOpdSlipEnquiry] = useState<Enquiry | null>(null)
   const [isExporting, setIsExporting] = useState(false)
 
   const enquiries = useQuery({ queryKey: ["enquiries"], queryFn: () => listEnquiries({ page_size: "200" }) })
@@ -974,6 +986,16 @@ export function EnquiriesPage() {
           >
             <span>🏥</span> Surgical & IPD Pipeline
           </button>
+          <button
+            onClick={() => setActiveTab("chain")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+              activeTab === "chain"
+                ? "bg-teal-600 text-white shadow-sm dark:bg-teal-500"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+            }`}
+          >
+            <span>🌐</span> Multi-Branch Chain Network
+          </button>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
@@ -1022,7 +1044,9 @@ export function EnquiriesPage() {
         </div>
       </div>
 
-      {activeTab === "surgical" ? (
+      {activeTab === "chain" ? (
+        <MultiBranchChainAggregator />
+      ) : activeTab === "surgical" ? (
         <SurgicalPipelineTab onNewEstimate={() => setShowEstimateModal(true)} />
       ) : (
         <>
@@ -1117,6 +1141,7 @@ export function EnquiriesPage() {
                       users={users.data?.results ?? []}
                       onCreateEstimate={() => setShowEstimateModal(true)}
                       onOpen360={(enquiry) => setSelected360Enquiry(enquiry)}
+                      onOpenOpdSlip={(enquiry) => setSelectedOpdSlipEnquiry(enquiry)}
                     />
                   ))}
                   {cards.length === 0 && <div className="text-[11.5px] text-ink-5 px-1">—</div>}
@@ -1143,6 +1168,12 @@ export function EnquiriesPage() {
           enquiry={selected360Enquiry}
           ownerName={ownerName(selected360Enquiry.assigned_to)}
           onClose={() => setSelected360Enquiry(null)}
+        />
+      )}
+      {selectedOpdSlipEnquiry && (
+        <PrintableOPDSlipModal
+          enquiry={selectedOpdSlipEnquiry}
+          onClose={() => setSelectedOpdSlipEnquiry(null)}
         />
       )}
     </div>

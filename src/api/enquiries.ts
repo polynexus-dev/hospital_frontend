@@ -110,4 +110,42 @@ export async function downloadTreatmentEstimatePdf(id: number, procedureName = "
   triggerBlobDownload(blob, `Estimate_EST-${id}_${sanitized}.pdf`)
 }
 
+export interface BranchMetric {
+  hospital_id: string
+  hospital_name: string
+  slug: string
+  city: string
+  is_current: boolean
+  total_enquiries: number
+  active_leads: number
+  stages: {
+    new: number
+    contacted: number
+    scheduled: number
+    visited: number
+    completed: number
+    lost: number
+  }
+  pipeline_value: number
+  converted_value: number
+  conversion_rate: number
+  sla_breaches: number
+  treatment_estimates_count: number
+}
+
+export interface ChainOverviewResponse {
+  group_name: string
+  total_branches: number
+  total_group_enquiries: number
+  total_group_pipeline_value: number
+  total_group_converted_value: number
+  overall_conversion_rate: number
+  branches: BranchMetric[]
+}
+
+export function getChainOverview() {
+  return api.get<ChainOverviewResponse>("/enquiries/chain-overview/")
+}
+
+
 

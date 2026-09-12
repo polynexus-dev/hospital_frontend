@@ -27,6 +27,7 @@ import { slaInfo } from "../../lib/sla"
 import { extractApiError } from "../../api/client"
 import type { Channel, ConsentOptOut, Enquiry, EnquiryStage, Thread } from "../../types/api"
 import type { Tone } from "../../components/ui/tone"
+import { BroadcastCampaignManager } from "./BroadcastCampaignManager"
 
 const CHANNELS: Channel[] = ["whatsapp", "sms", "email", "call_note"]
 
@@ -127,6 +128,7 @@ export function InboxPage() {
 
   const [selectedThreadId, setSelectedThreadId] = useState<number | null>(null)
   const [channelFilter, setChannelFilter] = useState<Channel | "all">("all")
+  const [activeInboxTab, setActiveInboxTab] = useState<"conversations" | "broadcasts">("conversations")
   const [composerBody, setComposerBody] = useState("")
   const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -376,14 +378,54 @@ export function InboxPage() {
   }
 
   return (
-    <div className="grid grid-cols-[268px_minmax(380px,1fr)_248px] gap-3 h-[calc(100vh-130px)] min-w-[940px]">
-      {/* LEFT — thread list */}
-      <Card className="h-full flex flex-col overflow-hidden">
-        <CardHeader className="justify-between">
-          <div className="flex items-center gap-2">
-            <div className="text-[13px] font-semibold">Threads</div>
-            <NeutralTag>{threadsQuery.data?.count ?? 0}</NeutralTag>
-          </div>
+    <div className="flex flex-col gap-3 h-[calc(100vh-130px)] min-w-[940px]">
+      {/* Top Tab Bar: 1-on-1 Patient Inbox vs Broadcast Outreach Engine */}
+      <div className="flex items-center justify-between bg-surface border border-border-faint px-3 py-1.5 rounded-lg shrink-0">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveInboxTab("conversations")}
+            className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition ${
+              activeInboxTab === "conversations"
+                ? "bg-brand text-white shadow-xs"
+                : "text-ink-3 hover:text-ink-1 hover:bg-slate-100"
+            }`}
+          >
+            <span>💬</span>
+            <span>Patient Conversations</span>
+            <span className={`text-[11px] px-1.5 py-0.2 rounded-full ${activeInboxTab === "conversations" ? "bg-white/20 text-white" : "bg-slate-200 text-ink-3"}`}>
+              {threadsQuery.data?.count ?? 0}
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveInboxTab("broadcasts")}
+            className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition ${
+              activeInboxTab === "broadcasts"
+                ? "bg-emerald-600 text-white shadow-xs"
+                : "text-ink-3 hover:text-ink-1 hover:bg-slate-100"
+            }`}
+          >
+            <span>📢</span>
+            <span>WhatsApp Broadcast & Outreach Engine</span>
+            <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded uppercase">
+              Campaigns
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {activeInboxTab === "broadcasts" ? (
+        <BroadcastCampaignManager />
+      ) : (
+        <div className="grid grid-cols-[268px_minmax(380px,1fr)_248px] gap-3 flex-1 min-h-0">
+          {/* LEFT — thread list */}
+          <Card className="h-full flex flex-col overflow-hidden">
+            <CardHeader className="justify-between">
+              <div className="flex items-center gap-2">
+                <div className="text-[13px] font-semibold">Threads</div>
+                <NeutralTag>{threadsQuery.data?.count ?? 0}</NeutralTag>
+              </div>
           <select
             value={channelFilter}
             onChange={(e) => setChannelFilter(e.target.value as Channel | "all")}
@@ -819,6 +861,8 @@ export function InboxPage() {
           </>
         )}
       </div>
+    </div>
+      )}
     </div>
   )
 }

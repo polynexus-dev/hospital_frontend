@@ -23,3 +23,26 @@ export function resolveServiceRecoveryTask(id: number, resolutionNotes: string) 
 export function npsByDepartment() {
   return api.get<NpsByDepartmentRow[]>("/nps-responses/by-department/")
 }
+
+export interface ReputationSummary {
+  total_responses: number
+  promoters_count: number
+  passives_count: number
+  detractors_count: number
+  nps_score: number
+  google_review_url: string
+  prompts_sent_count: number
+}
+
+export function getReputationSummary() {
+  return api.get<ReputationSummary>("/nps-responses/reputation-summary/")
+}
+
+export function updateGoogleReviewUrl(googleReviewUrl: string) {
+  return api.post<{ google_review_url: string }>("/nps-responses/update-google-review-url/", { google_review_url: googleReviewUrl })
+}
+
+export function sendGoogleReviewPrompt(npsResponseId: number) {
+  return api.post<{ detail: string; google_review_url: string }>(`/nps-responses/${npsResponseId}/send-google-review-prompt/`)
+}
+

@@ -68,4 +68,49 @@ export function createConsent(payload: { patient: number; channel: Channel; purp
   return api.post<ConsentOptOut>("/consent/", payload)
 }
 
+export interface BroadcastCampaign {
+  id: number
+  title: string
+  channel: Channel
+  target_audience: "all_patients" | "unconverted_leads" | "follow_up_leads" | "chronic_care" | "senior_citizens"
+  template: number | null
+  custom_message: string
+  scheduled_for: string | null
+  status: "draft" | "scheduled" | "sending" | "completed" | "failed"
+  total_recipients: number
+  sent_count: number
+  delivered_count: number
+  read_count: number
+  failed_count: number
+  created_by?: number | null
+  created_by_name?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface AudienceCountResponse {
+  all_patients: number
+  unconverted_leads: number
+  follow_up_leads: number
+  chronic_care: number
+  senior_citizens: number
+}
+
+export function listBroadcastCampaigns() {
+  return api.get<Paginated<BroadcastCampaign>>("/broadcasts/")
+}
+
+export function createBroadcastCampaign(payload: Partial<BroadcastCampaign>) {
+  return api.post<BroadcastCampaign>("/broadcasts/", payload)
+}
+
+export function dispatchBroadcastCampaign(id: number) {
+  return api.post<{ detail: string; campaign: BroadcastCampaign }>(`/broadcasts/${id}/dispatch/`)
+}
+
+export function getAudienceCounts() {
+  return api.get<AudienceCountResponse>("/broadcasts/audience-count/")
+}
+
+
 

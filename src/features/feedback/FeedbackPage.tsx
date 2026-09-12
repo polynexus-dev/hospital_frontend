@@ -6,16 +6,21 @@ import { Button } from "../../components/ui/Button"
 import { NeutralTag, Pill } from "../../components/ui/Pill"
 import { ErrorState, EmptyState, LoadingState } from "../../components/ui/QueryStates"
 import {
+  getReputationSummary,
   listComplaints,
   listNpsResponses,
   listServiceRecoveryTasks,
   npsByDepartment,
   resolveServiceRecoveryTask,
+  sendGoogleReviewPrompt,
+  updateGoogleReviewUrl,
 } from "../../api/feedback"
+import { showToast } from "../../components/ui/Toast"
 import type { Tone } from "../../components/ui/tone"
 
-const TABS: { key: "nps" | "complaints" | "recovery"; label: string }[] = [
+const TABS: { key: "nps" | "reputation" | "complaints" | "recovery"; label: string }[] = [
   { key: "nps", label: "NPS Responses" },
+  { key: "reputation", label: "⭐ Google Review Booster" },
   { key: "complaints", label: "Complaints Log" },
   { key: "recovery", label: "Service Recovery Tasks" },
 ]
@@ -34,16 +39,46 @@ const recoveryTone: Record<"pending" | "in_progress" | "resolved", Tone> = {
 
 export function FeedbackPage() {
   const queryClient = useQueryClient()
-  const [activeTab, setActiveTab] = useState<"nps" | "complaints" | "recovery">("nps")
+  const [activeTab, setActiveTab] = useState<"nps" | "reputation" | "complaints" | "recovery">("nps")
 
   // Service recovery modal
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null)
   const [resolutionNotes, setResolutionNotes] = useState("")
 
+  // Google Review Booster
+  const [googleUrl, setGoogleUrl] = useState("")
+  const [isEditingGoogleUrl, setIsEditingGoogleUrl] = useState(false)
+  const [sendingPromptId, setSendingPromptId] = useState<number | null>(null)
+
+  const { data: reputationData, isLoading: isReputationLoading } = useQuery({
+    queryKey: ["reputation-summary"],
+    queryFn: getReputationSummary,
+  })
+
+  const updateGoogleUrlMutation = useMutation({
+    mutationFn: (url: string) => updateGoogleReviewUrl(url),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["reputation-summary"] })
+      setIsEditingGoogleUrl(false)
+      showToast("Google Maps Review URL updated successfully!", "success")
+    },
+    onError: () => showToast("Failed to update Google review URL", "error"),
+  })
+
+  const sendPromptMutation = useMutation({
+    mutationFn: (npsResponseId: number) => sendGoogleReviewPrompt(npsResponseId),
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ["reputation-summary"] })
+      showToast(res.detail, "success")
+    },
+    onError: () => showToast("Failed to send WhatsApp review prompt", "error"),
+    onSettled: () => setSendingPromptId(null),
+  })
+
   const { data: npsData, isLoading: isNpsLoading, isError: isNpsError } = useQuery({
     queryKey: ["nps-responses"],
     queryFn: () => listNpsResponses(),
-    enabled: activeTab === "nps",
+    enabled: activeTab === "nps" || activeTab === "reputation",
   })
 
   const { data: complaintsData, isLoading: isComplaintsLoading } = useQuery({
@@ -225,6 +260,169 @@ export function FeedbackPage() {
             )}
           </div>
         </Card>
+      )}
+
+      {/* ⭐ Google Review Booster Workspace */}
+      {activeTab === "reputation" && (
+        <div className="space-y-3.5">
+          {/* Reputation Funnel Stats */}
+          <div className="grid grid-cols-4 gap-3">
+            <Card padded>
+              <div className="text-[11px] text-ink-4 uppercase tracking-wider font-semibold">Net Promoter Score</div>
+              <div className="text-2xl font-extrabold text-brand mt-1">
+                {reputationData?.nps_score ? `${reputationData.nps_score > 0 ? "+" : ""}${reputationData.nps_score}` : "0"}
+              </div>
+              <div className="text-[11px] text-success font-semibold mt-1">★ World-Class Experience</div>
+            </Card>
+            <Card padded>
+              <div className="text-[11px] text-ink-4 uppercase tracking-wider font-semibold">Promoters (NPS 9–10)</div>
+              <div className="text-2xl font-extrabold text-success mt-1">
+                {reputationData?.promoters_count ?? 0}
+              </div>
+              <div className="text-[11px] text-ink-4 mt-1">Eligible for 5-star reviews</div>
+            </Card>
+            <Card padded>
+              <div className="text-[11px] text-ink-4 uppercase tracking-wider font-semibold">WhatsApp Prompts Sent</div>
+              <div className="text-2xl font-extrabold text-sky-600 dark:text-sky-400 mt-1">
+                {reputationData?.prompts_sent_count ?? 0}
+              </div>
+              <div className="text-[11px] text-ink-4 mt-1">Direct review requests</div>
+            </Card>
+            <Card padded>
+              <div className="text-[11px] text-ink-4 uppercase tracking-wider font-semibold">Reputation Target</div>
+              <div className="text-2xl font-extrabold text-amber-500 mt-1">4.8 ★</div>
+              <div className="text-[11px] text-ink-4 mt-1">Google Maps benchmark</div>
+            </Card>
+          </div>
+
+          {/* Google Place URL Configuration */}
+          <Card padded>
+            <div className="flex items-center justify-between gap-3 pb-3 border-b border-border">
+              <div>
+                <h3 className="text-sm font-bold text-ink flex items-center gap-1.5">
+                  <span>📍</span> Hospital Google Business Profile & Maps Link
+                </h3>
+                <p className="text-xs text-ink-4 mt-0.5">
+                  This review link is automatically dispatched via WhatsApp to happy patients and NPS promoters.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    const url = reputationData?.google_review_url || "https://maps.google.com"
+                    window.open(url, "_blank")
+                  }}
+                  className="border border-border text-xs"
+                >
+                  🔗 Test Review Link
+                </Button>
+                {!isEditingGoogleUrl ? (
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => {
+                      setGoogleUrl(reputationData?.google_review_url || "")
+                      setIsEditingGoogleUrl(true)
+                    }}
+                  >
+                    Edit URL
+                  </Button>
+                ) : (
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="url"
+                      value={googleUrl}
+                      onChange={(e) => setGoogleUrl(e.target.value)}
+                      placeholder="https://g.page/r/.../review"
+                      className="h-8 px-2.5 border border-brand rounded text-xs w-72 bg-page"
+                    />
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      disabled={updateGoogleUrlMutation.isPending || !googleUrl.trim()}
+                      onClick={() => updateGoogleUrlMutation.mutate(googleUrl)}
+                    >
+                      Save
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => setIsEditingGoogleUrl(false)}>
+                      Cancel
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+            {!isEditingGoogleUrl && (
+              <div className="pt-2.5 text-xs font-mono text-brand truncate">
+                {reputationData?.google_review_url || "https://g.page/polynexus-hospital/review"}
+              </div>
+            )}
+          </Card>
+
+          {/* Promoters List & Dispatch Queue */}
+          <Card>
+            <CardHeader>
+              <div>
+                <div className="text-[13px] font-semibold">Promoters Review Queue (NPS 9–10)</div>
+                <div className="text-[12px] text-ink-4">Patients who rated 9 or 10 — prime candidates for 5-star Google reviews</div>
+              </div>
+            </CardHeader>
+            <div className="px-3.5 pb-3.5">
+              {isNpsLoading && <LoadingState />}
+              {!isNpsLoading && npsResponses.filter((r) => r.category === "promoter").length === 0 && (
+                <EmptyState message="No promoters recorded yet. Once patients score 9 or 10, they appear here." />
+              )}
+              {!isNpsLoading &&
+                npsResponses
+                  .filter((r) => r.category === "promoter")
+                  .map((res) => (
+                    <div
+                      key={res.id}
+                      className="py-3 border-b border-border-faint last:border-b-0 flex items-center justify-between gap-3 text-xs"
+                    >
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-ink">{res.patient_name || `Patient #${res.patient}`}</span>
+                          <span className="px-1.5 py-0.5 rounded font-bold text-[11px] bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
+                            {res.score}/10 Promoter
+                          </span>
+                          {res.doctor_name && (
+                            <span className="text-teal-700 dark:text-teal-300 font-semibold">
+                              🩺 Dr. {res.doctor_name.replace(/^Dr\.?\s*/i, "")}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[11px] text-ink-4 font-mono">
+                          {res.patient_mobile || "Mobile not listed"} · Reviewed on {new Date(res.created_at).toLocaleDateString("en-IN")}
+                        </div>
+                        {res.comment && (
+                          <div className="text-ink-3 italic mt-1 bg-page/70 p-1.5 rounded border border-border/60 max-w-lg">
+                            "{res.comment}"
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="primary"
+                          disabled={sendPromptMutation.isPending && sendingPromptId === res.id}
+                          onClick={() => {
+                            setSendingPromptId(res.id)
+                            sendPromptMutation.mutate(res.id)
+                          }}
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1"
+                        >
+                          <span>⭐</span>
+                          {sendPromptMutation.isPending && sendingPromptId === res.id ? "Sending…" : "Send WhatsApp Review Link"}
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+            </div>
+          </Card>
+        </div>
       )}
 
       {/* Complaints Log */}

@@ -4,6 +4,7 @@ import type { Enquiry } from "../../types/api"
 import { getEnquiryHistory, addEnquiryNote, updateEnquiry } from "../../api/enquiries"
 import { Button } from "../../components/ui/Button"
 import { showToast } from "../../components/ui/Toast"
+import { PrintableOPDSlipModal } from "./PrintableOPDSlipModal"
 
 interface Props {
   enquiry: Enquiry
@@ -18,6 +19,7 @@ export function Lead360Modal({ enquiry, onClose, ownerName }: Props) {
   const [activeTab, setActiveTab] = useState<"overview" | "timeline" | "marketing" | "estimates">("overview")
   const [newNote, setNewNote] = useState("")
   const [followUpDate, setFollowUpDate] = useState(enquiry.follow_up_date || "")
+  const [showOpdSlipModal, setShowOpdSlipModal] = useState(false)
 
   const { data: history, isLoading: historyLoading } = useQuery({
     queryKey: ["enquiry-history", enquiry.id],
@@ -98,7 +100,18 @@ export function Lead360Modal({ enquiry, onClose, ownerName }: Props) {
                 {ownerName && <span className="text-ink-4">👤 Owner: {ownerName}</span>}
               </div>
             </div>
-            <button onClick={onClose} className="text-ink-4 hover:text-ink text-base p-1">✕</button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowOpdSlipModal(true)}
+                className="px-2.5 py-1 text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white rounded flex items-center gap-1.5 shadow-xs transition"
+                title="Generate and print official OPD consultation token"
+              >
+                <span>🖨️</span>
+                <span>OPD Slip</span>
+              </button>
+              <button onClick={onClose} className="text-ink-4 hover:text-ink text-base p-1">✕</button>
+            </div>
           </div>
 
           {/* Quick Metrics Bar */}
@@ -168,6 +181,33 @@ export function Lead360Modal({ enquiry, onClose, ownerName }: Props) {
         <div className="p-5 overflow-y-auto flex-1 space-y-4">
           {activeTab === "overview" && (
             <div className="space-y-4">
+              {/* ⭐ Google Review Booster Banner for Completed Leads */}
+              {enquiry.stage === "completed" && (
+                <div className="bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700 rounded-lg p-3 flex items-center justify-between gap-3 flex-wrap">
+                  <div>
+                    <span className="text-xs font-bold text-emerald-900 dark:text-emerald-200 block flex items-center gap-1">
+                      <span>⭐</span> Patient Visit Completed — Request 5-Star Google Review
+                    </span>
+                    <span className="text-[11px] text-emerald-700 dark:text-emerald-400">
+                      Happy patients are 7x more likely to leave a 5-star Google rating if asked within 24 hours
+                    </span>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="primary"
+                    onClick={() => {
+                      const text = encodeURIComponent(
+                        `Dear ${enquiry.name}, thank you for visiting us for ${enquiry.service_requested || "your consultation"}! We hope you had a comfortable experience. Would you mind taking 30 seconds to share your review on Google Maps to help others in our community? https://g.page/polynexus-hospital/review`
+                      )
+                      window.open(`https://wa.me/${enquiry.mobile.replace(/[^0-9]/g, "")}?text=${text}`, "_blank")
+                    }}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 shrink-0 font-bold"
+                  >
+                    <span>💬</span> Send via WhatsApp
+                  </Button>
+                </div>
+              )}
+
               {/* Scheduled Callback Setter */}
               <div className="bg-teal-50/60 dark:bg-teal-950/20 border border-teal-200 dark:border-teal-800/60 rounded-lg p-3">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -394,6 +434,13 @@ export function Lead360Modal({ enquiry, onClose, ownerName }: Props) {
           </Button>
         </div>
       </div>
+
+      {showOpdSlipModal && (
+        <PrintableOPDSlipModal
+          enquiry={enquiry}
+          onClose={() => setShowOpdSlipModal(false)}
+        />
+      )}
     </div>
   )
 }
