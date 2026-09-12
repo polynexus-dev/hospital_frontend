@@ -15,7 +15,11 @@ export interface NavItem {
 // deliberately unset — this surface is gated by a user flag, not a Django
 // model permission (no role template grants one; see RequireSaaSAdmin).
 export const saasNav: NavItem[] = [
-  { key: "saas-console", path: "/saas", labelKey: "SaaS Console", subKey: "Tenants · subscriptions · invoices · usage" },
+  { key: "saas-overview", path: "/saas?tab=overview", labelKey: "Platform Overview", subKey: "Multi-tenant health & adoption" },
+  { key: "saas-tenants", path: "/saas?tab=subscriptions", labelKey: "Tenants & Subscriptions", subKey: "Hospital onboarding & module flags" },
+  { key: "saas-invoices", path: "/saas?tab=invoices", labelKey: "Billing & Invoices", subKey: "Platform subscription invoices" },
+  { key: "saas-usage", path: "/saas?tab=usage", labelKey: "Usage & Telemetry", subKey: "API usage & database storage" },
+  { key: "saas-tickets", path: "/saas?tab=tickets", labelKey: "Support Tickets", subKey: "Help requests from hospital tenants" },
 ]
 
 export const dailyWorkNav: NavItem[] = [

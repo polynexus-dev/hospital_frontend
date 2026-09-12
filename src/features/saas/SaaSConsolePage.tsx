@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { useSearchParams } from "react-router-dom"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Card, CardHeader } from "../../components/ui/Card"
 import { StatTile } from "../../components/ui/StatTile"
@@ -188,8 +189,14 @@ function SubscriptionRow({ subscription }: { subscription: TenantSubscription })
 }
 
 export function SaaSConsolePage() {
-  const [activeTab, setActiveTab] = useState<TabKey>("overview")
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tabParam = searchParams.get("tab") as TabKey | null
+  const activeTab: TabKey = tabParam && TABS.some((t) => t.key === tabParam) ? tabParam : "overview"
   const [unresolvedOnly, setUnresolvedOnly] = useState(true)
+
+  const setActiveTab = (key: TabKey) => {
+    setSearchParams({ tab: key })
+  }
 
   const analytics = useQuery({
     queryKey: ["saas-analytics"],

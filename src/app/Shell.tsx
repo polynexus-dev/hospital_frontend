@@ -30,12 +30,22 @@ interface NavSection {
 
 function NavRow({ item }: { item: (typeof allNav)[number] }) {
   const { t } = useTranslation()
+  const location = useLocation()
+
+  const isSelected = useMemo(() => {
+    if (item.path.includes("?")) {
+      const full = location.pathname + location.search
+      return full === item.path || (location.pathname === "/saas" && !location.search && item.path === "/saas?tab=overview")
+    }
+    return location.pathname === item.path || location.pathname.startsWith(item.path + "/")
+  }, [item.path, location.pathname, location.search])
+
   return (
     <NavLink
       to={item.path}
-      className={({ isActive }) =>
+      className={() =>
         `flex items-center justify-between gap-2 px-[9px] py-[8px] rounded-control text-[13px] mb-[1px] ${
-          isActive ? "font-semibold text-brand bg-brand-tint-strong" : "font-normal text-ink-2 hover:bg-page"
+          isSelected ? "font-semibold text-brand bg-brand-tint-strong" : "font-normal text-ink-2 hover:bg-page"
         }`
       }
     >
@@ -155,15 +165,60 @@ export function Shell() {
   }
 
 
-  const active = useMemo(
-    () => allNav.find((n) => location.pathname === n.path || location.pathname.startsWith(n.path + "/")),
-    [location.pathname],
-  )
+  const isSaasUser = Boolean(user?.is_saas_admin || (!user?.hospital && user?.is_superuser))
+
+  const [platformMode, setPlatformMode] = useState<"saas" | "hospital">(() => {
+    if (location.pathname.startsWith("/saas")) return "saas"
+    try {
+      const saved = localStorage.getItem("platform_mode")
+      if (saved === "hospital" || saved === "saas") return saved
+    } catch {}
+    return isSaasUser ? "saas" : "hospital"
+  })
+
+  useEffect(() => {
+    if (location.pathname.startsWith("/saas")) {
+      setPlatformMode("saas")
+      localStorage.setItem("platform_mode", "saas")
+    } else if (
+      location.pathname.startsWith("/dashboard") ||
+      location.pathname.startsWith("/patients") ||
+      location.pathname.startsWith("/appointments") ||
+      location.pathname.startsWith("/console") ||
+      location.pathname.startsWith("/callbacks") ||
+      location.pathname.startsWith("/enquiries") ||
+      location.pathname.startsWith("/inbox") ||
+      location.pathname.startsWith("/referrals") ||
+      location.pathname.startsWith("/ipd") ||
+      location.pathname.startsWith("/pharmacy")
+    ) {
+      setPlatformMode("hospital")
+      localStorage.setItem("platform_mode", "hospital")
+    }
+  }, [location.pathname])
+
+  const isInSaasMode = isSaasUser && platformMode === "saas"
+
+  const active = useMemo(() => {
+    if (location.pathname.startsWith("/saas")) {
+      const full = location.pathname + location.search
+      const match = saasNav.find((n) => n.path === full) || (location.search === "" ? saasNav[0] : undefined)
+      if (match) return match
+    }
+    return allNav.find((n) => {
+      if (n.path.includes("?")) {
+        const full = location.pathname + location.search
+        return full === n.path
+      }
+      return location.pathname === n.path || location.pathname.startsWith(n.path + "/")
+    })
+  }, [location.pathname, location.search])
 
   const { data: pendingCallbacks } = useQuery({
     queryKey: ["callback-tasks", "pending-count"],
     queryFn: () => listCallbackTasks({ status: "pending" }),
     refetchInterval: 30_000,
+    enabled: !isInSaasMode,
   })
 
   const handleLogout = () => {
@@ -175,76 +230,118 @@ export function Shell() {
     <div className="flex h-screen min-h-[760px] text-ink bg-page">
       <div className="w-[226px] shrink-0 bg-sidebar border-r border-border flex flex-col">
         <div className="px-[18px] pt-[18px] pb-[14px] border-b border-border-soft flex items-center gap-[10px]">
-          <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow-xs shrink-0">
-            🏥
+          <div
+            className={`w-8 h-8 rounded-lg text-white flex items-center justify-center font-bold text-sm shadow-xs shrink-0 ${
+              isInSaasMode ? "bg-indigo-600" : "bg-emerald-600"
+            }`}
+          >
+            {isInSaasMode ? "⚡" : "🏥"}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-[13px] font-bold text-ink truncate">{user?.hospital_name || "Polynexus Hospital"}</div>
-            <div className="text-[11px] text-ink-6 truncate">{user?.role_name ?? "Hospital Admin"}</div>
+            <div className="text-[13px] font-bold text-ink truncate">
+              {isInSaasMode ? "Polynexus SaaS" : user?.hospital_name || "Polynexus Hospital"}
+            </div>
+            <div className="text-[11px] text-ink-6 truncate">
+              {isInSaasMode ? "Platform Master Admin" : user?.role_name ?? "Hospital Operations"}
+            </div>
           </div>
         </div>
 
         <div className="flex-1 overflow-y-auto px-[10px] pt-3 pb-5">
-          {/* Platform operators only — ordinary hospital users never see this */}
-          {(user?.is_saas_admin || (!user?.hospital && user?.is_superuser)) && (
+          {/* Quick Mode Toggle for SaaS Super Admins */}
+          {isSaasUser && (
+            <div className="flex items-center gap-[3px] p-[3px] mb-3 bg-page rounded-control border border-border-soft">
+              <button
+                onClick={() => {
+                  setPlatformMode("saas")
+                  localStorage.setItem("platform_mode", "saas")
+                  navigate("/saas")
+                }}
+                className={`flex-1 h-7 rounded-[6px] text-[11px] font-bold flex items-center justify-center gap-1 transition-colors ${
+                  isInSaasMode ? "bg-brand text-white shadow-2xs" : "text-ink-4 hover:text-ink-2"
+                }`}
+              >
+                <span>⚡</span>
+                <span>SaaS Mode</span>
+              </button>
+              <button
+                onClick={() => {
+                  setPlatformMode("hospital")
+                  localStorage.setItem("platform_mode", "hospital")
+                  navigate("/dashboard")
+                }}
+                className={`flex-1 h-7 rounded-[6px] text-[11px] font-bold flex items-center justify-center gap-1 transition-colors ${
+                  !isInSaasMode ? "bg-surface text-brand shadow-2xs border border-border-soft" : "text-ink-4 hover:text-ink-2"
+                }`}
+              >
+                <span>🏥</span>
+                <span>Hospital Ops</span>
+              </button>
+            </div>
+          )}
+
+          {isInSaasMode ? (
             <>
               <div className="text-[10px] tracking-[.1em] uppercase text-ink-5 font-semibold px-2 pt-1.5 pb-2">
-                Platform
+                Platform Control
               </div>
               {saasNav.map((item) => (
                 <NavRow key={item.key} item={item} />
               ))}
-            </>
-          )}
 
-          {/* CRM ⇄ HMS product switcher — only shown when this user's role
-              (Role.domain) grants both, and the hospital's subscription
-              actually enables at least one ERP module. A domain-locked
-              role (crm-only or erp-only) just never sees this; their nav
-              below is that one domain's sections, permanently. */}
-          {showDomainSwitcher && (
-            <div className="flex items-center gap-[3px] p-[3px] mb-3 bg-page rounded-control border border-border-soft">
-              <button
-                onClick={() => switchDomain("crm")}
-                className={`flex-1 h-7 rounded-[6px] text-[12px] font-semibold flex items-center justify-center gap-1.5 transition-colors ${
-                  activeDomain === "crm" ? "bg-surface text-brand shadow-2xs" : "text-ink-4 hover:text-ink-2"
-                }`}
-              >
-                <span>💼</span>
-                <span>CRM</span>
-              </button>
-              <button
-                onClick={() => switchDomain("erp")}
-                className={`flex-1 h-7 rounded-[6px] text-[12px] font-semibold flex items-center justify-center gap-1.5 transition-colors ${
-                  activeDomain === "erp" ? "bg-surface text-brand shadow-2xs" : "text-ink-4 hover:text-ink-2"
-                }`}
-              >
-                <span>🏥</span>
-                <span>HMS</span>
-              </button>
-            </div>
-          )}
-
-          {visibleSections.map((section) => (
-            <div key={section.heading}>
-              <div className="text-[10px] tracking-[.1em] uppercase text-ink-5 font-semibold px-2 pt-1.5 pb-2">
-                {section.heading}
-              </div>
-              {section.items.map((item) => (
-                <NavRow key={item.key} item={item} />
-              ))}
-            </div>
-          ))}
-
-          {visibleAdminItems.length > 0 && (
-            <div>
               <div className="text-[10px] tracking-[.1em] uppercase text-ink-5 font-semibold px-2 pt-[18px] pb-2">
                 Administration
               </div>
-              {visibleAdminItems.map((item) => (
-                <NavRow key={item.key} item={item} />
+              <NavRow item={{ key: "settings", path: "/settings", labelKey: "nav.settings", subKey: "screenSub.settings" }} />
+            </>
+          ) : (
+            <>
+              {/* CRM ⇄ HMS product switcher — only shown when role grants both */}
+              {showDomainSwitcher && (
+                <div className="flex items-center gap-[3px] p-[3px] mb-3 bg-page rounded-control border border-border-soft">
+                  <button
+                    onClick={() => switchDomain("crm")}
+                    className={`flex-1 h-7 rounded-[6px] text-[12px] font-semibold flex items-center justify-center gap-1.5 transition-colors ${
+                      activeDomain === "crm" ? "bg-surface text-brand shadow-2xs" : "text-ink-4 hover:text-ink-2"
+                    }`}
+                  >
+                    <span>💼</span>
+                    <span>CRM</span>
+                  </button>
+                  <button
+                    onClick={() => switchDomain("erp")}
+                    className={`flex-1 h-7 rounded-[6px] text-[12px] font-semibold flex items-center justify-center gap-1.5 transition-colors ${
+                      activeDomain === "erp" ? "bg-surface text-brand shadow-2xs" : "text-ink-4 hover:text-ink-2"
+                    }`}
+                  >
+                    <span>🏥</span>
+                    <span>HMS</span>
+                  </button>
+                </div>
+              )}
+
+              {visibleSections.map((section) => (
+                <div key={section.heading}>
+                  <div className="text-[10px] tracking-[.1em] uppercase text-ink-5 font-semibold px-2 pt-1.5 pb-2">
+                    {section.heading}
+                  </div>
+                  {section.items.map((item) => (
+                    <NavRow key={item.key} item={item} />
+                  ))}
+                </div>
               ))}
-            </div>
+
+              {visibleAdminItems.length > 0 && (
+                <div>
+                  <div className="text-[10px] tracking-[.1em] uppercase text-ink-5 font-semibold px-2 pt-[18px] pb-2">
+                    Administration
+                  </div>
+                  {visibleAdminItems.map((item) => (
+                    <NavRow key={item.key} item={item} />
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -274,6 +371,22 @@ export function Shell() {
             <div className="w-[11px] h-[11px] border-[1.5px] border-ink-5 rounded-full shrink-0" />
             <span className="truncate">{t("common.search")}</span>
           </div>
+
+          {/* Return to SaaS button when inspecting a hospital tenant */}
+          {isSaasUser && !isInSaasMode && (
+            <button
+              onClick={() => {
+                setPlatformMode("saas")
+                localStorage.setItem("platform_mode", "saas")
+                navigate("/saas")
+              }}
+              className="flex items-center gap-1.5 h-8 px-3 rounded-control text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-xs transition-colors shrink-0"
+              title="Return to SaaS Platform Control"
+            >
+              <span>⚡</span>
+              <span>Back to SaaS Platform</span>
+            </button>
+          )}
 
           {/* Premium Branch Switcher in Top Header */}
           {user?.available_hospitals && user.available_hospitals.length > 1 && (
@@ -401,59 +514,61 @@ export function Shell() {
         </div>
       </div>
 
-      {/* Global Quick Action Speed-Dial FAB Button */}
-      <div className="fixed bottom-6 right-64 z-40 flex flex-col items-end gap-2">
-        {isFabOpen && (
-          <div className="bg-surface border border-border rounded-xl shadow-2xl p-2 flex flex-col gap-1.5 min-w-[200px] animate-in fade-in slide-in-from-bottom-2">
-            <div className="px-2 py-1 text-[10px] uppercase font-bold text-ink-5 border-b border-border">
-              Quick Actions (Hotkeys)
+      {/* Global Quick Action Speed-Dial FAB Button — only shown in Hospital Ops mode */}
+      {!isInSaasMode && (
+        <div className="fixed bottom-6 right-64 z-40 flex flex-col items-end gap-2">
+          {isFabOpen && (
+            <div className="bg-surface border border-border rounded-xl shadow-2xl p-2 flex flex-col gap-1.5 min-w-[200px] animate-in fade-in slide-in-from-bottom-2">
+              <div className="px-2 py-1 text-[10px] uppercase font-bold text-ink-5 border-b border-border">
+                Quick Actions (Hotkeys)
+              </div>
+              <button
+                onClick={() => {
+                  setIsFabOpen(false)
+                  navigate("/patients")
+                  showToast("Opening Patient Directory...")
+                }}
+                className="flex items-center gap-2.5 text-xs font-semibold text-ink hover:bg-brand-tint hover:text-brand px-2.5 py-1.5 rounded-lg text-left transition-colors"
+              >
+                <span>👤</span>
+                <span>New Patient (Alt+N)</span>
+              </button>
+              <button
+                onClick={() => {
+                  setIsFabOpen(false)
+                  navigate("/appointments")
+                  showToast("Opening OPD Appointments...")
+                }}
+                className="flex items-center gap-2.5 text-xs font-semibold text-ink hover:bg-brand-tint hover:text-brand px-2.5 py-1.5 rounded-lg text-left transition-colors"
+              >
+                <span>📅</span>
+                <span>Book Appointment (Alt+A)</span>
+              </button>
+              <button
+                onClick={() => {
+                  setIsFabOpen(false)
+                  navigate("/patients/1")
+                  showToast("Opening OPD e-Prescription (e-Rx)...")
+                }}
+                className="flex items-center gap-2.5 text-xs font-semibold text-ink hover:bg-brand-tint hover:text-brand px-2.5 py-1.5 rounded-lg text-left transition-colors"
+              >
+                <span>💊</span>
+                <span>Issue e-Prescription (e-Rx)</span>
+              </button>
             </div>
-            <button
-              onClick={() => {
-                setIsFabOpen(false)
-                navigate("/patients")
-                showToast("Opening Patient Directory...")
-              }}
-              className="flex items-center gap-2.5 text-xs font-semibold text-ink hover:bg-brand-tint hover:text-brand px-2.5 py-1.5 rounded-lg text-left transition-colors"
-            >
-              <span>👤</span>
-              <span>New Patient (Alt+N)</span>
-            </button>
-            <button
-              onClick={() => {
-                setIsFabOpen(false)
-                navigate("/appointments")
-                showToast("Opening OPD Appointments...")
-              }}
-              className="flex items-center gap-2.5 text-xs font-semibold text-ink hover:bg-brand-tint hover:text-brand px-2.5 py-1.5 rounded-lg text-left transition-colors"
-            >
-              <span>📅</span>
-              <span>Book Appointment (Alt+A)</span>
-            </button>
-            <button
-              onClick={() => {
-                setIsFabOpen(false)
-                navigate("/patients/1")
-                showToast("Opening OPD e-Prescription (e-Rx)...")
-              }}
-              className="flex items-center gap-2.5 text-xs font-semibold text-ink hover:bg-brand-tint hover:text-brand px-2.5 py-1.5 rounded-lg text-left transition-colors"
-            >
-              <span>💊</span>
-              <span>Issue e-Prescription (e-Rx)</span>
-            </button>
-          </div>
-        )}
+          )}
 
-        <button
-          onClick={() => setIsFabOpen(!isFabOpen)}
-          aria-expanded={isFabOpen}
-          aria-label="Quick Actions"
-          className="h-11 px-4 bg-brand hover:bg-brand-strong text-white rounded-full font-bold text-xs shadow-xl flex items-center gap-2 transition-transform hover:scale-105 active:scale-95"
-        >
-          <span className="text-base">{isFabOpen ? "✕" : "⚡"}</span>
-          <span>Quick Actions</span>
-        </button>
-      </div>
+          <button
+            onClick={() => setIsFabOpen(!isFabOpen)}
+            aria-expanded={isFabOpen}
+            aria-label="Quick Actions"
+            className="h-11 px-4 bg-brand hover:bg-brand-strong text-white rounded-full font-bold text-xs shadow-xl flex items-center gap-2 transition-transform hover:scale-105 active:scale-95"
+          >
+            <span className="text-base">{isFabOpen ? "✕" : "⚡"}</span>
+            <span>Quick Actions</span>
+          </button>
+        </div>
+      )}
 
       {/* Keyboard Shortcuts Cheat Sheet Modal */}
       {isShortcutsOpen && (
