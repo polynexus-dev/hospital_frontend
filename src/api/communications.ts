@@ -10,13 +10,19 @@ export function listRecentThreads() {
   return api.get<Paginated<Message>>("/messages/?ordering=-created_at")
 }
 
-export function sendMessage(payload: {
+export interface SendMessagePayload {
   patient: number
   channel: Channel
-  purpose: string
+  purpose?: string
+  body?: string
+  message?: string
+  template?: number | null
+  template_id?: number | null
   context?: Record<string, string>
   fallback_channel?: Channel
-}) {
+}
+
+export function sendMessage(payload: SendMessagePayload) {
   return api.post<Message>("/messages/send/", payload)
 }
 

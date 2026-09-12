@@ -8,6 +8,7 @@ import { Chip, NeutralTag, Pill } from "../../components/ui/Pill"
 import { EmptyState, LoadingState } from "../../components/ui/QueryStates"
 import {
   claimThread,
+  createConsent,
   listConsent,
   listMessages,
   listRecentThreads,
@@ -16,12 +17,14 @@ import {
   markThreadRead,
   postInteractiveChatAction,
   sendMessage,
+  setConsent,
 } from "../../api/communications"
 import { createEnquiry, listEnquiries } from "../../api/enquiries"
 import { getPatient, listPatients } from "../../api/patients"
 import { listUsers } from "../../api/accounts"
 import { useAuthStore } from "../../store/auth"
 import { slaInfo } from "../../lib/sla"
+import { extractApiError } from "../../api/client"
 import type { Channel, ConsentOptOut, Enquiry, EnquiryStage, Thread } from "../../types/api"
 import type { Tone } from "../../components/ui/tone"
 
@@ -125,6 +128,8 @@ export function InboxPage() {
   const [selectedThreadId, setSelectedThreadId] = useState<number | null>(null)
   const [channelFilter, setChannelFilter] = useState<Channel | "all">("all")
   const [composerBody, setComposerBody] = useState("")
+  const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const threadsQuery = useQuery({
     queryKey: ["threads", channelFilter],
@@ -158,9 +163,8 @@ export function InboxPage() {
   })
 
   const templatesQuery = useQuery({
-    queryKey: ["templates", selectedThread?.channel],
-    queryFn: () => listTemplates({ channel: selectedThread!.channel }),
-    enabled: !!selectedThread,
+    queryKey: ["templates"],
+    queryFn: () => listTemplates(),
   })
 
   const enquiriesQuery = useQuery({
@@ -191,6 +195,35 @@ export function InboxPage() {
       queryClient.invalidateQueries({ queryKey: ["messages"] })
       queryClient.invalidateQueries({ queryKey: ["threads"] })
       setComposerBody("")
+      setSelectedTemplateId(null)
+      setErrorMessage(null)
+    },
+    onError: (err) => {
+      const msg = extractApiError(err, "Failed to send message.")
+      setErrorMessage(msg)
+    },
+  })
+
+  const consentMutation = useMutation({
+    mutationFn: ({ id, isOptedOut }: { id: number; isOptedOut: boolean }) => setConsent(id, isOptedOut),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["consent"] })
+      setErrorMessage(null)
+    },
+    onError: (err) => {
+      setErrorMessage(extractApiError(err, "Failed to update consent."))
+    },
+  })
+
+  const createConsentMutation = useMutation({
+    mutationFn: (payload: { patient: number; channel: Channel; purpose: ConsentOptOut["purpose"]; is_opted_out: boolean }) =>
+      createConsent(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["consent"] })
+      setErrorMessage(null)
+    },
+    onError: (err) => {
+      setErrorMessage(extractApiError(err, "Failed to grant consent."))
     },
   })
 
@@ -260,9 +293,36 @@ export function InboxPage() {
     return dates.reduce((earliest, iso) => (new Date(iso).getTime() < new Date(earliest).getTime() ? iso : earliest))
   }, [selectedPatientQuery.data, patientEnquiries])
 
-  const activeTemplates = templatesQuery.data?.results.filter((t) => t.is_active) ?? []
+  const activeTemplates = useMemo(() => {
+    const list = templatesQuery.data?.results.filter((t) => t.is_active) ?? []
+    if (!selectedThread) return list
+    const forChannel = list.filter((t) => t.channel === selectedThread.channel)
+    return forChannel.length > 0 ? forChannel : list
+  }, [templatesQuery.data, selectedThread])
+
   const filteredMessages = (messagesQuery.data?.results ?? []).filter((m) => m.channel === selectedThread?.channel)
   const consentRows = consentQuery.data?.results ?? []
+
+  const patientMobile = selectedPatientQuery.data?.mobile?.trim() ?? ""
+  const patientEmail = selectedPatientQuery.data?.email?.trim() ?? ""
+
+  const isMissingAddress = useMemo(() => {
+    if (!selectedThread) return false
+    if (selectedThread.channel === "whatsapp" || selectedThread.channel === "sms") {
+      return !patientMobile
+    }
+    if (selectedThread.channel === "email") {
+      return !patientEmail
+    }
+    return false
+  }, [selectedThread, patientMobile, patientEmail])
+
+  const channelConsentRecord = useMemo(() => {
+    if (!selectedThread) return null
+    return consentRows.find((c) => c.channel === selectedThread.channel) ?? null
+  }, [selectedThread, consentRows])
+
+  const isOptedOut = channelConsentRecord ? channelConsentRecord.is_opted_out : false
 
   const nextStep = selectedThread
     ? suggestNextStep({ hasUnreadInbound: selectedThread.unread_count > 0, latestEnquiry, channel: selectedThread.channel })
@@ -276,12 +336,37 @@ export function InboxPage() {
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!selectedThread || !composerBody.trim()) return
+    setErrorMessage(null)
+    const text = composerBody.trim()
+    if (!selectedThread || !text) return
+
+    if (isMissingAddress) {
+      setErrorMessage(
+        `Cannot send message: Patient has no registered ${
+          selectedThread.channel === "email" ? "email address" : "mobile number"
+        } on file. Please update the patient's record.`,
+      )
+      return
+    }
+
+    const matchedTemplate =
+      activeTemplates.find((t) => t.id === selectedTemplateId) ??
+      (selectedThread.channel === "whatsapp" && activeTemplates.length > 0 ? activeTemplates[0] : null)
+
     sendMutation.mutate({
       patient: selectedThread.patient,
       channel: selectedThread.channel,
-      purpose: "outreach",
-      context: { body: composerBody },
+      purpose: matchedTemplate?.purpose || "transactional",
+      body: text,
+      message: text,
+      ...(matchedTemplate
+        ? {
+            template: matchedTemplate.id,
+            template_id: matchedTemplate.id,
+            template_name: matchedTemplate.name,
+          }
+        : {}),
+      context: { body: text },
     })
   }
 
@@ -416,31 +501,177 @@ export function InboxPage() {
             </div>
 
             <div className="border-t border-border px-3.5 py-3 flex flex-col gap-2">
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <div className="flex flex-wrap gap-1.5">
-                  {(activeTemplates.length > 0
-                    ? activeTemplates.map((t) => ({ key: `t${t.id}`, label: t.name, body: t.body }))
-                    : FALLBACK_QUICK_REPLIES.map((q) => ({ key: q.label, label: q.label, body: q.body }))
-                  ).map((chip) => (
-                    <button
-                      key={chip.key}
-                      type="button"
-                      onClick={() => setComposerBody(chip.body)}
-                      className="text-[12px] font-semibold px-2.5 py-1.5 rounded-chip border border-border-strong text-ink-3 hover:border-brand hover:bg-brand-tint hover:text-brand"
-                    >
-                      {chip.label}
-                    </button>
-                  ))}
+              {isMissingAddress && (
+                <div className="p-2.5 rounded-control bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-medium flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span>⚠️</span>
+                    <span>
+                      Patient has no <strong>{selectedThread.channel === "email" ? "email address" : "mobile number"}</strong> on file. Messages cannot be delivered without an address.
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/patients/${selectedThread.patient}`)}
+                    className="underline font-semibold hover:text-amber-900 dark:hover:text-amber-100 shrink-0"
+                  >
+                    Update Patient Profile →
+                  </button>
                 </div>
+              )}
+
+              {isOptedOut && (
+                <div className="p-2.5 rounded-control bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-medium flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span>⚠️</span>
+                    <span>
+                      Patient is currently <strong>opted out</strong> of {CHANNEL_LABELS[selectedThread.channel]} under DPDP rules.
+                    </span>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="h-6 text-[11px] px-2 py-0 border-amber-600 text-amber-700 hover:bg-amber-100 dark:text-amber-200 shrink-0"
+                    disabled={consentMutation.isPending}
+                    onClick={() => {
+                      if (channelConsentRecord) {
+                        consentMutation.mutate({ id: channelConsentRecord.id, isOptedOut: false })
+                      }
+                    }}
+                  >
+                    {consentMutation.isPending ? "Updating…" : "Opt-In Patient"}
+                  </Button>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[11.5px] font-semibold text-ink-3">Template:</span>
+                  <select
+                    value={selectedTemplateId ?? ""}
+                    onChange={(e) => {
+                      const id = e.target.value ? Number(e.target.value) : null
+                      setSelectedTemplateId(id)
+                      if (id) {
+                        const found = activeTemplates.find((t) => t.id === id)
+                        if (found) {
+                          setComposerBody(found.body)
+                        }
+                      }
+                      if (errorMessage) setErrorMessage(null)
+                    }}
+                    className="h-[28px] px-2 border border-border-strong rounded-control bg-surface text-[12px] text-ink-2 max-w-[200px]"
+                  >
+                    <option value="">-- Choose template --</option>
+                    {activeTemplates.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name} ({CHANNEL_LABELS[t.channel] ?? t.channel})
+                      </option>
+                    ))}
+                  </select>
+
+                  <div className="flex flex-wrap gap-1.5 ml-1">
+                    {(activeTemplates.length > 0
+                      ? activeTemplates.slice(0, 3).map((t) => ({ key: `t${t.id}`, label: t.name, body: t.body, id: t.id }))
+                      : FALLBACK_QUICK_REPLIES.map((q) => ({ key: q.label, label: q.label, body: q.body, id: null }))
+                    ).map((chip) => (
+                      <button
+                        key={chip.key}
+                        type="button"
+                        onClick={() => {
+                          setComposerBody(chip.body)
+                          setSelectedTemplateId(chip.id)
+                          setErrorMessage(null)
+                        }}
+                        className={`text-[12px] font-semibold px-2.5 py-1 rounded-chip border transition-colors ${
+                          selectedTemplateId === chip.id
+                            ? "border-brand bg-brand text-white"
+                            : "border-border-strong text-ink-3 hover:border-brand hover:bg-brand-tint hover:text-brand"
+                        }`}
+                      >
+                        {chip.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <Button size="sm" variant="secondary" onClick={handleGenerateAiReply} disabled={aiMutation.isPending}>
                   {aiMutation.isPending ? "Generating…" : "✨ AI Auto-Reply"}
                 </Button>
               </div>
+
+              {errorMessage && (
+                <div className="p-2.5 rounded-control bg-danger-bg border border-danger-border text-danger-text text-xs flex flex-col gap-2 shadow-2xs">
+                  <div className="flex items-center justify-between gap-2 font-semibold">
+                    <div className="flex items-center gap-2">
+                      <span>⚠️</span>
+                      <span>{errorMessage}</span>
+                    </div>
+                    <button type="button" onClick={() => setErrorMessage(null)} className="text-danger-text hover:opacity-75 font-bold">✕</button>
+                  </div>
+                  {errorMessage.includes("opted out, no template, or no address") && (
+                    <div className="flex items-center gap-2 pt-1 border-t border-danger-border/40 flex-wrap text-[11px]">
+                      <span className="font-semibold text-ink-2">Resolve quickly:</span>
+                      {activeTemplates.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const first = activeTemplates[0]
+                            setSelectedTemplateId(first.id)
+                            setComposerBody(first.body)
+                            setErrorMessage(null)
+                          }}
+                          className="px-2 py-0.5 rounded bg-surface border border-border-strong text-ink-2 hover:border-brand hover:text-brand font-medium"
+                        >
+                          Attach Template ({activeTemplates[0].name})
+                        </button>
+                      )}
+                      {channelConsentRecord?.is_opted_out && (
+                        <button
+                          type="button"
+                          onClick={() => consentMutation.mutate({ id: channelConsentRecord.id, isOptedOut: false })}
+                          className="px-2 py-0.5 rounded bg-surface border border-border-strong text-ink-2 hover:border-brand hover:text-brand font-medium"
+                        >
+                          Opt-In Patient
+                        </button>
+                      )}
+                      {!channelConsentRecord && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            createConsentMutation.mutate({
+                              patient: selectedThread.patient,
+                              channel: selectedThread.channel,
+                              purpose: "transactional",
+                              is_opted_out: false,
+                            })
+                          }
+                          className="px-2 py-0.5 rounded bg-surface border border-border-strong text-ink-2 hover:border-brand hover:text-brand font-medium"
+                        >
+                          Grant {CHANNEL_LABELS[selectedThread.channel]} Consent
+                        </button>
+                      )}
+                      {isMissingAddress && (
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/patients/${selectedThread.patient}`)}
+                          className="px-2 py-0.5 rounded bg-surface border border-border-strong text-ink-2 hover:border-brand hover:text-brand font-medium"
+                        >
+                          Add Mobile / Address
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <form onSubmit={handleSend} className="flex gap-2">
                 <input
                   required
                   value={composerBody}
-                  onChange={(e) => setComposerBody(e.target.value)}
+                  onChange={(e) => {
+                    setComposerBody(e.target.value)
+                    if (errorMessage) setErrorMessage(null)
+                  }}
                   placeholder={`Type your ${CHANNEL_LABELS[selectedThread.channel]} message or click ✨ AI Auto-Reply…`}
                   className="flex-1 h-9 px-3 border border-border-strong rounded-control text-[13px] outline-none focus:border-brand"
                 />
@@ -471,6 +702,18 @@ export function InboxPage() {
                   </span>
                 </div>
                 <div className="flex justify-between gap-2">
+                  <span className="text-ink-4">Mobile</span>
+                  <span className={`font-semibold text-right ${patientMobile ? "text-ink-2" : "text-amber-600 font-bold"}`}>
+                    {patientMobile || "Missing"}
+                  </span>
+                </div>
+                <div className="flex justify-between gap-2">
+                  <span className="text-ink-4">Email</span>
+                  <span className={`font-semibold text-right ${patientEmail ? "text-ink-2" : "text-ink-4"}`}>
+                    {patientEmail || "—"}
+                  </span>
+                </div>
+                <div className="flex justify-between gap-2">
                   <span className="text-ink-4">Source</span>
                   <span className="text-ink-2 text-right">{latestEnquiry?.source ?? "—"}</span>
                 </div>
@@ -492,20 +735,67 @@ export function InboxPage() {
             </Card>
 
             <Card padded>
-              <Eyebrow>Consent</Eyebrow>
+              <div className="flex items-center justify-between mb-2">
+                <Eyebrow>Consent</Eyebrow>
+                <span className="text-[11px] text-ink-4">DPDP Act, 2023</span>
+              </div>
               {consentQuery.isLoading && <LoadingState />}
-              {!consentQuery.isLoading && consentRows.length === 0 && <EmptyState message="No consent records on file." />}
+              {!consentQuery.isLoading && consentRows.length === 0 && (
+                <div className="text-[12px] text-ink-4 py-1">No consent records yet.</div>
+              )}
               <div className="flex flex-col gap-2">
                 {consentRows.map((c) => (
-                  <div key={c.id} className="flex items-center gap-2 text-[12.5px]">
-                    <div className={`w-[7px] h-[7px] rounded-full shrink-0 ${c.is_opted_out ? "bg-border-strong" : "bg-success"}`} />
-                    <span className="text-ink-2 truncate">
-                      {CHANNEL_LABELS[c.channel]} · {PURPOSE_LABELS[c.purpose]}
-                    </span>
-                    <span className="ml-auto text-[11px] text-ink-4 shrink-0">{c.is_opted_out ? "Opted out" : "Consented"}</span>
+                  <div key={c.id} className="flex items-center justify-between gap-2 text-[12.5px]">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className={`w-[7px] h-[7px] rounded-full shrink-0 ${c.is_opted_out ? "bg-danger" : "bg-success"}`} />
+                      <span className="text-ink-2 truncate">
+                        {CHANNEL_LABELS[c.channel] ?? c.channel} · {PURPOSE_LABELS[c.purpose] ?? c.purpose}
+                      </span>
+                    </div>
+                    {c.is_opted_out ? (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="h-[22px] px-2 py-0 text-[11px] font-semibold border-emerald-500 text-emerald-600 hover:bg-emerald-50 shrink-0"
+                        disabled={consentMutation.isPending}
+                        onClick={() => consentMutation.mutate({ id: c.id, isOptedOut: false })}
+                      >
+                        Opt In
+                      </Button>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled={consentMutation.isPending}
+                        onClick={() => consentMutation.mutate({ id: c.id, isOptedOut: true })}
+                        className="text-[11px] text-ink-4 hover:text-danger hover:underline shrink-0"
+                        title="Click to opt out patient"
+                      >
+                        Consented
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
+
+              {!channelConsentRecord && (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="mt-3 w-full text-[11.5px] border-border-strong text-ink-2 hover:border-brand hover:text-brand"
+                  disabled={createConsentMutation.isPending}
+                  onClick={() =>
+                    createConsentMutation.mutate({
+                      patient: selectedThread.patient,
+                      channel: selectedThread.channel,
+                      purpose: "transactional",
+                      is_opted_out: false,
+                    })
+                  }
+                >
+                  {createConsentMutation.isPending ? "Granting…" : `+ Grant ${CHANNEL_LABELS[selectedThread.channel]} Consent`}
+                </Button>
+              )}
+
               <div className="text-[11px] text-ink-5 mt-3 pt-3 border-t border-border-faint leading-relaxed">
                 Consent capture, storage, and retention follow the Digital Personal Data Protection (DPDP) Act, 2023.
               </div>

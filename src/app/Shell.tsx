@@ -18,6 +18,7 @@ import { useAuthStore } from "../store/auth"
 import { Avatar } from "../components/ui/Avatar"
 import { listCallbackTasks } from "../api/telephony"
 import { switchHospital } from "../api/auth"
+import { listHospitals } from "../api/hospitals"
 import { AIChatbotWidget } from "../components/ui/AIChatbotWidget"
 
 type Domain = "crm" | "erp"
@@ -221,6 +222,61 @@ export function Shell() {
     enabled: !isInSaasMode,
   })
 
+  const { data: allHospitals } = useQuery({
+    queryKey: ["hospitals"],
+    queryFn: listHospitals,
+    enabled: !isInSaasMode || !user?.hospital,
+  })
+
+  const availableBranches = useMemo(() => {
+    if (user?.available_hospitals && user.available_hospitals.length > 0) {
+      return user.available_hospitals
+    }
+    if (allHospitals && allHospitals.length > 0) {
+      return allHospitals.map((h) => ({
+        id: h.id,
+        name: h.name,
+        slug: h.slug,
+        city: h.city,
+      }))
+    }
+    return []
+  }, [user?.available_hospitals, allHospitals])
+
+  // If user has no active hospital attached, auto-attach to saved branch or first available branch
+  useEffect(() => {
+    if (!isInSaasMode && !user?.hospital && availableBranches.length > 0) {
+      const savedBranch = localStorage.getItem("last_active_hospital")
+      const target = availableBranches.find((b) => b.id === savedBranch) || availableBranches[0]
+      if (target) {
+        switchHospital(target.id)
+          .then((updatedUser) => {
+            if (updatedUser) {
+              useAuthStore.getState().setUser(updatedUser)
+              localStorage.setItem("last_active_hospital", target.id)
+              showToast(`Attached to hospital branch: ${target.name}`)
+            }
+          })
+          .catch(() => {})
+      }
+    }
+  }, [isInSaasMode, user?.hospital, availableBranches])
+
+  const handleSwitchBranch = async (branchId: string) => {
+    setIsBranchOpen(false)
+    try {
+      const updatedUser = await switchHospital(branchId)
+      if (updatedUser) {
+        useAuthStore.getState().setUser(updatedUser)
+        localStorage.setItem("last_active_hospital", branchId)
+        showToast(`Switched active branch to ${updatedUser.hospital_name || "selected hospital"}`)
+        window.location.reload()
+      }
+    } catch {
+      window.location.reload()
+    }
+  }
+
   const handleLogout = () => {
     logout()
     navigate("/login")
@@ -389,15 +445,25 @@ export function Shell() {
           )}
 
           {/* Premium Branch Switcher in Top Header */}
-          {user?.available_hospitals && user.available_hospitals.length > 1 && (
+          {availableBranches.length > 0 && (
             <div className="relative">
               <button
                 onClick={() => setIsBranchOpen(!isBranchOpen)}
-                className="flex items-center gap-2 h-8 px-3 border border-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 rounded-control text-xs font-semibold transition-all shadow-2xs"
+                className={`flex items-center gap-2 h-8 px-3 border rounded-control text-xs font-semibold transition-all shadow-2xs cursor-pointer ${
+                  !user?.hospital
+                    ? "border-amber-500 bg-amber-50 text-amber-900 hover:bg-amber-100 font-bold animate-pulse"
+                    : "border-emerald-500/40 bg-emerald-50/50 text-emerald-800 hover:bg-emerald-100"
+                }`}
               >
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                {!user?.hospital ? (
+                  <span>⚠️</span>
+                ) : (
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                )}
                 <span className="max-w-[160px] truncate">
-                  {user.hospital_name || "Select Branch"}
+                  {!user?.hospital
+                    ? "Select Hospital Branch"
+                    : user.hospital_name || availableBranches.find((b) => b.id === user.hospital)?.name || "Active Branch"}
                 </span>
                 <span className="text-[10px] opacity-70">▾</span>
               </button>
@@ -409,27 +475,22 @@ export function Shell() {
                     Hospital Branch Context
                   </div>
                   <div className="max-h-60 overflow-y-auto py-1">
-                    {user.available_hospitals.map((h) => {
-                      const isSelected = h.id === user.hospital
+                    {availableBranches.map((h) => {
+                      const isSelected = h.id === user?.hospital
                       return (
                         <button
                           key={h.id}
-                          onClick={async () => {
-                            setIsBranchOpen(false)
-                            if (!isSelected) {
-                              await switchHospital(h.id)
-                              window.location.reload()
-                            }
-                          }}
-                          className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between transition-colors ${
+                          onClick={() => handleSwitchBranch(h.id)}
+                          className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between transition-colors cursor-pointer ${
                             isSelected
-                              ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold"
+                              ? "bg-emerald-50 text-emerald-700 font-bold"
                               : "text-ink hover:bg-page"
                           }`}
                         >
                           <div className="flex items-center gap-2 truncate pr-2">
                             <span className="text-sm">📍</span>
                             <span className="truncate">{h.name}</span>
+                            {h.city && <span className="text-[10px] opacity-60">({h.city})</span>}
                           </div>
                           {isSelected && <span className="text-emerald-600 font-bold text-sm">✓</span>}
                         </button>
@@ -505,6 +566,33 @@ export function Shell() {
             className="fixed top-4 right-1/3 z-50 bg-slate-900 text-white text-xs font-semibold px-4 py-2.5 rounded-lg shadow-2xl flex items-center gap-2 border border-slate-700 animate-in fade-in slide-in-from-top-3"
           >
             <span>{toastMessage}</span>
+          </div>
+        )}
+
+        {/* Warning banner when in Hospital Ops mode but no hospital branch is attached */}
+        {!isInSaasMode && !user?.hospital && (
+          <div className="bg-amber-50 border-b border-amber-300 text-amber-900 px-5 py-3 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-2.5">
+              <span className="text-base">⚠️</span>
+              <div>
+                <strong className="font-bold">No Hospital Branch Attached:</strong> You are currently not attached to an active hospital branch. Clinical actions (registering patients, booking OPD/IPD) require a branch context.
+              </div>
+            </div>
+            {availableBranches.length > 0 && (
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="font-bold text-amber-800">Select Branch:</span>
+                <select
+                  className="bg-white border border-amber-400 text-slate-900 font-bold px-2.5 py-1 rounded text-xs focus:ring-2 focus:ring-amber-500 shadow-2xs"
+                  onChange={(e) => handleSwitchBranch(e.target.value)}
+                  defaultValue=""
+                >
+                  <option value="" disabled>Choose a branch...</option>
+                  {availableBranches.map((b) => (
+                    <option key={b.id} value={b.id}>{b.name} ({b.city || "Main"})</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
         )}
 

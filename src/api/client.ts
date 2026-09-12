@@ -42,6 +42,33 @@ export class ApiError extends Error {
   }
 }
 
+export function extractApiError(err: unknown, fallback = "An unexpected error occurred."): string {
+  if (err instanceof ApiError && err.body) {
+    if (typeof err.body === "string") return err.body
+    if (Array.isArray(err.body) && err.body.length > 0) {
+      return String(err.body[0])
+    }
+    if (typeof err.body === "object") {
+      const b = err.body as Record<string, unknown>
+      if (typeof b.detail === "string") return b.detail
+      if (Array.isArray(b.non_field_errors) && b.non_field_errors.length > 0) {
+        return String(b.non_field_errors[0])
+      }
+      if (Array.isArray(b.errors) && b.errors.length > 0) {
+        return String(b.errors[0])
+      }
+      const firstKey = Object.keys(b)[0]
+      if (firstKey) {
+        const val = b[firstKey]
+        if (Array.isArray(val) && val.length > 0) return `${firstKey}: ${val[0]}`
+        if (typeof val === "string") return `${firstKey}: ${val}`
+      }
+    }
+  }
+  if (err instanceof Error) return err.message
+  return fallback
+}
+
 let refreshPromise: Promise<string | null> | null = null
 
 async function refreshAccessToken(): Promise<string | null> {
