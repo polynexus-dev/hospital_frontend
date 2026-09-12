@@ -1,5 +1,5 @@
 import { api, triggerBlobDownload } from "./client"
-import type { Enquiry, EnquiryStage, LostReason, Paginated } from "../types/api"
+import type { Enquiry, EnquiryHistory, EnquiryStage, LostReason, Paginated } from "../types/api"
 
 export interface TreatmentEstimate {
   id: number
@@ -69,6 +69,20 @@ export function updateEnquiry(id: number, payload: Partial<Enquiry>) {
   return api.patch<Enquiry>(`/enquiries/${id}/`, payload)
 }
 
+export function getEnquiryHistory(id: number) {
+  return api.get<EnquiryHistory>(`/enquiries/${id}/history/`)
+}
+
+export function addEnquiryNote(id: number, note: string) {
+  return api.post<Enquiry>(`/enquiries/${id}/add-note/`, { note })
+}
+
+export async function exportEnquiriesCsv(params: Record<string, string> = {}) {
+  const qs = new URLSearchParams(params).toString()
+  const blob = await api.getBlob(`/enquiries/export-csv/${qs ? `?${qs}` : ""}`)
+  triggerBlobDownload(blob, `hospital_crm_leads_${new Date().toISOString().slice(0, 10)}.csv`)
+}
+
 export function getWebhookConfig() {
   return api.get<WebhookConfigResponse>("/enquiries/webhook-config/")
 }
@@ -95,4 +109,5 @@ export async function downloadTreatmentEstimatePdf(id: number, procedureName = "
   const sanitized = procedureName.replace(/[^a-zA-Z0-9_-]/g, "_")
   triggerBlobDownload(blob, `Estimate_EST-${id}_${sanitized}.pdf`)
 }
+
 

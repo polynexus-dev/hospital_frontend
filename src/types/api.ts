@@ -190,6 +190,8 @@ export interface Enquiry {
   landing_page: string
   referrer_url: string
   department: number | null
+  consulting_doctor: number | null
+  consulting_doctor_name: string
   service_requested: string
   urgency: Urgency
   score: number
@@ -197,6 +199,7 @@ export interface Enquiry {
   assigned_to: number | null
   duplicate_of: number | null
   sla_due_at: string | null
+  follow_up_date: string | null
   escalation_level: number
   lost_reason: LostReason
   lost_notes: string
@@ -210,10 +213,29 @@ export interface EnquiryAssignmentChange {
   id: number
   enquiry: number
   from_owner: number | null
+  from_owner_name?: string
   to_owner: number | null
+  to_owner_name?: string
   changed_by: number | null
+  changed_by_name?: string
   reason: string
   created_at: string
+}
+
+export interface EnquiryStageChange {
+  id: number
+  enquiry: number
+  from_stage: string
+  to_stage: string
+  changed_by: number | null
+  changed_by_name?: string
+  created_at: string
+}
+
+export interface EnquiryHistory {
+  stage_changes: EnquiryStageChange[]
+  assignment_changes: EnquiryAssignmentChange[]
+  estimates: any[]
 }
 
 export interface Doctor {
