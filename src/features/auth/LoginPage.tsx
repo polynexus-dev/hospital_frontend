@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { login, verifyMfa, fetchMe, isMfaChallenge } from "../../api/auth"
 import { useAuthStore } from "../../store/auth"
-import { ApiError } from "../../api/client"
+import { ApiError, getSubdomain } from "../../api/client"
 import { Button } from "../../components/ui/Button"
 
 export function LoginPage() {
@@ -12,14 +12,17 @@ export function LoginPage() {
   const setTokens = useAuthStore((s) => s.setTokens)
   const setUser = useAuthStore((s) => s.setUser)
 
+  const subdomain = getSubdomain()
+  const isSaasPortal = subdomain === "app"
+  const tenantTitle = isSaasPortal
+    ? "SaaS Admin Console"
+    : subdomain
+    ? `${subdomain.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}`
+    : t("login.title")
+
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [otp, setOtp] = useState("")
-  // Set once the password step returns a challenge instead of tokens —
-  // its presence is what switches the form to the OTP step (see
-  // apps.accounts.serializers.HospitalScopedTokenObtainPairSerializer:
-  // an is_2fa_enabled account gets {mfa_required, mfa_token} in place of
-  // real tokens, and mfa_token is the only thing /auth/mfa/verify/ trusts).
   const [mfaToken, setMfaToken] = useState<string | null>(null)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
@@ -27,7 +30,11 @@ export function LoginPage() {
   const completeLogin = async () => {
     const me = await fetchMe()
     setUser(me)
-    navigate("/dashboard")
+    if (me.is_saas_admin || me.is_superuser) {
+      navigate("/saas")
+    } else {
+      navigate("/dashboard")
+    }
   }
 
   const handleCredentialsSubmit = async (e: React.FormEvent) => {
@@ -77,13 +84,19 @@ export function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-page">
       <div className="w-[360px] bg-surface border border-border rounded-card p-7">
         <div className="w-8 h-8 rounded-[6px] bg-brand text-white flex items-center justify-center font-bold text-sm mb-4">
-          H
+          {isSaasPortal ? "⚡" : "🏥"}
         </div>
 
         {mfaToken === null ? (
           <>
-            <div className="text-[19px] font-semibold mb-1">{t("login.title")}</div>
-            <div className="text-[13px] text-ink-4 mb-6">{t("login.subtitle")}</div>
+            <div className="text-[19px] font-semibold mb-1">{tenantTitle}</div>
+            <div className="text-[13px] text-ink-4 mb-6">
+              {isSaasPortal
+                ? "Platform operator & tenant management access"
+                : subdomain
+                ? "Hospital staff & provider portal"
+                : t("login.subtitle")}
+            </div>
 
             <form onSubmit={handleCredentialsSubmit} className="flex flex-col gap-3">
               <div>

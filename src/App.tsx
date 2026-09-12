@@ -26,6 +26,16 @@ const WorkflowsPage = lazy(() => import("./features/workflows/WorkflowsPage").th
 const AdminPage = lazy(() => import("./features/admin/AdminPage").then((m) => ({ default: m.AdminPage })))
 const SaaSConsolePage = lazy(() => import("./features/saas/SaaSConsolePage").then((m) => ({ default: m.SaaSConsolePage })))
 
+import { useAuthStore } from "./store/auth"
+
+function HomeRedirect() {
+  const user = useAuthStore((s) => s.user)
+  if (user && (user.is_saas_admin || user.is_superuser) && !user.hospital) {
+    return <Navigate to="/saas" replace />
+  }
+  return <Navigate to="/dashboard" replace />
+}
+
 function App() {
   return (
     <Routes>
@@ -33,7 +43,7 @@ function App() {
 
       <Route element={<ProtectedRoute />}>
         <Route element={<Shell />}>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/" element={<HomeRedirect />} />
           <Route path="/dashboard" element={<Suspense fallback={<LoadingState />}><DashboardPage /></Suspense>} />
           <Route path="/console" element={<Suspense fallback={<LoadingState />}><ConsolePage /></Suspense>} />
           <Route path="/callbacks" element={<Suspense fallback={<LoadingState />}><CallbacksPage /></Suspense>} />

@@ -1,7 +1,26 @@
 import { useAuthStore } from "../store/auth"
 import { decryptPayload, encryptPayload, getSessionId, isSessionReady } from "./payloadCrypto"
 
+export function getSubdomain(): string | null {
+  if (typeof window === "undefined") return null
+  const host = window.location.hostname.toLowerCase()
+  const parts = host.split(".")
+  if (parts.length >= 3 && parts[0] !== "www" && parts[0] !== "api") {
+    return parts[0]
+  }
+  if (parts.length === 2 && parts[1] === "localhost") {
+    return parts[0]
+  }
+  return null
+}
+
 export function getApiBaseUrl(): string {
+  if (typeof window !== "undefined") {
+    const hostname = window.location.hostname
+    if (hostname !== "localhost" && hostname !== "127.0.0.1") {
+      return `${window.location.protocol}//${window.location.host}/api/v1`
+    }
+  }
   const envUrl = import.meta.env.VITE_API_BASE_URL
   if (envUrl && envUrl.startsWith("http")) return envUrl
   if (typeof window !== "undefined") {
