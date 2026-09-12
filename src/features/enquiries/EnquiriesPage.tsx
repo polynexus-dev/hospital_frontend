@@ -18,6 +18,10 @@ import { bookAppointment, listDoctors, listSlots } from "../../api/appointments"
 import { createPatient, lookupPatientByMobile } from "../../api/patients"
 import type { Enquiry, EnquiryStage, EnquirySource } from "../../types/api"
 import type { User } from "../../types/api"
+import { CreateTreatmentEstimateModal } from "./CreateTreatmentEstimateModal"
+import { InboundWebhookModal } from "./InboundWebhookModal"
+import { SurgicalPipelineTab } from "./SurgicalPipelineTab"
+
 
 const INR = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })
 
@@ -482,7 +486,12 @@ function EnquiryCard({ enquiry, ownerName, users }: { enquiry: Enquiry; ownerNam
 }
 
 export function EnquiriesPage() {
+  const queryClient = useQueryClient()
+  const [activeTab, setActiveTab] = useState<"leads" | "surgical">("leads")
   const [showNew, setShowNew] = useState(false)
+  const [showWebhookModal, setShowWebhookModal] = useState(false)
+  const [showEstimateModal, setShowEstimateModal] = useState(false)
+
   const [deptFilter, setDeptFilter] = useState<number | "all">("all")
   const [sourceFilter, setSourceFilter] = useState<EnquirySource | "all">("all")
   const [ownerFilter, setOwnerFilter] = useState<number | "all">("all")
@@ -524,71 +533,138 @@ export function EnquiriesPage() {
 
   return (
     <div className="flex flex-col gap-3.5">
-      <div className="flex items-center gap-2 flex-wrap">
-        <div className="flex gap-1.5 flex-wrap">
-          <select
-            value={deptFilter}
-            onChange={(e) => setDeptFilter(e.target.value === "all" ? "all" : Number(e.target.value))}
-            className="h-[30px] px-2.5 border border-border-strong rounded-control bg-surface text-[12.5px] text-ink-3"
-          >
-            <option value="all">All departments</option>
-            {departments.map((d) => (
-              <option key={d} value={d}>Dept #{d}</option>
-            ))}
-          </select>
-          <select
-            value={sourceFilter}
-            onChange={(e) => setSourceFilter(e.target.value as EnquirySource | "all")}
-            className="h-[30px] px-2.5 border border-border-strong rounded-control bg-surface text-[12.5px] text-ink-3"
-          >
-            <option value="all">All sources</option>
-            {SOURCES.map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-          <select
-            value={ownerFilter}
-            onChange={(e) => setOwnerFilter(e.target.value === "all" ? "all" : Number(e.target.value))}
-            className="h-[30px] px-2.5 border border-border-strong rounded-control bg-surface text-[12.5px] text-ink-3"
-          >
-            <option value="all">Owner: anyone</option>
-            {owners.map((o) => (
-              <option key={o} value={o}>{ownerName(o)}</option>
-            ))}
-          </select>
+      {/* Top Header & Tab Controls */}
+      <div className="flex items-center justify-between border-b border-slate-200 pb-3 dark:border-slate-800 gap-3 flex-wrap">
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => setSlaOnly((v) => !v)}
-            className={`h-[30px] px-2.5 rounded-control text-[12.5px] font-semibold border ${
-              slaOnly ? "bg-danger-bg border-danger-border text-danger-text" : "bg-surface border-border-strong text-ink-3"
+            onClick={() => setActiveTab("leads")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              activeTab === "leads"
+                ? "bg-teal-600 text-white shadow-sm dark:bg-teal-500"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
             }`}
           >
-            SLA breached · {slaBreachedCount}
+            📋 OPD & Inbound Leads ({open.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("surgical")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+              activeTab === "surgical"
+                ? "bg-teal-600 text-white shadow-sm dark:bg-teal-500"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+            }`}
+          >
+            <span>🏥</span> Surgical & IPD Pipeline
           </button>
         </div>
-        <div className="flex-1" />
-        <div className="text-[12.5px] text-ink-4">{filtered.length} open · {INR.format(pipelineValue)} pipeline value</div>
-        <Button variant="primary" onClick={() => setShowNew(true)}>New enquiry</Button>
+
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setShowWebhookModal(true)}
+            className="border border-slate-200 dark:border-slate-800 text-teal-700 dark:text-teal-400"
+          >
+            ⚡ Inbound Webhooks
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => setShowEstimateModal(true)}
+          >
+            + New Surgical Estimate
+          </Button>
+          <Button
+            size="sm"
+            variant="primary"
+            onClick={() => setShowNew(true)}
+          >
+            + New Lead
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-6 gap-3 items-start min-w-[1020px]">
-        {STAGES.map((stage) => {
-          const cards = filtered.filter((e) => e.stage === stage.key)
-          return (
-            <div key={stage.key} className="bg-page border border-border rounded-card p-2.5 flex flex-col gap-2.5">
-              <div className="flex items-center justify-between px-0.5">
-                <div className="text-[12px] font-bold">{stage.label}</div>
-                <div className="text-[11.5px] text-ink-4 font-semibold">{cards.length}</div>
-              </div>
-              {cards.map((e) => (
-                <EnquiryCard key={e.id} enquiry={e} ownerName={ownerName(e.assigned_to)} users={users.data?.results ?? []} />
-              ))}
-              {cards.length === 0 && <div className="text-[11.5px] text-ink-5 px-1">—</div>}
+      {activeTab === "surgical" ? (
+        <SurgicalPipelineTab onNewEstimate={() => setShowEstimateModal(true)} />
+      ) : (
+        <>
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex gap-1.5 flex-wrap">
+              <select
+                value={deptFilter}
+                onChange={(e) => setDeptFilter(e.target.value === "all" ? "all" : Number(e.target.value))}
+                className="h-[30px] px-2.5 border border-border-strong rounded-control bg-surface text-[12.5px] text-ink-3"
+              >
+                <option value="all">All departments</option>
+                {departments.map((d) => (
+                  <option key={d} value={d}>Dept #{d}</option>
+                ))}
+              </select>
+              <select
+                value={sourceFilter}
+                onChange={(e) => setSourceFilter(e.target.value as EnquirySource | "all")}
+                className="h-[30px] px-2.5 border border-border-strong rounded-control bg-surface text-[12.5px] text-ink-3"
+              >
+                <option value="all">All sources</option>
+                {SOURCES.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+              <select
+                value={ownerFilter}
+                onChange={(e) => setOwnerFilter(e.target.value === "all" ? "all" : Number(e.target.value))}
+                className="h-[30px] px-2.5 border border-border-strong rounded-control bg-surface text-[12.5px] text-ink-3"
+              >
+                <option value="all">Owner: anyone</option>
+                {owners.map((o) => (
+                  <option key={o} value={o}>{ownerName(o)}</option>
+                ))}
+              </select>
+              <button
+                onClick={() => setSlaOnly((v) => !v)}
+                className={`h-[30px] px-2.5 rounded-control text-[12.5px] font-semibold border ${
+                  slaOnly ? "bg-danger-bg border-danger-border text-danger-text" : "bg-surface border-border-strong text-ink-3"
+                }`}
+              >
+                SLA breached · {slaBreachedCount}
+              </button>
             </div>
-          )
-        })}
-      </div>
+            <div className="flex-1" />
+            <div className="text-[12.5px] text-ink-4">{filtered.length} open · {INR.format(pipelineValue)} pipeline value</div>
+          </div>
+
+          <div className="grid grid-cols-6 gap-3 items-start min-w-[1020px]">
+            {STAGES.map((stage) => {
+              const cards = filtered.filter((e) => e.stage === stage.key)
+              return (
+                <div key={stage.key} className="bg-page border border-border rounded-card p-2.5 flex flex-col gap-2.5">
+                  <div className="flex items-center justify-between px-0.5">
+                    <div className="text-[12px] font-bold">{stage.label}</div>
+                    <div className="text-[11.5px] text-ink-4 font-semibold">{cards.length}</div>
+                  </div>
+                  {cards.map((e) => (
+                    <EnquiryCard key={e.id} enquiry={e} ownerName={ownerName(e.assigned_to)} users={users.data?.results ?? []} />
+                  ))}
+                  {cards.length === 0 && <div className="text-[11.5px] text-ink-5 px-1">—</div>}
+                </div>
+              )
+            })}
+          </div>
+        </>
+      )}
 
       {showNew && <NewEnquiryForm onClose={() => setShowNew(false)} />}
+      <InboundWebhookModal
+        open={showWebhookModal}
+        onClose={() => setShowWebhookModal(false)}
+        onLeadCaptured={() => enquiries.refetch()}
+      />
+      <CreateTreatmentEstimateModal
+        open={showEstimateModal}
+        onClose={() => setShowEstimateModal(false)}
+        onCreated={() => queryClient.invalidateQueries({ queryKey: ["treatment-estimates"] })}
+      />
     </div>
   )
 }
+

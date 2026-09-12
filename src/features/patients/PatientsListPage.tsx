@@ -7,12 +7,15 @@ import { NeutralTag } from "../../components/ui/Pill"
 import { ErrorState, LoadingState } from "../../components/ui/QueryStates"
 import { createPatient, listPatients } from "../../api/patients"
 import type { Patient } from "../../types/api"
+import { RecallHubModal } from "./RecallHubModal"
 
 export function PatientsListPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [search, setSearch] = useState("")
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isRecallModalOpen, setIsRecallModalOpen] = useState(false)
+
   const [formData, setFormData] = useState<Partial<Patient>>({
     first_name: "",
     last_name: "",
@@ -62,8 +65,20 @@ export function PatientsListPage() {
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Patient Directory</h1>
           <p className="text-sm text-slate-500 dark:text-slate-400">Search and manage complete Patient 360 records</p>
         </div>
-        <Button variant="primary" onClick={() => setIsModalOpen(true)}>+ New Patient</Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="secondary"
+            onClick={() => setIsRecallModalOpen(true)}
+            className="border border-teal-200 text-teal-800 hover:bg-teal-50 dark:border-teal-900/50 dark:text-teal-300"
+          >
+            🩺 Clinical Recalls Hub
+          </Button>
+          <Button variant="primary" onClick={() => setIsModalOpen(true)}>
+            + New Patient
+          </Button>
+        </div>
       </div>
+
 
       <Card className="p-4">
         <div className="flex gap-2">
@@ -239,6 +254,15 @@ export function PatientsListPage() {
           </Card>
         </div>
       )}
+
+      <RecallHubModal
+        open={isRecallModalOpen}
+        onClose={() => setIsRecallModalOpen(false)}
+        onBookAppointment={(p) => {
+          navigate(`/appointments?patient=${p.id}`)
+        }}
+      />
     </div>
   )
 }
+

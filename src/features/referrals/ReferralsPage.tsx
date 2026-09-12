@@ -10,13 +10,43 @@ import {
   listReferringDoctors,
   createReferringDoctor,
   createFieldVisit,
+  downloadReferralStatementPdf,
+  settleReferrals,
   type ReferringDoctor,
 } from "../../api/referrals"
+import { showToast } from "../../components/ui/Toast"
+
 
 export function ReferralsPage() {
   const [activeTab, setActiveTab] = useState<"league" | "directory" | "visits">("league")
   const [showAddDoctor, setShowAddDoctor] = useState(false)
   const [showLogVisit, setShowLogVisit] = useState(false)
+  const [downloadingDoctorId, setDownloadingDoctorId] = useState<number | null>(null)
+  const queryClient = useQueryClient()
+
+  const handleDownloadStatement = async (doc: ReferringDoctor) => {
+    setDownloadingDoctorId(doc.id)
+    try {
+      await downloadReferralStatementPdf(doc.id, doc.name)
+      showToast(`Statement PDF downloaded for Dr. ${doc.name}!`, "success")
+    } catch {
+      showToast("Failed to generate referral statement", "error")
+    } finally {
+      setDownloadingDoctorId(null)
+    }
+  }
+
+  const handleSettlePayout = async (doc: ReferringDoctor) => {
+    try {
+      const res = await settleReferrals(doc.id)
+      showToast(res.detail, "success")
+      queryClient.invalidateQueries({ queryKey: ["referrals-league"] })
+      queryClient.invalidateQueries({ queryKey: ["referral-doctors"] })
+    } catch {
+      showToast("Failed to settle referrals", "error")
+    }
+  }
+
 
   const { data: leagueData, isLoading: isLeagueLoading } = useQuery({
     queryKey: ["referrals-league"],
@@ -120,11 +150,23 @@ export function ReferralsPage() {
                     </div>
                   </div>
 
-                  <div className="text-right">
-                    <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
-                      ₹{Number(doc.total_attributed_revenue || 0).toLocaleString("en-IN")}
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                        ₹{Number(doc.total_attributed_revenue || 0).toLocaleString("en-IN")}
+                      </div>
+                      <span className="text-xs text-slate-400">{doc.total_referrals || 0} Patient Referrals</span>
                     </div>
-                    <span className="text-xs text-slate-400">{doc.total_referrals || 0} Patient Referrals</span>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleDownloadStatement(doc)}
+                      disabled={downloadingDoctorId === doc.id}
+                      className="text-teal-700 hover:text-teal-800 dark:text-teal-400 border border-teal-200 dark:border-teal-900/60"
+                      title="Download Monthly Commission Statement PDF"
+                    >
+                      {downloadingDoctorId === doc.id ? "..." : "📄 Statement"}
+                    </Button>
                   </div>
                 </Card>
               ))}
@@ -153,6 +195,7 @@ export function ReferralsPage() {
                   <th className="px-6 py-3 font-semibold">Contact</th>
                   <th className="px-6 py-3 font-semibold">Tier</th>
                   <th className="px-6 py-3 font-semibold">Status</th>
+                  <th className="px-6 py-3 font-semibold text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
@@ -168,6 +211,29 @@ export function ReferralsPage() {
                     <td className="px-6 py-4">
                       {doc.is_active ? <SuccessTag>ACTIVE</SuccessTag> : <NeutralTag>INACTIVE</NeutralTag>}
                     </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDownloadStatement(doc)}
+                          disabled={downloadingDoctorId === doc.id}
+                          className="text-teal-700 hover:text-teal-800 dark:text-teal-400 text-xs border border-slate-200 dark:border-slate-700"
+                          title="Download Commission Statement PDF"
+                        >
+                          {downloadingDoctorId === doc.id ? "..." : "📄 Statement"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => handleSettlePayout(doc)}
+                          className="text-xs"
+                          title="Settle pending referral payouts"
+                        >
+                          ✓ Settle
+                        </Button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -175,6 +241,7 @@ export function ReferralsPage() {
           )}
         </Card>
       )}
+
 
       {/* TAB 3: FIELD VISITS */}
       {activeTab === "visits" && (
