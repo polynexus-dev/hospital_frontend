@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, useRef } from "react"
 import { useSearchParams } from "react-router-dom"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Card, CardHeader } from "../../components/ui/Card"
@@ -25,7 +25,7 @@ import {
 } from "../../api/saas"
 import type { OnboardTenantPayload, SaaSHospital, SaaSSupportTicket, TenantInvoice, TenantSubscription } from "../../types/api"
 import type { Tone } from "../../components/ui/tone"
-import { TenantModulesModal } from "./TenantModulesModal"
+import { TenantModulesModal, SYSTEM_MODULES } from "./TenantModulesModal"
 import { TenantOnboardModal } from "./TenantOnboardModal"
 
 
@@ -75,6 +75,28 @@ function formatBytes(bytes: number): string {
 
 function formatDate(iso: string | null): string {
   return iso ? new Date(iso).toLocaleDateString("en-IN", { year: "numeric", month: "short", day: "numeric" }) : "—"
+}
+
+function HighlightMatch({ text, query }: { text: string; query: string }) {
+  if (!query.trim() || !text) return <>{text}</>
+  const escaped = query.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  const parts = text.split(new RegExp(`(${escaped})`, "gi"))
+  return (
+    <>
+      {parts.map((part, i) =>
+        part.toLowerCase() === query.trim().toLowerCase() ? (
+          <span
+            key={i}
+            className="bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-200 font-bold rounded-xs px-0.5"
+          >
+            {part}
+          </span>
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      )}
+    </>
+  )
 }
 
 function TicketRow({ ticket }: { ticket: SaaSSupportTicket }) {
@@ -252,12 +274,25 @@ export function SaaSConsolePage() {
   const urlQuery = searchParams.get("q") || ""
   const [searchQuery, setSearchQuery] = useState(urlQuery)
   const [selectedHospitalId, setSelectedHospitalId] = useState<string>("all")
+  const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false)
+  const [selectedIndex, setSelectedIndex] = useState(-1)
+  const searchContainerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (urlQuery) {
       setSearchQuery(urlQuery)
     }
   }, [urlQuery])
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setIsSuggestionsOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
 
   const setActiveTab = (key: TabKey) => {
     setSearchParams((prev) => {
@@ -317,7 +352,7 @@ export function SaaSConsolePage() {
   const invoices = useQuery({
     queryKey: ["saas-invoices"],
     queryFn: () => listInvoices(),
-    enabled: activeTab === "invoices",
+    enabled: activeTab === "invoices" || Boolean(searchQuery.trim()),
   })
 
   const usage = useQuery({
@@ -332,7 +367,6 @@ export function SaaSConsolePage() {
     enabled: activeTab === "tickets",
   })
 
-
   const hospitalList = useMemo(() => {
     if (user?.available_hospitals && user.available_hospitals.length > 0) {
       return user.available_hospitals
@@ -341,11 +375,41 @@ export function SaaSConsolePage() {
     subscriptions.data?.results.forEach((s) => {
       map.set(s.hospital, { id: s.hospital, name: s.hospital_name || `Hospital #${s.hospital}` })
     })
+    ;(hospitals.data?.results ?? []).forEach((h) => {
+      if (!map.has(h.id)) {
+        map.set(h.id, { id: h.id, name: h.name })
+      }
+    })
     return Array.from(map.values())
-  }, [user, subscriptions.data])
+  }, [user, subscriptions.data, hospitals.data])
+
+  const allSubscriptionItems = useMemo(() => {
+    const subs = subscriptions.data?.results ?? []
+    const subHospIds = new Set(subs.map((s) => String(s.hospital)))
+    const list: TenantSubscription[] = [...subs]
+    ;(hospitals.data?.results ?? []).forEach((h) => {
+      if (!subHospIds.has(String(h.id))) {
+        list.push({
+          id: (h.subscription?.id || (h.id as any)),
+          hospital: h.id as any,
+          hospital_name: h.name,
+          tier: (h.subscription?.tier || "pro") as any,
+          billing_cycle: (h.subscription?.billing_cycle || "monthly") as any,
+          base_price: h.subscription?.base_price || "24999.00",
+          max_staff_users: h.subscription?.max_staff_users || 50,
+          status: (h.subscription?.status || (h.is_active ? "active" : "suspended")) as any,
+          started_at: h.created_at || new Date().toISOString().split("T")[0],
+          next_billing_date: h.subscription?.next_billing_date || null,
+          created_at: h.created_at || new Date().toISOString(),
+          updated_at: h.updated_at || new Date().toISOString(),
+        })
+      }
+    })
+    return list
+  }, [subscriptions.data?.results, hospitals.data?.results])
 
   const filteredSubscriptions = useMemo(() => {
-    const list = subscriptions.data?.results ?? []
+    const list = allSubscriptionItems
     return list.filter((s) => {
       if (selectedHospitalId !== "all" && String(s.hospital) !== selectedHospitalId) {
         return false
@@ -355,11 +419,160 @@ export function SaaSConsolePage() {
         const name = (s.hospital_name || "").toLowerCase()
         const tier = (s.tier || "").toLowerCase()
         const id = String(s.hospital)
-        return name.includes(q) || tier.includes(q) || id.includes(q)
+        const matchedHosp = hospitalsMap.get(String(s.hospital)) || hospitalsMap.get(s.hospital_name || "")
+        const slug = (matchedHosp?.slug || "").toLowerCase()
+        const city = (matchedHosp?.city || "").toLowerCase()
+        const state = (matchedHosp?.state || "").toLowerCase()
+        const modules = (matchedHosp?.enabled_modules || []).join(" ").toLowerCase()
+        return (
+          name.includes(q) ||
+          tier.includes(q) ||
+          id.includes(q) ||
+          slug.includes(q) ||
+          city.includes(q) ||
+          state.includes(q) ||
+          modules.includes(q)
+        )
       }
       return true
     })
-  }, [subscriptions.data?.results, selectedHospitalId, searchQuery])
+  }, [allSubscriptionItems, selectedHospitalId, searchQuery, hospitalsMap])
+
+  // Autocomplete Suggestions computation
+  const suggestions = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase()
+    if (!q) return { hospitals: [], invoices: [], modules: [], flat: [] }
+
+    // 1. Matching Hospitals
+    const allHospitals: SaaSHospital[] = hospitals.data?.results ?? []
+    const hospMap = new Map<string, SaaSHospital>()
+    allHospitals.forEach((h) => hospMap.set(String(h.id), h))
+    hospitalList.forEach((h) => {
+      if (!hospMap.has(String(h.id))) {
+        hospMap.set(String(h.id), {
+          id: String(h.id),
+          name: h.name,
+          slug: h.name.toLowerCase().replace(/[^a-z0-9]/g, "-"),
+          city: "Pune",
+          state: "Maharashtra",
+          address: "",
+          primary_language: "en",
+          is_active: true,
+          enabled_modules: ["opd", "ipd", "billing", "pharmacy", "laboratory"],
+          staff_count: 10,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+      }
+    })
+
+    const matchingHospitals = Array.from(hospMap.values())
+      .filter((h) => {
+        const name = (h.name || "").toLowerCase()
+        const slug = (h.slug || "").toLowerCase()
+        const city = (h.city || "").toLowerCase()
+        const state = (h.state || "").toLowerCase()
+        const id = String(h.id).toLowerCase()
+        return name.includes(q) || slug.includes(q) || city.includes(q) || state.includes(q) || id.includes(q)
+      })
+      .slice(0, 5)
+
+    // 2. Matching Invoices
+    const allInvoices: TenantInvoice[] = invoices.data?.results ?? []
+    const matchingInvoices = allInvoices
+      .filter((inv) => {
+        const num = (inv.invoice_number || "").toLowerCase()
+        const hospName = (inv.hospital_name || "").toLowerCase()
+        const status = (inv.status || "").toLowerCase()
+        return num.includes(q) || hospName.includes(q) || status.includes(q)
+      })
+      .slice(0, 3)
+
+    // 3. Matching Modules
+    const matchingModules = SYSTEM_MODULES
+      .filter((mod) => {
+        const key = mod.key.toLowerCase()
+        const name = mod.name.toLowerCase()
+        const cat = mod.category.toLowerCase()
+        return key.includes(q) || name.includes(q) || cat.includes(q)
+      })
+      .map((mod) => {
+        const count = Array.from(hospMap.values()).filter((h) =>
+          h.enabled_modules ? h.enabled_modules.includes(mod.key) : true
+        ).length
+        return { ...mod, count }
+      })
+      .slice(0, 3)
+
+    type FlatItem =
+      | { type: "hospital"; data: SaaSHospital }
+      | { type: "invoice"; data: TenantInvoice }
+      | { type: "module"; data: (typeof SYSTEM_MODULES)[number] & { count: number } }
+
+    const flat: FlatItem[] = [
+      ...matchingHospitals.map((h) => ({ type: "hospital" as const, data: h })),
+      ...matchingInvoices.map((inv) => ({ type: "invoice" as const, data: inv })),
+      ...matchingModules.map((mod) => ({ type: "module" as const, data: mod })),
+    ]
+
+    return {
+      hospitals: matchingHospitals,
+      invoices: matchingInvoices,
+      modules: matchingModules,
+      flat,
+    }
+  }, [searchQuery, hospitals.data?.results, hospitalList, invoices.data?.results])
+
+  const handleSelectSuggestion = (
+    item:
+      | { type: "hospital"; data: SaaSHospital }
+      | { type: "invoice"; data: TenantInvoice }
+      | { type: "module"; data: (typeof SYSTEM_MODULES)[number] & { count: number } }
+  ) => {
+    setIsSuggestionsOpen(false)
+    setSelectedIndex(-1)
+
+    if (item.type === "hospital") {
+      setSelectedHospitalId(String(item.data.id))
+      setSearchQuery(item.data.name)
+      if (activeTab === "overview") {
+        setActiveTab("subscriptions")
+      }
+    } else if (item.type === "invoice") {
+      setSearchQuery(item.data.invoice_number)
+      setActiveTab("invoices")
+    } else if (item.type === "module") {
+      setSearchQuery(item.data.key)
+      if (activeTab === "overview") {
+        setActiveTab("subscriptions")
+      }
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!isSuggestionsOpen || suggestions.flat.length === 0) {
+      if (e.key === "ArrowDown" && searchQuery.trim()) {
+        setIsSuggestionsOpen(true)
+      }
+      return
+    }
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault()
+      setSelectedIndex((prev) => (prev < suggestions.flat.length - 1 ? prev + 1 : 0))
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault()
+      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : suggestions.flat.length - 1))
+    } else if (e.key === "Enter") {
+      if (selectedIndex >= 0 && selectedIndex < suggestions.flat.length) {
+        e.preventDefault()
+        handleSelectSuggestion(suggestions.flat[selectedIndex])
+      }
+    } else if (e.key === "Escape") {
+      setIsSuggestionsOpen(false)
+      setSelectedIndex(-1)
+    }
+  }
 
   const filteredInvoices = useMemo(() => {
     const list = invoices.data?.results ?? []
@@ -433,23 +646,259 @@ export function SaaSConsolePage() {
       {/* Universal SaaS Hospital Search & Filter Bar */}
       <div className="bg-surface border border-border rounded-xl p-3 shadow-2xs flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2 flex-1 min-w-[280px]">
-          <div className="relative flex-1">
+          <div className="relative flex-1" ref={searchContainerRef}>
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-4 text-xs pointer-events-none">🔍</span>
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value)
+                setIsSuggestionsOpen(true)
+                setSelectedIndex(-1)
+              }}
+              onFocus={() => {
+                if (searchQuery.trim()) {
+                  setIsSuggestionsOpen(true)
+                }
+              }}
+              onKeyDown={handleKeyDown}
               placeholder="Search hospital by name, slug, ID, or invoice..."
               className="w-full h-9 pl-8 pr-8 border border-border-strong rounded-control text-[12.5px] bg-page outline-none focus:border-brand transition-colors"
             />
             {searchQuery && (
               <button
-                onClick={() => setSearchQuery("")}
+                onClick={() => {
+                  setSearchQuery("")
+                  setIsSuggestionsOpen(false)
+                  setSelectedIndex(-1)
+                }}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-4 hover:text-ink text-xs p-1"
                 title="Clear search"
               >
                 ✕
               </button>
+            )}
+
+            {/* Auto-suggestion Dropdown Overlay on Typing */}
+            {isSuggestionsOpen && searchQuery.trim() && (
+              <div
+                className="absolute left-0 right-0 top-full mt-1.5 z-50 bg-surface border border-border-strong rounded-xl shadow-2xl overflow-hidden backdrop-blur-md max-h-[440px] flex flex-col animate-in fade-in slide-in-from-top-1 duration-150"
+                role="listbox"
+              >
+                <div className="px-3.5 py-2 bg-page/80 border-b border-border text-[11px] font-semibold text-ink-4 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <span>⚡</span>
+                    <span>
+                      Suggestions for <strong className="text-ink font-bold">"{searchQuery}"</strong>
+                    </span>
+                    <span className="px-1.5 py-0.2 rounded-full bg-brand-tint text-brand text-[10px] font-bold">
+                      {suggestions.flat.length} found
+                    </span>
+                  </span>
+                  <span className="text-[10px] text-ink-4 font-normal hidden sm:inline">
+                    Use ↑ ↓ to navigate · ↵ to select · Esc to close
+                  </span>
+                </div>
+
+                <div className="overflow-y-auto max-h-[340px] divide-y divide-border-faint text-xs">
+                  {suggestions.flat.length === 0 ? (
+                    <div className="p-4 text-center text-ink-4 flex flex-col items-center gap-2">
+                      <span className="text-xl">🔍</span>
+                      <p>
+                        No matching hospitals, invoices, or modules for <strong className="text-ink">"{searchQuery}"</strong>
+                      </p>
+                      <p className="text-[11px]">Check for spelling or try searching by city, subdomain, or invoice number.</p>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Hospitals Section */}
+                      {suggestions.hospitals.length > 0 && (
+                        <div>
+                          <div className="px-3 py-1.5 bg-page/40 text-[10.5px] font-bold uppercase tracking-wider text-ink-4 flex items-center justify-between">
+                            <span>🏥 Hospitals & Tenants</span>
+                            <span className="text-[10px]">
+                              {suggestions.hospitals.length} match{suggestions.hospitals.length > 1 ? "es" : ""}
+                            </span>
+                          </div>
+                          {suggestions.hospitals.map((h) => {
+                            const globalIndex = suggestions.flat.findIndex((it) => it.type === "hospital" && it.data.id === h.id)
+                            const isSelected = selectedIndex === globalIndex
+                            return (
+                              <div
+                                key={`hosp-${h.id}`}
+                                onClick={() => handleSelectSuggestion({ type: "hospital", data: h })}
+                                onMouseEnter={() => setSelectedIndex(globalIndex)}
+                                className={`px-3.5 py-2.5 cursor-pointer flex items-center justify-between gap-3 transition-colors ${
+                                  isSelected ? "bg-brand-tint/70 border-l-3 border-brand pl-[11px]" : "hover:bg-page-hover"
+                                }`}
+                              >
+                                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                  <div className="w-7 h-7 rounded-lg bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800/60 text-teal-700 dark:text-teal-300 flex items-center justify-center font-bold text-xs shrink-0">
+                                    {h.name.charAt(0).toUpperCase()}
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <div className="font-semibold text-ink text-[12.5px] flex items-center gap-2 truncate">
+                                      <span>
+                                        <HighlightMatch text={h.name} query={searchQuery} />
+                                      </span>
+                                      {h.subscription?.tier && (
+                                        <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-brand/10 text-brand">
+                                          {h.subscription.tier}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-2 text-[11px] text-ink-4 mt-0.5">
+                                      {h.slug && (
+                                        <span className="font-mono text-teal-600 dark:text-teal-400">
+                                          <HighlightMatch text={`${h.slug}.hms.polynexus.in`} query={searchQuery} />
+                                        </span>
+                                      )}
+                                      {(h.city || h.state) && (
+                                        <span>
+                                          📍 <HighlightMatch text={[h.city, h.state].filter(Boolean).join(", ")} query={searchQuery} />
+                                        </span>
+                                      )}
+                                      {h.enabled_modules && (
+                                        <span className="text-ink-4">
+                                          · {h.enabled_modules.length} modules
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      setIsSuggestionsOpen(false)
+                                      handleInspect(h.id)
+                                    }}
+                                    className="px-2 py-1 text-[11px] font-semibold bg-brand text-white rounded hover:bg-brand-hover shadow-xs flex items-center gap-1 transition-colors"
+                                    title="Switch directly into this hospital's operational dashboard"
+                                  >
+                                    <span>Inspect</span>
+                                    <span>↗</span>
+                                  </button>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+
+                      {/* Invoices Section */}
+                      {suggestions.invoices.length > 0 && (
+                        <div>
+                          <div className="px-3 py-1.5 bg-page/40 text-[10.5px] font-bold uppercase tracking-wider text-ink-4 flex items-center justify-between">
+                            <span>🧾 Tenant Invoices</span>
+                            <span className="text-[10px]">
+                              {suggestions.invoices.length} match{suggestions.invoices.length > 1 ? "es" : ""}
+                            </span>
+                          </div>
+                          {suggestions.invoices.map((inv) => {
+                            const globalIndex = suggestions.flat.findIndex((it) => it.type === "invoice" && it.data.id === inv.id)
+                            const isSelected = selectedIndex === globalIndex
+                            return (
+                              <div
+                                key={`inv-${inv.id}`}
+                                onClick={() => handleSelectSuggestion({ type: "invoice", data: inv })}
+                                onMouseEnter={() => setSelectedIndex(globalIndex)}
+                                className={`px-3.5 py-2 cursor-pointer flex items-center justify-between gap-3 transition-colors ${
+                                  isSelected ? "bg-brand-tint/70 border-l-3 border-brand pl-[11px]" : "hover:bg-page-hover"
+                                }`}
+                              >
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <span className="text-base">🧾</span>
+                                  <div className="min-w-0">
+                                    <div className="font-mono font-semibold text-[12px] text-ink">
+                                      <HighlightMatch text={inv.invoice_number} query={searchQuery} />
+                                    </div>
+                                    <div className="text-[11px] text-ink-4">
+                                      {inv.hospital_name ? (
+                                        <HighlightMatch text={inv.hospital_name} query={searchQuery} />
+                                      ) : (
+                                        `Hospital #${inv.hospital}`
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <span className="font-semibold text-ink text-[12px]">
+                                    {INR.format(Number(inv.amount))}
+                                  </span>
+                                  <Pill tone={INVOICE_TONE[inv.status]}>{inv.status}</Pill>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+
+                      {/* Modules Section */}
+                      {suggestions.modules.length > 0 && (
+                        <div>
+                          <div className="px-3 py-1.5 bg-page/40 text-[10.5px] font-bold uppercase tracking-wider text-ink-4 flex items-center justify-between">
+                            <span>📦 Clinical & Operational Modules</span>
+                            <span className="text-[10px]">
+                              {suggestions.modules.length} match{suggestions.modules.length > 1 ? "es" : ""}
+                            </span>
+                          </div>
+                          {suggestions.modules.map((mod) => {
+                            const globalIndex = suggestions.flat.findIndex((it) => it.type === "module" && it.data.key === mod.key)
+                            const isSelected = selectedIndex === globalIndex
+                            return (
+                              <div
+                                key={`mod-${mod.key}`}
+                                onClick={() => handleSelectSuggestion({ type: "module", data: mod })}
+                                onMouseEnter={() => setSelectedIndex(globalIndex)}
+                                className={`px-3.5 py-2 cursor-pointer flex items-center justify-between gap-3 transition-colors ${
+                                  isSelected ? "bg-brand-tint/70 border-l-3 border-brand pl-[11px]" : "hover:bg-page-hover"
+                                }`}
+                              >
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <span className="text-base">{mod.icon}</span>
+                                  <div className="min-w-0">
+                                    <div className="font-semibold text-[12px] text-ink flex items-center gap-1.5">
+                                      <HighlightMatch text={mod.name} query={searchQuery} />
+                                      <span className="text-[10px] text-ink-4 px-1.5 py-0.2 rounded bg-page border border-border">
+                                        {mod.category}
+                                      </span>
+                                    </div>
+                                    <div className="text-[11px] text-ink-4 truncate">
+                                      {mod.desc}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="text-right shrink-0">
+                                  <span className="text-[11px] font-medium text-brand">
+                                    Filter by module →
+                                  </span>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+
+                <div className="p-2 bg-page/60 border-t border-border flex items-center justify-between text-[11px] text-ink-3">
+                  <span>Click any item or press <b>Enter</b> to apply</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsSuggestionsOpen(false)
+                      setIsOnboardModalOpen(true)
+                    }}
+                    className="text-brand hover:underline font-semibold flex items-center gap-1"
+                  >
+                    <span>✨ + Onboard new hospital tenant</span>
+                  </button>
+                </div>
+              </div>
             )}
           </div>
 

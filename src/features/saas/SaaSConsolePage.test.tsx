@@ -204,5 +204,62 @@ describe("SaaSConsolePage", () => {
     await waitFor(() => expect(screen.getByText(/onboard new hospital tenant/i)).toBeInTheDocument())
     expect(screen.getByText(/1\. hospital profile/i)).toBeInTheDocument()
   })
+
+  it("displays auto-complete suggestions overlay when typing in universal search bar", async () => {
+    const { platformAnalytics, listSubscriptions, listHospitals } = await import("../../api/saas")
+    vi.mocked(platformAnalytics).mockResolvedValue({
+      total_hospitals: 1, active_hospitals: 1, total_revenue: 0, total_patients: 0, module_adoption_percent: {},
+    })
+    vi.mocked(listSubscriptions).mockResolvedValue(page([subscription]))
+    vi.mocked(listHospitals).mockResolvedValue(
+      page([
+        {
+          id: "h1",
+          name: "Apollo Nagpur",
+          slug: "apollo-nagpur",
+          city: "Nagpur",
+          state: "Maharashtra",
+          address: "Central Ave",
+          primary_language: "en",
+          is_active: true,
+          enabled_modules: ["opd", "ipd", "billing"],
+          staff_count: 25,
+          created_at: "2026-01-01T00:00:00Z",
+          updated_at: "2026-01-01T00:00:00Z",
+          subscription: {
+            id: 1,
+            tier: "pro",
+            billing_cycle: "monthly",
+            status: "active",
+            base_price: "12000.00",
+            max_staff_users: 50,
+            next_billing_date: "2026-10-01",
+          },
+        },
+      ])
+    )
+
+    const user = userEvent.setup()
+    renderConsole()
+
+    const searchInput = screen.getByPlaceholderText(/search hospital by name, slug, id, or invoice/i)
+    await user.type(searchInput, "apol")
+
+    // The suggestions dropdown should pop open
+    await waitFor(() => expect(screen.getByRole("listbox")).toBeInTheDocument())
+    const listbox = screen.getByRole("listbox")
+    expect(listbox).toHaveTextContent(/suggestions for/i)
+    expect(listbox).toHaveTextContent(/hospitals & tenants/i)
+    expect(listbox).toHaveTextContent(/apollo nagpur/i)
+    expect(listbox).toHaveTextContent(/apollo-nagpur\.hms\.polynexus\.in/i)
+
+    // Selecting suggestion by clicking on the hospital item row
+    const hospitalRow = screen.getByText(/hospitals & tenants/i).parentElement!.nextElementSibling!
+    await user.click(hospitalRow)
+
+    // Suggestion dropdown should close and input should update
+    await waitFor(() => expect(screen.queryByRole("listbox")).not.toBeInTheDocument())
+    expect(searchInput).toHaveValue("Apollo Nagpur")
+  })
 })
 
