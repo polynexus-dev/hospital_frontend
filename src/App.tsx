@@ -49,7 +49,7 @@ import { useAuthStore } from "./store/auth"
 
 function HomeRedirect() {
   const user = useAuthStore((s) => s.user)
-  if (user && (user.is_saas_admin || user.is_superuser) && !user.hospital) {
+  if (user && (user.is_saas_admin || (!user.hospital && user.is_superuser))) {
     return <Navigate to="/saas" replace />
   }
   return <Navigate to="/dashboard" replace />

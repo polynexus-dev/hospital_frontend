@@ -185,10 +185,8 @@ export function Shell() {
         </div>
 
         <div className="flex-1 overflow-y-auto px-[10px] pt-3 pb-5">
-          {/* Platform operators only — an ordinary hospital user never
-              sees this section, and RequireSaaSAdmin blocks the route
-              even if they type the URL. */}
-          {((user?.is_saas_admin || user?.is_superuser) && !user?.hospital) && (
+          {/* Platform operators only — ordinary hospital users never see this */}
+          {(user?.is_saas_admin || (!user?.hospital && user?.is_superuser)) && (
             <>
               <div className="text-[10px] tracking-[.1em] uppercase text-ink-5 font-semibold px-2 pt-1.5 pb-2">
                 Platform
