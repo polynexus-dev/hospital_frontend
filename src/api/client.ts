@@ -1,4 +1,5 @@
 import { useAuthStore } from "../store/auth"
+import { decryptPayload, encryptPayload, getSessionId, isSessionReady } from "./payloadCrypto"
 
 export function getApiBaseUrl(): string {
   const envUrl = import.meta.env.VITE_API_BASE_URL
@@ -68,10 +69,29 @@ async function request<T>(path: string, options: RequestOptions = {}, isRetry = 
   if (!isFormData) finalHeaders["Content-Type"] = "application/json"
   if (accessToken && !skipAuth) finalHeaders["Authorization"] = `Bearer ${accessToken}`
 
+  // Attach session ID so the backend PayloadEncryptionMiddleware can look up
+  // the shared AES key. No-op when session is not initialised (dev / Postman).
+  const sessionId = getSessionId()
+  if (sessionId) finalHeaders["X-Session-Id"] = sessionId
+
+  // Encrypt the request body when the session is active.
+  let serialisedBody: string | FormData | undefined
+  if (isFormData) {
+    serialisedBody = body as FormData
+  } else if (body !== undefined) {
+    if (isSessionReady()) {
+      // Encrypt: send {"enc":"gcm2$..."} instead of plain JSON.
+      const encrypted = await encryptPayload(body)
+      serialisedBody = JSON.stringify(encrypted)
+    } else {
+      serialisedBody = JSON.stringify(body)
+    }
+  }
+
   const res = await fetch(`${API_BASE_URL}${path}`, {
     ...rest,
     headers: finalHeaders,
-    body: isFormData ? (body as FormData) : body !== undefined ? JSON.stringify(body) : undefined,
+    body: serialisedBody,
   })
 
   if (res.status === 401 && !skipAuth && !isRetry) {
@@ -92,7 +112,15 @@ async function request<T>(path: string, options: RequestOptions = {}, isRetry = 
   if (res.status === 204) return undefined as T
   const contentType = res.headers.get("content-type") ?? ""
   if (!contentType.includes("application/json")) return undefined as T
-  return res.json() as Promise<T>
+
+  const json = await res.json()
+
+  // Decrypt the response if it is a Layer-2 encrypted payload.
+  if (json && typeof json === "object" && "enc" in json && isSessionReady()) {
+    return decryptPayload(json.enc as string) as Promise<T>
+  }
+
+  return json as T
 }
 
 async function requestBlob(path: string, isRetry = false): Promise<Blob> {
