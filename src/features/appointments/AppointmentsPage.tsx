@@ -142,7 +142,7 @@ export function AppointmentsPage() {
     queryFn: () => listAppointments({ slot__date: selectedDate }),
   })
   const waitlistQuery = useQuery({ queryKey: ["waitlist"], queryFn: () => listWaitlist() })
-  const reminderQuery = useQuery({ queryKey: ["reports", "reminder-delivery"], queryFn: reminderDelivery })
+  const reminderQuery = useQuery({ queryKey: ["reports", "reminder-delivery"], queryFn: () => reminderDelivery() })
   const queueQuery = useQuery({
     queryKey: ["doctor-queue", queueDoctorId, selectedDate],
     queryFn: () => fetchDoctorQueue(queueDoctorId, selectedDate),

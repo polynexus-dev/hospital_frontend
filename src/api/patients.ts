@@ -34,3 +34,32 @@ export function uploadPatientDocument(formData: FormData) {
   return api.post<Document>("/documents/", formData)
 }
 
+export interface RecallPatient {
+  id: number
+  full_name: string
+  uhid: string
+  mobile: string
+  preferred_language: string
+  next_recall_due_at: string
+  recall_reason: string
+  urgency: "overdue" | "due_today" | "upcoming"
+}
+
+export interface RecallSummary {
+  overdue: number
+  due_today: number
+  due_this_week: number
+  total_recalls: number
+}
+
+export interface RecallResponse {
+  summary: RecallSummary
+  results: RecallPatient[]
+}
+
+export function listPatientRecalls(params: { status?: string; reason?: string } = {}) {
+  const qs = new URLSearchParams(params as Record<string, string>).toString()
+  return api.get<RecallResponse>(`/patients/recalls/${qs ? `?${qs}` : ""}`)
+}
+
+

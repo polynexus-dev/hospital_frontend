@@ -11,6 +11,7 @@ import { switchHospital } from "../../api/auth"
 import { extractApiError } from "../../api/client"
 import { useAuthStore } from "../../store/auth"
 import type { Patient } from "../../types/api"
+import { RecallHubModal } from "./RecallHubModal"
 
 export function PatientsListPage() {
   const navigate = useNavigate()
@@ -18,6 +19,7 @@ export function PatientsListPage() {
   const { user, setUser } = useAuthStore()
   const [search, setSearch] = useState("")
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isRecallModalOpen, setIsRecallModalOpen] = useState(false)
   const [mutationError, setMutationError] = useState<string | null>(null)
   const [selectedBranch, setSelectedBranch] = useState<string>(user?.hospital || "")
 
@@ -132,18 +134,27 @@ export function PatientsListPage() {
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Patient Directory</h1>
           <p className="text-sm text-slate-600 mt-0.5">Search and manage complete Patient 360 records</p>
         </div>
-        <Button
-          variant="primary"
-          onClick={() => {
-            setMutationError(null)
-            if (!selectedBranch && availableBranches.length > 0) {
-              setSelectedBranch(availableBranches[0].id)
-            }
-            setIsModalOpen(true)
-          }}
-        >
-          + New Patient
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="secondary"
+            onClick={() => setIsRecallModalOpen(true)}
+            className="border border-teal-200 text-teal-800 hover:bg-teal-50 dark:border-teal-900/50 dark:text-teal-300"
+          >
+            🩺 Clinical Recalls Hub
+          </Button>
+          <Button
+            variant="primary"
+            onClick={() => {
+              setMutationError(null)
+              if (!selectedBranch && availableBranches.length > 0) {
+                setSelectedBranch(availableBranches[0].id)
+              }
+              setIsModalOpen(true)
+            }}
+          >
+            + New Patient
+          </Button>
+        </div>
       </div>
 
       {/* Hospital Warning Banner if not attached to a branch */}
@@ -397,6 +408,14 @@ export function PatientsListPage() {
           </div>
         </div>
       )}
+
+      <RecallHubModal
+        open={isRecallModalOpen}
+        onClose={() => setIsRecallModalOpen(false)}
+        onBookAppointment={(p) => {
+          navigate(`/appointments?patient=${p.id}`)
+        }}
+      />
     </div>
   )
 }

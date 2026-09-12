@@ -31,3 +31,8 @@ export function listInsuranceClaims(params: Record<string, string> = {}) {
 export function createInsuranceClaim(data: { bill: number; insurance_company: string; policy_number: string; claimed_amount: number }) {
   return api.post<InsuranceClaim>("/billing/insurance-claims/", data)
 }
+
+export function downloadBillPdf(billId: number) {
+  return api.getBlob(`/billing/bills/${billId}/download/`)
+}
+

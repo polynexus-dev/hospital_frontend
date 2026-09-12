@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query"
 import { Card } from "../../components/ui/Card"
 import { StatTile } from "../../components/ui/StatTile"
@@ -5,8 +6,10 @@ import { Pill } from "../../components/ui/Pill"
 import { Button } from "../../components/ui/Button"
 import { LoadingState, EmptyState } from "../../components/ui/QueryStates"
 import { claimCallbackTask, completeCallbackTask, listCallbackTasks, logCallbackAttempt } from "../../api/telephony"
+import { createEnquiry } from "../../api/enquiries"
 import { listUsers } from "../../api/accounts"
 import { slaInfo } from "../../lib/sla"
+import type { CallbackTask } from "../../types/api"
 
 export function CallbacksPage() {
   const queryClient = useQueryClient()
@@ -40,6 +43,8 @@ export function CallbacksPage() {
     mutationFn: logCallbackAttempt,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["callback-tasks"] }),
   })
+
+  const [convertingTask, setConvertingTask] = useState<CallbackTask | null>(null)
 
   const openQueue = queue.data?.results.filter((t) => t.status !== "done") ?? []
 
@@ -99,6 +104,9 @@ export function CallbacksPage() {
                       Claim
                     </Button>
                   )}
+                  <Button size="sm" variant="secondary" onClick={() => setConvertingTask(task)}>
+                    + Lead
+                  </Button>
                 </div>
               </div>
             )
@@ -109,6 +117,93 @@ export function CallbacksPage() {
           Escalation: 15 min unattended → escalated status (see apps.telephony.tasks.escalate_overdue_callbacks).
         </div>
       </Card>
+
+      {convertingTask && (
+        <CallbackToEnquiryModal task={convertingTask} onClose={() => setConvertingTask(null)} />
+      )}
+    </div>
+  )
+}
+function CallbackToEnquiryModal({
+  task,
+  onClose,
+}: {
+  task: CallbackTask
+  onClose: () => void
+}) {
+  const queryClient = useQueryClient()
+  const [name, setName] = useState("")
+  const [serviceRequested, setServiceRequested] = useState("")
+  const [notes, setNotes] = useState(task.ivr_path ? `From IVR: ${task.ivr_path}` : "")
+
+  const convert = useMutation({
+    mutationFn: async () => {
+      await createEnquiry({
+        name: name || `Caller ${task.phone_number}`,
+        mobile: task.phone_number,
+        source: "ivr",
+        service_requested: serviceRequested,
+        notes: notes,
+      })
+      await completeCallbackTask(task.id, "Converted to enquiry lead")
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["callback-tasks"] })
+      queryClient.invalidateQueries({ queryKey: ["enquiries"] })
+      onClose()
+    },
+  })
+
+  return (
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div className="bg-surface border border-border-strong rounded-xl p-5 w-[420px] shadow-2xl space-y-3.5" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between pb-2 border-b border-border">
+          <h3 className="text-sm font-bold text-ink">Convert Call to CRM Enquiry</h3>
+          <button onClick={onClose} className="text-ink-4 hover:text-ink text-xs p-1">✕</button>
+        </div>
+        <div className="space-y-2 text-xs">
+          <div>
+            <label className="text-[11px] text-ink-4 block mb-1">Caller Phone Number</label>
+            <input value={task.phone_number} disabled className="w-full h-8 px-2.5 border border-border rounded bg-page/50 font-mono text-ink-3" />
+          </div>
+          <div>
+            <label className="text-[11px] text-ink-4 block mb-1">Caller / Patient Name</label>
+            <input
+              placeholder="e.g. Rahul Sharma"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full h-8 px-2.5 border border-border-strong rounded bg-page outline-none focus:border-brand"
+            />
+          </div>
+          <div>
+            <label className="text-[11px] text-ink-4 block mb-1">Service / Speciality Enquired</label>
+            <input
+              placeholder="e.g. Cardiology OPD, Knee Replacement, MRI"
+              value={serviceRequested}
+              onChange={(e) => setServiceRequested(e.target.value)}
+              className="w-full h-8 px-2.5 border border-border-strong rounded bg-page outline-none focus:border-brand"
+            />
+          </div>
+          <div>
+            <label className="text-[11px] text-ink-4 block mb-1">Call Notes / Disposition</label>
+            <textarea
+              rows={2}
+              placeholder="Summary of conversation..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="w-full p-2 border border-border-strong rounded bg-page outline-none focus:border-brand"
+            />
+          </div>
+        </div>
+        <div className="flex gap-2 pt-2 border-t border-border justify-end">
+          <Button size="sm" variant="secondary" onClick={onClose} disabled={convert.isPending}>
+            Cancel
+          </Button>
+          <Button size="sm" variant="primary" onClick={() => convert.mutate()} disabled={convert.isPending}>
+            {convert.isPending ? "Creating Enquiry…" : "Create Lead & Resolve"}
+          </Button>
+        </div>
+      </div>
     </div>
   )
 }

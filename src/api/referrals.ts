@@ -1,4 +1,4 @@
-import { api } from "./client"
+import { api, triggerBlobDownload } from "./client"
 import type { Paginated } from "../types/api"
 
 export interface ReferringDoctor {
@@ -66,3 +66,14 @@ export function listFieldVisits() {
 export function createFieldVisit(payload: Partial<FieldVisit>) {
   return api.post<FieldVisit>("/referrals/field-visits/", payload)
 }
+
+export async function downloadReferralStatementPdf(doctorId: number, doctorName = "ReferringDoctor") {
+  const blob = await api.getBlob(`/referrals/doctors/${doctorId}/statement-pdf/`)
+  const sanitized = doctorName.replace(/[^a-zA-Z0-9_-]/g, "_")
+  triggerBlobDownload(blob, `Referral_Statement_${sanitized}_${doctorId}.pdf`)
+}
+
+export function settleReferrals(doctorId: number) {
+  return api.post<{ settled_count: number; detail: string }>(`/referrals/doctors/${doctorId}/settle/`, {})
+}
+

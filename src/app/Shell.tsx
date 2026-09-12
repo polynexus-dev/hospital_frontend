@@ -423,9 +423,25 @@ export function Shell() {
           </div>
           <div className="flex-1 min-w-2" />
           
-          <div className="flex items-center gap-[7px] h-8 px-2.5 border border-border rounded-control flex-none w-[220px] min-w-0 overflow-hidden text-ink-5 text-[13px]">
-            <div className="w-[11px] h-[11px] border-[1.5px] border-ink-5 rounded-full shrink-0" />
-            <span className="truncate">{t("common.search")}</span>
+          <div className="flex items-center gap-2 h-8 px-2.5 border border-border-strong rounded-control flex-none w-[250px] min-w-0 text-ink text-[13px] bg-page focus-within:border-brand transition-colors">
+            <span className="text-xs text-ink-4 shrink-0">🔍</span>
+            <input
+              type="text"
+              placeholder={isInSaasMode ? "Search hospital by name, slug..." : t("common.search")}
+              className="w-full bg-transparent border-none outline-none text-xs text-ink placeholder:text-ink-4"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  const val = (e.target as HTMLInputElement).value.trim()
+                  if (val) {
+                    if (isInSaasMode) {
+                      navigate(`/saas?tab=subscriptions&q=${encodeURIComponent(val)}`)
+                    } else {
+                      navigate(`/patients?search=${encodeURIComponent(val)}`)
+                    }
+                  }
+                }
+              }}
+            />
           </div>
 
           {/* Return to SaaS button when inspecting a hospital tenant */}

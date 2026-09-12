@@ -53,11 +53,13 @@ export interface Role {
 
 export interface Patient {
   id: number
+  uhid?: string
   first_name: string
   last_name: string
   full_name: string
   date_of_birth: string | null
   gender: "male" | "female" | "other" | "undisclosed" | ""
+
   mobile: string
   alternate_mobile: string
   email: string
@@ -976,11 +978,77 @@ export interface StockTransaction {
 // only to is_saas_admin/is_superuser accounts. Every one of these spans
 // all tenants, unlike the rest of this file.
 
+export interface SaaSHospital {
+  id: string
+  name: string
+  slug: string
+  city: string
+  state: string
+  address: string
+  primary_language: string
+  is_active: boolean
+  enabled_modules: string[]
+  staff_count: number
+  created_at: string
+  updated_at: string
+  subscription?: {
+    id: number
+    tier: "starter" | "pro" | "enterprise"
+    billing_cycle: "monthly" | "annual"
+    status: "active" | "suspended" | "cancelled"
+    base_price: string
+    max_staff_users: number
+    next_billing_date: string | null
+  } | null
+}
+
+export interface OnboardTenantPayload {
+  name: string
+  slug: string
+  city?: string
+  state?: string
+  address?: string
+  primary_language?: string
+  enabled_modules?: string[]
+  subscription?: {
+    tier: "starter" | "pro" | "enterprise"
+    billing_cycle: "monthly" | "annual"
+    base_price: number
+    max_staff_users: number
+  }
+  owner: {
+    email: string
+    first_name: string
+    last_name: string
+    phone?: string
+    password?: string
+  }
+}
+
+export interface PublicTenantBranding {
+  is_tenant: boolean
+  id?: string
+  name: string
+  slug?: string | null
+  city?: string | null
+  state?: string | null
+  address?: string | null
+  primary_language?: string
+  is_active?: boolean
+  enabled_modules?: string[]
+  google_review_url?: string
+  theme?: {
+    primary_color: string
+    accent_color: string
+  }
+}
+
 export interface TenantSubscription {
   id: number
   hospital: string
   hospital_name?: string
   tier: "starter" | "pro" | "enterprise"
+
   billing_cycle: "monthly" | "annual"
   base_price: string
   max_staff_users: number
