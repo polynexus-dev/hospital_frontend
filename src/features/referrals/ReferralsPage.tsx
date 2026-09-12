@@ -1,12 +1,22 @@
 import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Card } from "../../components/ui/Card"
+import { Button } from "../../components/ui/Button"
 import { NeutralTag, SuccessTag } from "../../components/ui/Pill"
 import { LoadingState } from "../../components/ui/QueryStates"
-import { listFieldVisits, listReferralLeagueTable, listReferringDoctors } from "../../api/referrals"
+import {
+  listFieldVisits,
+  listReferralLeagueTable,
+  listReferringDoctors,
+  createReferringDoctor,
+  createFieldVisit,
+  type ReferringDoctor,
+} from "../../api/referrals"
 
 export function ReferralsPage() {
   const [activeTab, setActiveTab] = useState<"league" | "directory" | "visits">("league")
+  const [showAddDoctor, setShowAddDoctor] = useState(false)
+  const [showLogVisit, setShowLogVisit] = useState(false)
 
   const { data: leagueData, isLoading: isLeagueLoading } = useQuery({
     queryKey: ["referrals-league"],
@@ -17,7 +27,7 @@ export function ReferralsPage() {
   const { data: doctorsData, isLoading: isDoctorsLoading } = useQuery({
     queryKey: ["referral-doctors"],
     queryFn: listReferringDoctors,
-    enabled: activeTab === "directory",
+    enabled: activeTab === "directory" || showLogVisit,
   })
 
   const { data: visitsData, isLoading: isVisitsLoading } = useQuery({
@@ -43,11 +53,21 @@ export function ReferralsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Referral Doctor CRM</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Referring doctor directory, revenue attribution league table, & field visit touchpoints
-        </p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Referral Doctor CRM</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Referring doctor directory, revenue attribution league table, & field visit touchpoints
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="secondary" onClick={() => setShowLogVisit(true)}>
+            + Log Field Visit
+          </Button>
+          <Button variant="primary" onClick={() => setShowAddDoctor(true)}>
+            + Add Referring Doctor
+          </Button>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -116,6 +136,12 @@ export function ReferralsPage() {
       {/* TAB 2: DOCTOR DIRECTORY */}
       {activeTab === "directory" && (
         <Card className="overflow-hidden">
+          <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
+            <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">All Registered Network Doctors</h2>
+            <Button size="sm" variant="primary" onClick={() => setShowAddDoctor(true)}>
+              + Add Doctor
+            </Button>
+          </div>
           {isDoctorsLoading ? (
             <LoadingState />
           ) : (
@@ -153,7 +179,12 @@ export function ReferralsPage() {
       {/* TAB 3: FIELD VISITS */}
       {activeTab === "visits" && (
         <Card className="p-6 space-y-4">
-          <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Representative Field Visit Logs</h2>
+          <div className="flex justify-between items-center">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Representative Field Visit Logs</h2>
+            <Button size="sm" variant="secondary" onClick={() => setShowLogVisit(true)}>
+              + Log Field Visit
+            </Button>
+          </div>
           {isVisitsLoading ? (
             <LoadingState />
           ) : (
@@ -172,6 +203,253 @@ export function ReferralsPage() {
           )}
         </Card>
       )}
+
+      {showAddDoctor && (
+        <NewReferringDoctorModal onClose={() => setShowAddDoctor(false)} />
+      )}
+
+      {showLogVisit && (
+        <NewFieldVisitModal
+          doctors={allDoctors}
+          onClose={() => setShowLogVisit(false)}
+        />
+      )}
+    </div>
+  )
+}
+
+function NewReferringDoctorModal({ onClose }: { onClose: () => void }) {
+  const queryClient = useQueryClient()
+  const [name, setName] = useState("")
+  const [speciality, setSpeciality] = useState("")
+  const [clinicName, setClinicName] = useState("")
+  const [city, setCity] = useState("Pune")
+  const [mobile, setMobile] = useState("")
+  const [email, setEmail] = useState("")
+  const [tier, setTier] = useState<"gold" | "silver" | "bronze">("silver")
+  const [notes, setNotes] = useState("")
+
+  const addDoc = useMutation({
+    mutationFn: () =>
+      createReferringDoctor({
+        name,
+        speciality,
+        clinic_name: clinicName,
+        city,
+        mobile,
+        email,
+        tier,
+        notes,
+        is_active: true,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["referral-doctors"] })
+      queryClient.invalidateQueries({ queryKey: ["referrals-league"] })
+      onClose()
+    },
+  })
+
+  return (
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div className="bg-surface border border-border-strong rounded-xl p-5 w-[460px] shadow-2xl space-y-4" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between pb-2 border-b border-border">
+          <h3 className="text-sm font-bold text-ink">Add Referring Doctor</h3>
+          <button onClick={onClose} className="text-ink-4 hover:text-ink text-xs p-1">✕</button>
+        </div>
+        <div className="space-y-3 text-xs">
+          <div>
+            <label className="text-[11px] text-ink-4 block mb-1">Doctor Name *</label>
+            <input
+              placeholder="e.g. Dr. Rajesh Kulkarni"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full h-8 px-2.5 border border-border-strong rounded bg-page outline-none focus:border-brand"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[11px] text-ink-4 block mb-1">Speciality</label>
+              <input
+                placeholder="e.g. General Physician, Ortho"
+                value={speciality}
+                onChange={(e) => setSpeciality(e.target.value)}
+                className="w-full h-8 px-2.5 border border-border-strong rounded bg-page outline-none focus:border-brand"
+              />
+            </div>
+            <div>
+              <label className="text-[11px] text-ink-4 block mb-1">Partnership Tier</label>
+              <select
+                value={tier}
+                onChange={(e) => setTier(e.target.value as any)}
+                className="w-full h-8 px-2.5 border border-border-strong rounded bg-page outline-none focus:border-brand"
+              >
+                <option value="gold">🥇 Gold Tier</option>
+                <option value="silver">🥈 Silver Tier</option>
+                <option value="bronze">🥉 Bronze Tier</option>
+              </select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[11px] text-ink-4 block mb-1">Clinic Name</label>
+              <input
+                placeholder="e.g. Kulkarni Clinic"
+                value={clinicName}
+                onChange={(e) => setClinicName(e.target.value)}
+                className="w-full h-8 px-2.5 border border-border-strong rounded bg-page outline-none focus:border-brand"
+              />
+            </div>
+            <div>
+              <label className="text-[11px] text-ink-4 block mb-1">City</label>
+              <input
+                placeholder="City"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                className="w-full h-8 px-2.5 border border-border-strong rounded bg-page outline-none focus:border-brand"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[11px] text-ink-4 block mb-1">Mobile *</label>
+              <input
+                placeholder="10-digit mobile"
+                value={mobile}
+                onChange={(e) => setMobile(e.target.value)}
+                className="w-full h-8 px-2.5 border border-border-strong rounded bg-page outline-none focus:border-brand"
+              />
+            </div>
+            <div>
+              <label className="text-[11px] text-ink-4 block mb-1">Email</label>
+              <input
+                placeholder="doctor@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full h-8 px-2.5 border border-border-strong rounded bg-page outline-none focus:border-brand"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-[11px] text-ink-4 block mb-1">Notes / Relationship Info</label>
+            <textarea
+              rows={2}
+              placeholder="e.g. Met at CME conference, interested in referring spine surgery cases"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="w-full p-2 border border-border-strong rounded bg-page outline-none focus:border-brand"
+            />
+          </div>
+        </div>
+        <div className="flex gap-2 pt-2 border-t border-border justify-end">
+          <Button size="sm" variant="secondary" onClick={onClose} disabled={addDoc.isPending}>
+            Cancel
+          </Button>
+          <Button
+            size="sm"
+            variant="primary"
+            onClick={() => addDoc.mutate()}
+            disabled={!name.trim() || !mobile.trim() || addDoc.isPending}
+          >
+            {addDoc.isPending ? "Saving…" : "Save Doctor"}
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function NewFieldVisitModal({
+  doctors,
+  onClose,
+}: {
+  doctors: ReferringDoctor[]
+  onClose: () => void
+}) {
+  const queryClient = useQueryClient()
+  const [doctorId, setDoctorId] = useState<number | "">(doctors[0]?.id ?? "")
+  const [visitDate, setVisitDate] = useState(() => new Date().toISOString().split("T")[0])
+  const [outcome, setOutcome] = useState("")
+  const [notes, setNotes] = useState("")
+
+  const logVisit = useMutation({
+    mutationFn: () =>
+      createFieldVisit({
+        referring_doctor: Number(doctorId),
+        visit_date: visitDate,
+        notes: notes || "Routine touchpoint visit",
+        outcome: outcome || undefined,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["field-visits"] })
+      onClose()
+    },
+  })
+
+  return (
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div className="bg-surface border border-border-strong rounded-xl p-5 w-[440px] shadow-2xl space-y-4" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between pb-2 border-b border-border">
+          <h3 className="text-sm font-bold text-ink">Log Field Visit Touchpoint</h3>
+          <button onClick={onClose} className="text-ink-4 hover:text-ink text-xs p-1">✕</button>
+        </div>
+        <div className="space-y-3 text-xs">
+          <div>
+            <label className="text-[11px] text-ink-4 block mb-1">Referring Doctor *</label>
+            <select
+              value={doctorId}
+              onChange={(e) => setDoctorId(Number(e.target.value))}
+              className="w-full h-8 px-2.5 border border-border-strong rounded bg-page outline-none focus:border-brand"
+            >
+              {doctors.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name} ({d.clinic_name || d.city})
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-[11px] text-ink-4 block mb-1">Visit Date</label>
+            <input
+              type="date"
+              value={visitDate}
+              onChange={(e) => setVisitDate(e.target.value)}
+              className="w-full h-8 px-2.5 border border-border-strong rounded bg-page outline-none focus:border-brand"
+            />
+          </div>
+          <div>
+            <label className="text-[11px] text-ink-4 block mb-1">Visit Outcome / Key Discussion</label>
+            <input
+              placeholder="e.g. Shared brochure, committed 3 ortho referrals/month"
+              value={outcome}
+              onChange={(e) => setOutcome(e.target.value)}
+              className="w-full h-8 px-2.5 border border-border-strong rounded bg-page outline-none focus:border-brand"
+            />
+          </div>
+          <div>
+            <label className="text-[11px] text-ink-4 block mb-1">Detailed Visit Notes</label>
+            <textarea
+              rows={3}
+              placeholder="Doctor feedback, requested facilities, follow-up items..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="w-full p-2 border border-border-strong rounded bg-page outline-none focus:border-brand"
+            />
+          </div>
+        </div>
+        <div className="flex gap-2 pt-2 border-t border-border justify-end">
+          <Button size="sm" variant="secondary" onClick={onClose} disabled={logVisit.isPending}>
+            Cancel
+          </Button>
+          <Button
+            size="sm"
+            variant="primary"
+            onClick={() => logVisit.mutate()}
+            disabled={!doctorId || logVisit.isPending}
+          >
+            {logVisit.isPending ? "Logging…" : "Log Visit"}
+          </Button>
+        </div>
+      </div>
     </div>
   )
 }

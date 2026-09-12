@@ -12,6 +12,7 @@ import { listAppointments, listDoctors } from "../../api/appointments"
 import { createConsent, listConsent, listMessages, setConsent } from "../../api/communications"
 import { listHisBilling } from "../../api/integrations"
 import { createPrescription, downloadPrescriptionPdf, listPrescriptions } from "../../api/prescriptions"
+import { listEnquiries } from "../../api/enquiries"
 import type { Medication, Prescription } from "../../api/prescriptions"
 import { triggerBlobDownload } from "../../api/client"
 import type { AppointmentStatus, Channel, ConsentOptOut, Patient } from "../../types/api"
@@ -334,6 +335,81 @@ function RecallCard({ patient }: { patient: Patient }) {
   )
 }
 
+function CrmAcquisitionCard({ patient }: { patient: Patient }) {
+  const { data: enquiryData, isLoading } = useQuery({
+    queryKey: ["patient-enquiries", patient.id],
+    queryFn: () => listEnquiries({ patient: String(patient.id) }),
+  })
+
+  const enquiries = enquiryData?.results ?? []
+  const primaryEnquiry = enquiries[0]
+
+  return (
+    <Card padded>
+      <div className="flex items-center justify-between mb-2.5">
+        <div className="text-[11px] tracking-[.08em] uppercase text-ink-4 font-semibold">CRM & Acquisition Source</div>
+        {primaryEnquiry && (
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded uppercase bg-brand-tint text-brand">
+            {primaryEnquiry.source.replace("_", " ")}
+          </span>
+        )}
+      </div>
+
+      <div className="space-y-2.5 text-[13px]">
+        <div>
+          <div className="text-[11.5px] text-ink-4">Acquisition Channel</div>
+          <div className="text-ink-2 font-semibold mt-0.5 flex items-center gap-1.5">
+            {primaryEnquiry ? (
+              <>
+                <span className="capitalize">{primaryEnquiry.source.replace("_", " ")}</span>
+                {primaryEnquiry.campaign && (
+                  <span className="text-xs text-ink-4 font-normal">({primaryEnquiry.campaign})</span>
+                )}
+              </>
+            ) : patient.referring_doctor_name ? (
+              <span>Doctor Referral ({patient.referring_doctor_name})</span>
+            ) : (
+              <span>Direct OPD / Walk-in</span>
+            )}
+          </div>
+        </div>
+
+        {patient.referring_doctor_name && (
+          <div>
+            <div className="text-[11.5px] text-ink-4">Referring Doctor</div>
+            <div className="text-ink-2 font-semibold mt-0.5 text-xs">
+              👨‍⚕️ {patient.referring_doctor_name}
+            </div>
+          </div>
+        )}
+
+        <div>
+          <div className="text-[11.5px] text-ink-4 mb-1">Linked CRM Enquiries ({enquiries.length})</div>
+          {isLoading ? (
+            <div className="text-xs text-ink-4">Loading enquiries…</div>
+          ) : enquiries.length === 0 ? (
+            <div className="text-xs text-ink-4">No prior CRM enquiry attached to this MRN.</div>
+          ) : (
+            <div className="space-y-1.5">
+              {enquiries.map((e) => (
+                <div key={e.id} className="p-2 rounded bg-page/60 border border-border-faint text-xs flex justify-between items-center">
+                  <div>
+                    <span className="font-semibold text-ink-2">{e.service_requested || "General Consultation"}</span>
+                    <span className="block text-[11px] text-ink-4 font-mono">{new Date(e.created_at).toLocaleDateString()}</span>
+                  </div>
+                  <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-surface border border-border text-ink-3">
+                    {e.stage}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </Card>
+  )
+}
+
 export function PatientDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -560,7 +636,10 @@ export function PatientDetailPage() {
         <AccountCard patient={patient} outstandingDues={outstandingDues} lifetimeBilled={lifetimeBilled} />
         <LinkedPeopleCard patient={patient} treatingDoctorLabel={treatingDoctorLabel} />
       </div>
-      <RecallCard patient={patient} />
+      <div className="grid grid-cols-2 gap-3.5">
+        <RecallCard patient={patient} />
+        <CrmAcquisitionCard patient={patient} />
+      </div>
 
       {/* Tabs */}
       <div className="flex items-center gap-1 border-b border-border">

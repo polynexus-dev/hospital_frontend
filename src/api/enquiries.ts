@@ -25,3 +25,7 @@ export function reassignEnquiry(id: number, ownerId: number, reason?: string) {
 export function mergeEnquiry(duplicateId: number, primaryId: number) {
   return api.post<Enquiry>(`/enquiries/${duplicateId}/merge/`, { primary_id: primaryId })
 }
+
+export function updateEnquiry(id: number, payload: Partial<Enquiry>) {
+  return api.patch<Enquiry>(`/enquiries/${id}/`, payload)
+}
