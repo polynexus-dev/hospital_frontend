@@ -17,7 +17,7 @@ import {
 import { useAuthStore } from "../store/auth"
 import { Avatar } from "../components/ui/Avatar"
 import { listCallbackTasks } from "../api/telephony"
-import { switchHospital } from "../api/auth"
+import { logoutRequest, switchHospital } from "../api/auth"
 import { listHospitals } from "../api/hospitals"
 import { AIChatbotWidget } from "../components/ui/AIChatbotWidget"
 
@@ -278,6 +278,14 @@ export function Shell() {
   }
 
   const handleLogout = () => {
+    const { refreshToken } = useAuthStore.getState()
+    // Best-effort: blacklist the refresh token server-side so it can't be
+    // replayed after logout. Local state is cleared and the user is
+    // navigated away regardless of whether this call succeeds — a network
+    // hiccup on logout must never trap the user on an authenticated page.
+    if (refreshToken) {
+      logoutRequest(refreshToken).catch(() => {})
+    }
     logout()
     navigate("/login")
   }

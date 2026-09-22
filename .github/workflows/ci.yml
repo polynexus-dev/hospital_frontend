@@ -31,11 +31,13 @@ jobs:
           npm test -- --run 2>&1 | tee vitest-output.log
 
       - name: Dependency vulnerability scan (npm audit)
-        # Same non-blocking posture as the backend's pip-audit step — a new
-        # CVE in an existing pinned dependency surfaces in the run summary
-        # for a human to triage, rather than failing unrelated PRs.
+        # Blocking (see docs/SECURITY_COMPLIANCE.md finding M4, closed
+        # 2026-09-22) — same reasoning as the backend's pip-audit step.
+        # --audit-level=high already excludes low/moderate noise (e.g. the
+        # current vitest/@vitest/mocker moderate advisory), so this only
+        # fails the build on something that actually warrants blocking a
+        # merge.
         run: npm audit --audit-level=high
-        continue-on-error: true
 
       - name: Email test report
         # Same reasoning as the backend workflow's identical step: covers

@@ -34,6 +34,14 @@ export function verifyMfa(mfaToken: string, otp: string) {
   return api.post<TokenPair>("/auth/mfa/verify/", { mfa_token: mfaToken, otp }, { skipAuth: true })
 }
 
+// Blacklists the refresh token server-side (rest_framework_simplejwt's
+// TokenBlacklistView) so a token that's already been logged out of can't be
+// replayed — without this, "logout" only ever cleared local state and the
+// still-valid refresh token kept working until it naturally expired.
+export function logoutRequest(refreshToken: string) {
+  return api.post<void>("/auth/logout/", { refresh: refreshToken })
+}
+
 export function fetchMe() {
   return api.get<User>("/users/me/")
 }
