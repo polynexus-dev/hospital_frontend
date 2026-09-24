@@ -61,4 +61,15 @@ describe("ProtectedRoute", () => {
     await waitFor(() => expect(screen.getByText("Login screen")).toBeInTheDocument())
     expect(useAuthStore.getState().refreshToken).toBeNull()
   })
+
+  it("refreshes a cached user in the background so new permissions show up", async () => {
+    const { fetchMe } = await import("../api/auth")
+    // @ts-expect-error partial User for this test
+    vi.mocked(fetchMe).mockResolvedValue({ id: 1, email: "x@example.com", permissions: ["governance.view_auditrule"] })
+    // @ts-expect-error partial User for this test
+    useAuthStore.setState({ refreshToken: "r", user: { id: 1, email: "x@example.com", permissions: [] } })
+    renderProtected()
+    expect(screen.getByText("Dashboard content")).toBeInTheDocument() // no wait for the network
+    await waitFor(() => expect(useAuthStore.getState().user?.permissions).toEqual(["governance.view_auditrule"]))
+  })
 })
