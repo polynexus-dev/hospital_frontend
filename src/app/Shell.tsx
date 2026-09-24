@@ -72,6 +72,10 @@ export function Shell() {
   const [unlockPasscode, setUnlockPasscode] = useState("")
   const [unlockError, setUnlockError] = useState<string | null>(null)
   const [isBranchOpen, setIsBranchOpen] = useState(false)
+  const [accessHospitalId, setAccessHospitalId] = useState<string | null>(null)
+  const [accessReason, setAccessReason] = useState("")
+  const [accessError, setAccessError] = useState<string | null>(null)
+  const [isEnteringHospital, setIsEnteringHospital] = useState(false)
   const [isCompactMode, setIsCompactMode] = useState(() => localStorage.getItem("crm_compact") === "true")
   const [isFabOpen, setIsFabOpen] = useState(false)
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false)
@@ -254,13 +258,14 @@ export function Shell() {
     return []
   }, [user?.available_hospitals, allHospitals])
 
-  // If user has no active hospital attached, auto-attach to saved branch or first available branch
+  // Only hospital staff are auto-attached. Platform users must explicitly
+  // enter a tenant workspace, so patient data is never exposed by default.
   useEffect(() => {
-    if (!isInSaasMode && !user?.hospital && availableBranches.length > 0) {
+    if (!isSaasUser && !isInSaasMode && !user?.hospital && availableBranches.length > 0) {
       const savedBranch = localStorage.getItem("last_active_hospital")
       const target = availableBranches.find((b) => b.id === savedBranch) || availableBranches[0]
       if (target) {
-        switchHospital(target.id)
+        switchHospital(target.id, "Hospital staff branch context")
           .then((updatedUser) => {
             if (updatedUser) {
               useAuthStore.getState().setUser(updatedUser)
@@ -271,12 +276,23 @@ export function Shell() {
           .catch(() => {})
       }
     }
-  }, [isInSaasMode, user?.hospital, availableBranches])
+  }, [isSaasUser, isInSaasMode, user?.hospital, availableBranches])
+
+  const openHospitalAccess = (branchId?: string) => {
+    setIsBranchOpen(false)
+    setAccessHospitalId(branchId ?? availableBranches[0]?.id ?? null)
+    setAccessReason("")
+    setAccessError(null)
+  }
 
   const handleSwitchBranch = async (branchId: string) => {
+    if (isSaasUser) {
+      openHospitalAccess(branchId)
+      return
+    }
     setIsBranchOpen(false)
     try {
-      const updatedUser = await switchHospital(branchId)
+      const updatedUser = await switchHospital(branchId, "Hospital staff branch context")
       if (updatedUser) {
         useAuthStore.getState().setUser(updatedUser)
         localStorage.setItem("last_active_hospital", branchId)
@@ -285,6 +301,29 @@ export function Shell() {
       }
     } catch {
       window.location.reload()
+    }
+  }
+
+  const enterHospitalWorkspace = async () => {
+    if (!accessHospitalId) return
+    if (accessReason.trim().length < 10) {
+      setAccessError("Please provide a support-access reason (at least 10 characters).")
+      return
+    }
+    setIsEnteringHospital(true)
+    setAccessError(null)
+    try {
+      const updatedUser = await switchHospital(accessHospitalId, accessReason.trim())
+      useAuthStore.getState().setUser(updatedUser)
+      localStorage.setItem("last_active_hospital", accessHospitalId)
+      localStorage.setItem("platform_mode", "hospital")
+      setPlatformMode("hospital")
+      setAccessHospitalId(null)
+      navigate("/dashboard")
+    } catch (error) {
+      setAccessError(error instanceof Error ? error.message : "Unable to enter this hospital workspace.")
+    } finally {
+      setIsEnteringHospital(false)
     }
   }
 
@@ -341,9 +380,7 @@ export function Shell() {
               </button>
               <button
                 onClick={() => {
-                  setPlatformMode("hospital")
-                  localStorage.setItem("platform_mode", "hospital")
-                  navigate("/dashboard")
+                  openHospitalAccess(user?.hospital ?? availableBranches[0]?.id)
                 }}
                 className={`flex-1 h-7 rounded-[6px] text-[11px] font-bold flex items-center justify-center gap-1 transition-colors ${
                   !isInSaasMode ? "bg-surface text-brand shadow-2xs border border-border-soft" : "text-ink-4 hover:text-ink-2"
@@ -480,7 +517,7 @@ export function Shell() {
           )}
 
           {/* Premium Branch Switcher in Top Header */}
-          {availableBranches.length > 0 && (
+          {availableBranches.length > 0 && !isInSaasMode && (
             <div className="relative">
               <button
                 onClick={() => setIsBranchOpen(!isBranchOpen)}
@@ -605,7 +642,7 @@ export function Shell() {
         )}
 
         {/* Warning banner when in Hospital Ops mode but no hospital branch is attached */}
-        {!isInSaasMode && !user?.hospital && (
+        {!isInSaasMode && !user?.hospital && !isSaasUser && (
           <div className="bg-amber-50 border-b border-amber-300 text-amber-900 px-5 py-3 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
             <div className="flex items-center gap-2.5">
               <span className="text-base">⚠️</span>
@@ -821,6 +858,27 @@ export function Shell() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {accessHospitalId && (
+        <div className="fixed inset-0 z-[70] bg-slate-950/45 flex items-center justify-center p-4">
+          <div role="dialog" aria-modal="true" aria-labelledby="hospital-access-title" className="w-full max-w-lg bg-surface rounded-xl shadow-2xl border border-border p-6">
+            <div className="flex items-start gap-3">
+              <span className="text-xl">🔒</span>
+              <div>
+                <h2 id="hospital-access-title" className="text-base font-bold text-ink">Enter hospital workspace</h2>
+                <p className="mt-1 text-xs leading-5 text-ink-4">You are about to access operational and patient information for <strong className="text-ink">{availableBranches.find((h) => h.id === accessHospitalId)?.name ?? "this hospital"}</strong>. This access will be recorded in the security audit log.</p>
+              </div>
+            </div>
+            <label className="block mt-5 text-xs font-semibold text-ink-2">Support-access reason</label>
+            <textarea value={accessReason} onChange={(e) => setAccessReason(e.target.value)} autoFocus rows={3} placeholder="Example: Investigating ticket #1234 reported by hospital administrator" className="mt-1.5 w-full rounded-control border border-border px-3 py-2 text-sm outline-none focus:border-brand" />
+            {accessError && <p className="mt-2 text-xs text-danger-text">{accessError}</p>}
+            <div className="mt-5 flex justify-end gap-2">
+              <button onClick={() => setAccessHospitalId(null)} disabled={isEnteringHospital} className="h-9 px-3 rounded-control border border-border text-xs font-semibold text-ink-3">Cancel</button>
+              <button onClick={enterHospitalWorkspace} disabled={isEnteringHospital} className="h-9 px-3 rounded-control bg-indigo-600 text-white text-xs font-bold disabled:opacity-60">{isEnteringHospital ? "Entering…" : "Record & enter hospital"}</button>
+            </div>
           </div>
         </div>
       )}

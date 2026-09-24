@@ -46,8 +46,8 @@ export function fetchMe() {
   return api.get<User>("/users/me/")
 }
 
-export function switchHospital(hospitalId: string) {
-  return api.post<User>("/users/switch-hospital/", { hospital_id: hospitalId })
+export function switchHospital(hospitalId: string, reason = "Hospital staff branch context") {
+  return api.post<User>("/users/switch-hospital/", { hospital_id: hospitalId, reason })
 }
 
 // --- Two-factor authentication enrollment (apps.accounts.views.UserViewSet) ---

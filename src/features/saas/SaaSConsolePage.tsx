@@ -302,8 +302,12 @@ export function SaaSConsolePage() {
   }
 
   const handleInspect = async (hospitalId: string | number) => {
+    const reason = window.prompt("Support-access reason (this entry will be audit logged):")
+    if (!reason || reason.trim().length < 10) {
+      return
+    }
     try {
-      await switchHospital(String(hospitalId))
+      await switchHospital(String(hospitalId), reason.trim())
       localStorage.setItem("platform_mode", "hospital")
       window.location.href = "/dashboard"
     } catch (e) {
