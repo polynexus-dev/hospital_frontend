@@ -73,6 +73,7 @@ export const nabhOpsNav: NavItem[] = [
   { key: "procurement", path: "/procurement", labelKey: "Procurement", subKey: "GRN, indents, suppliers", requiredPermission: "inventory.view_goodsreceiptnote" },
   { key: "hr-talent", path: "/hr-talent", labelKey: "Payroll & Talent", subKey: "Payroll, roster, training", requiredPermission: "hr.view_payrollrun" },
   { key: "support-services", path: "/support-services", labelKey: "Support Services", subKey: "Ambulance, CSSD, housekeeping, equipment", requiredPermission: "support_services.view_ambulancetrip" },
+  { key: "consultation-time", path: "/consultation-time", labelKey: "Consultation Time", subKey: "Minutes per patient, by doctor", requiredPermission: "appointments.view_appointment" },
   { key: "predictive", path: "/predictive", labelKey: "Predictive Analytics", subKey: "Forecasts & risk", requiredPermission: "analytics.view_dailymislog" },
 ]
 

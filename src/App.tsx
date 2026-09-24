@@ -61,6 +61,7 @@ const DiagnosticsSetupPage = lazy(() => import("./features/nabh/OperationsPages"
 const InpatientFlowPage = lazy(() => import("./features/nabh/OperationsPages").then((m) => ({ default: m.InpatientFlowPage })))
 const GovernancePage = lazy(() => import("./features/nabh/GovernancePage").then((m) => ({ default: m.GovernancePage })))
 const HelpCenter = lazy(() => import("./features/nabh/GovernancePage").then((m) => ({ default: m.HelpCenter })))
+const ConsultationTimePage = lazy(() => import("./features/nabh/ConsultationTimePage").then((m) => ({ default: m.ConsultationTimePage })))
 const PredictivePage = lazy(() => import("./features/nabh/PredictivePage").then((m) => ({ default: m.PredictivePage })))
 const QueueDisplayBoard = lazy(() => import("./features/public/QueueDisplayBoard").then((m) => ({ default: m.QueueDisplayBoard })))
 const TeleJoinPage = lazy(() => import("./features/public/TeleJoinPage").then((m) => ({ default: m.TeleJoinPage })))
@@ -162,6 +163,7 @@ function App() {
           <Route path="/diagnostics-setup" element={<Suspense fallback={<LoadingState />}><DiagnosticsSetupPage /></Suspense>} />
           <Route path="/inpatient-flow" element={<Suspense fallback={<LoadingState />}><InpatientFlowPage /></Suspense>} />
           <Route path="/governance" element={<Suspense fallback={<LoadingState />}><GovernancePage /></Suspense>} />
+          <Route path="/consultation-time" element={<Suspense fallback={<LoadingState />}><ConsultationTimePage /></Suspense>} />
           <Route path="/predictive" element={<Suspense fallback={<LoadingState />}><PredictivePage /></Suspense>} />
           <Route path="/help" element={<Suspense fallback={<LoadingState />}><div className="p-6 space-y-4"><h1 className="text-2xl font-bold">Help Centre</h1><HelpCenter /></div></Suspense>} />
 
