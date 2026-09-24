@@ -8,6 +8,9 @@ import { queryClient } from "./app/queryClient"
 import { ErrorBoundary } from "./components/ui/ErrorBoundary"
 import App from "./App.tsx"
 import { initSession } from "./api/payloadCrypto"
+import { endSessionIfNotKept } from "./store/auth"
+
+endSessionIfNotKept()
 
 // Attempt ECDH key exchange with the server before rendering.
 // - If PAYLOAD_ENCRYPTION_ENABLED=True (production): handshake succeeds and all

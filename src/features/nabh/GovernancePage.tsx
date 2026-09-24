@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { api, extractApiError } from "../../api/client"
 import { ModuleHub } from "../../components/resource/ModuleHub"
 import { col, opts } from "./fields"
+import { SSOSettings } from "./SSOSettings"
 
 function SecurityPolicyForm() {
   const [p, setP] = useState<Record<string, any> | null>(null)
@@ -47,6 +48,7 @@ function SecurityPolicyForm() {
         {num("lockout_threshold", "Failed logins before lockout (0 = off)")}
         {num("lockout_minutes", "Lockout duration (minutes)")}
         {box("enforce_mfa_for_all", "Require MFA for every user")}
+        {box("sso_required", "Require single sign-on (owner/admin keep password fallback)")}
       </div>
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 space-y-3">
         <h3 className="font-semibold">Auto screen lock</h3>
@@ -119,6 +121,7 @@ export function GovernancePage() {
       subtitle="NABH DOM / DAC — password & lockout policy, screen lock, security events, audit rules & rollback, backups, accreditations, help"
       tabs={[
         { key: "policy", label: "Security policy", render: () => <SecurityPolicyForm /> },
+        { key: "sso", label: "Single sign-on", render: () => <SSOSettings /> },
         {
           key: "events",
           label: "Security events",

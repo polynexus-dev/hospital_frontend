@@ -34,4 +34,28 @@ export const useAuthStore = create<AuthState>()(
   ),
 )
 
+// "Keep me signed in" (login page). Tokens always live in localStorage; when
+// the box was left unchecked, a browser session that no longer carries the
+// sessionStorage marker (the browser was closed) starts signed out.
+const KEEP_KEY = "hms_keep_signed_in"
+const ALIVE_KEY = "hms_session_alive"
 
+export function rememberSessionChoice(keep: boolean) {
+  try {
+    localStorage.setItem(KEEP_KEY, keep ? "1" : "0")
+    sessionStorage.setItem(ALIVE_KEY, "1")
+  } catch {
+    // storage unavailable — default behaviour (stay signed in) applies
+  }
+}
+
+export function endSessionIfNotKept() {
+  try {
+    if (localStorage.getItem(KEEP_KEY) === "0" && !sessionStorage.getItem(ALIVE_KEY)) {
+      useAuthStore.getState().logout()
+    }
+    sessionStorage.setItem(ALIVE_KEY, "1")
+  } catch {
+    // storage unavailable
+  }
+}

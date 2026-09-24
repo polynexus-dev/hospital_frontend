@@ -60,6 +60,7 @@ export const nabhCareNav: NavItem[] = [
   { key: "infection-control", path: "/infection-control", labelKey: "Infection Control", subKey: "HAI, antimicrobials, exposures", requiredPermission: "infection_control.view_haiincident" },
   { key: "telemedicine", path: "/telemedicine", labelKey: "Telemedicine", subKey: "Video consultations", requiredPermission: "telemedicine.view_teleconsultation" },
   { key: "queue", path: "/queue", labelKey: "Queue & Tokens", subKey: "Counters, tokens, TV display", requiredPermission: "queue_mgmt.view_queuetoken" },
+  { key: "cathlab", path: "/cathlab", labelKey: "Cath Lab", subKey: "PCI, devices, door-to-device", requiredPermission: "cathlab.view_cathprocedure" },
   { key: "oncology", path: "/oncology", labelKey: "Oncology", subKey: "Chemo, RT, tumour boards", requiredPermission: "oncology.view_cancercase" },
   { key: "dietary", path: "/dietary", labelKey: "Dietary & Kitchen", subKey: "Diet orders, trays", requiredPermission: "dietary.view_dietorder" },
   { key: "pharmacy-safety", path: "/pharmacy-safety", labelKey: "Medication Safety", subKey: "Recalls, reconciliation, emergency drugs", requiredPermission: "pharmacy.view_medicine" },
@@ -70,6 +71,7 @@ export const nabhCareNav: NavItem[] = [
 
 export const nabhOpsNav: NavItem[] = [
   { key: "quality", path: "/quality", labelKey: "Quality & KPIs", subKey: "Incidents, NABH KPIs", requiredPermission: "quality.view_safetyincident" },
+  { key: "schemes", path: "/schemes", labelKey: "Govt Schemes", subKey: "PM-JAY, CGHS, ECHS claims", requiredPermission: "schemes.view_schemecase" },
   { key: "accounts", path: "/accounts", labelKey: "Accounts & Tally", subKey: "Payables, GST, insurance", requiredPermission: "finance.view_vendorinvoice" },
   { key: "procurement", path: "/procurement", labelKey: "Procurement", subKey: "GRN, indents, suppliers", requiredPermission: "inventory.view_goodsreceiptnote" },
   { key: "hr-talent", path: "/hr-talent", labelKey: "Payroll & Talent", subKey: "Payroll, roster, training", requiredPermission: "hr.view_payrollrun" },

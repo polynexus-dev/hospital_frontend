@@ -1,6 +1,7 @@
 import { ModuleHub } from "../../components/resource/ModuleHub"
 import { StatusPill } from "../../components/resource/ResourceTable"
 import { admissionField, col, doctorField, opts, patientCol, patientField, userField } from "./fields"
+import { LaundryPanel, linenStockResource, linenTypesResource } from "./LaundryPanel"
 
 export function SupportServicesPage() {
   return (
@@ -86,6 +87,9 @@ export function SupportServicesPage() {
               { key: "items", label: "Items (JSON)", type: "json", placeholder: '[{"name": "Artery forceps", "count": 6}]' }, { key: "shelf_life_days", label: "Shelf life (days)", type: "number", defaultValue: 30 }],
           },
         },
+        { key: "laundry", label: "Laundry", render: () => <LaundryPanel /> },
+        { key: "linen-stock", label: "Linen stock", resource: linenStockResource },
+        { key: "linen-types", label: "Linen types", resource: linenTypesResource },
         {
           key: "housekeeping",
           label: "Housekeeping",

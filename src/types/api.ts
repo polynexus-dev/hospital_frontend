@@ -1072,6 +1072,7 @@ export interface PublicTenantBranding {
   is_active?: boolean
   enabled_modules?: string[]
   google_review_url?: string
+  helpline_phone?: string
   theme?: {
     primary_color: string
     accent_color: string

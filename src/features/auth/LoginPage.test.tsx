@@ -102,4 +102,53 @@ describe("LoginPage", () => {
 
     expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument()
   })
+
+  it("completes single sign-on from the one-time code in the URL fragment", async () => {
+    const { fetchMe } = await import("../../api/auth")
+    const { api } = await import("../../api/client")
+    // @ts-expect-error partial User for this test
+    vi.mocked(fetchMe).mockResolvedValue({ id: 3, email: "asha@cityhospital.in" })
+    const post = vi.spyOn(api, "post").mockResolvedValue({ access: "acc-sso", refresh: "ref-sso", next: "/dashboard" })
+    window.history.replaceState(null, "", "/login#sso=one-time-code")
+
+    renderLogin()
+
+    await waitFor(() => expect(screen.getByText("Dashboard content")).toBeInTheDocument())
+    expect(post).toHaveBeenCalledWith("/auth/sso/exchange/", { code: "one-time-code" }, { skipAuth: true })
+    expect(useAuthStore.getState().accessToken).toBe("acc-sso")
+    expect(window.location.hash).toBe("") // the code is not left in the address bar
+    post.mockRestore()
+  })
+
+  it("explains a failed single sign-on", async () => {
+    window.history.replaceState(null, "", "/login#sso_error=no_account")
+    renderLogin()
+    expect(await screen.findByText(/no staff account for that work email/i)).toBeInTheDocument()
+  })
+
+  it("signs patients in with their registered mobile and an OTP", async () => {
+    const { api } = await import("../../api/client")
+    const post = vi.spyOn(api, "post").mockResolvedValueOnce({ sent: true }).mockResolvedValueOnce({ token: "portal-token" })
+    const user = userEvent.setup()
+    render(
+      <MemoryRouter initialEntries={["/login"]}>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/portal" element={<div>Portal home</div>} />
+        </Routes>
+      </MemoryRouter>
+    )
+    await user.click(screen.getByRole("tab", { name: /patient portal/i }))
+    await user.type(screen.getByLabelText(/hospital code/i), "city-hospital")
+    await user.type(screen.getByLabelText(/mobile number/i), "9876543210")
+    await user.click(screen.getByRole("button", { name: /send otp/i }))
+    await user.type(await screen.findByLabelText(/one-time password/i), "123456")
+    await user.click(screen.getByRole("button", { name: /verify & open portal/i }))
+
+    await waitFor(() => expect(screen.getByText("Portal home")).toBeInTheDocument())
+    expect(post).toHaveBeenNthCalledWith(1, "/portal/auth/request-otp/", { hospital: "city-hospital", mobile: "9876543210" }, { skipAuth: true })
+    expect(sessionStorage.getItem("patient_portal_token")).toBe("portal-token")
+    post.mockRestore()
+    localStorage.removeItem("hms_login_tab")
+  })
 })

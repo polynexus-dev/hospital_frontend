@@ -61,6 +61,9 @@ const DiagnosticsSetupPage = lazy(() => import("./features/nabh/OperationsPages"
 const InpatientFlowPage = lazy(() => import("./features/nabh/OperationsPages").then((m) => ({ default: m.InpatientFlowPage })))
 const GovernancePage = lazy(() => import("./features/nabh/GovernancePage").then((m) => ({ default: m.GovernancePage })))
 const HelpCenter = lazy(() => import("./features/nabh/GovernancePage").then((m) => ({ default: m.HelpCenter })))
+const SchemesPage = lazy(() => import("./features/nabh/SchemesPage").then((m) => ({ default: m.SchemesPage })))
+const CathLabPage = lazy(() => import("./features/nabh/CathLabPage").then((m) => ({ default: m.CathLabPage })))
+const DicomViewer = lazy(() => import("./features/diagnostics/DicomViewer").then((m) => ({ default: m.DicomViewer })))
 const ClinicalTemplatesPage = lazy(() => import("./features/nabh/ClinicalTemplates").then((m) => ({ default: m.ClinicalTemplatesPage })))
 const ConsultationTimePage = lazy(() => import("./features/nabh/ConsultationTimePage").then((m) => ({ default: m.ConsultationTimePage })))
 const PredictivePage = lazy(() => import("./features/nabh/PredictivePage").then((m) => ({ default: m.PredictivePage })))
@@ -164,6 +167,9 @@ function App() {
           <Route path="/diagnostics-setup" element={<Suspense fallback={<LoadingState />}><DiagnosticsSetupPage /></Suspense>} />
           <Route path="/inpatient-flow" element={<Suspense fallback={<LoadingState />}><InpatientFlowPage /></Suspense>} />
           <Route path="/governance" element={<Suspense fallback={<LoadingState />}><GovernancePage /></Suspense>} />
+          <Route path="/schemes" element={<Suspense fallback={<LoadingState />}><SchemesPage /></Suspense>} />
+          <Route path="/cathlab" element={<Suspense fallback={<LoadingState />}><CathLabPage /></Suspense>} />
+          <Route path="/radiology/viewer/:orderId" element={<Suspense fallback={<LoadingState />}><DicomViewer /></Suspense>} />
           <Route path="/clinical-templates" element={<Suspense fallback={<LoadingState />}><ClinicalTemplatesPage /></Suspense>} />
           <Route path="/consultation-time" element={<Suspense fallback={<LoadingState />}><ConsultationTimePage /></Suspense>} />
           <Route path="/predictive" element={<Suspense fallback={<LoadingState />}><PredictivePage /></Suspense>} />

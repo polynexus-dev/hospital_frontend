@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { Link } from "react-router-dom"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Button } from "../../components/ui/Button"
 import { ApiError } from "../../api/client"
@@ -36,6 +37,7 @@ export function RadiologyOrderDetailPanel({ order }: { order: RadiologyOrder }) 
 
   return (
     <div className="space-y-3">
+      <Link to={`/radiology/viewer/${order.id}`} className="inline-block text-[12px] font-semibold text-brand">Open images ↗</Link>
       {report ? (
         <div className="space-y-1.5 text-[12.5px]">
           <div><span className="text-ink-5">Findings: </span>{report.findings || "—"}</div>
