@@ -206,7 +206,7 @@ function SubscriptionRow({
     },
   })
 
-  const moduleCount = hospital?.enabled_modules?.length ?? 14
+  const moduleCount = hospital?.enabled_modules?.length ?? SYSTEM_MODULES.length
 
   return (
     <div className="grid grid-cols-[1.5fr_0.7fr_0.7fr_0.8fr_0.7fr_0.8fr_0.8fr_1.8fr] gap-2.5 py-2.5 border-b border-border-faint items-center text-[13px] min-w-[1150px]">

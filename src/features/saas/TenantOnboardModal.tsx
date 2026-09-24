@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Button } from "../../components/ui/Button"
 
 import { Pill } from "../../components/ui/Pill"
-import { SYSTEM_MODULES } from "./TenantModulesModal"
+import { MODULE_PRESETS, ModuleSuitePicker, SYSTEM_MODULES } from "./TenantModulesModal"
 import type { OnboardTenantPayload, SaaSHospital } from "../../types/api"
 
 interface TenantOnboardModalProps {
@@ -301,65 +301,20 @@ export function TenantOnboardModal({ onClose, onSuccess, onSubmit }: TenantOnboa
                 <span className="text-xs font-medium text-slate-500">
                   Select which modules this tenant is licensed to use:
                 </span>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedModules(SYSTEM_MODULES.map((m) => m.key))}
-                    className="text-xs text-teal-600 hover:underline font-semibold"
-                  >
-                    Select All (14)
-                  </button>
-                  <span className="text-slate-300">·</span>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedModules(["opd", "ipd", "pharmacy", "laboratory", "billing"])}
-                    className="text-xs text-teal-600 hover:underline font-semibold"
-                  >
-                    Core (5)
-                  </button>
-                  <span className="text-slate-300">·</span>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedModules([])}
-                    className="text-xs text-slate-500 hover:underline"
-                  >
-                    Clear
-                  </button>
+                <div className="flex flex-wrap items-center gap-2">
+                  {MODULE_PRESETS.map((p, i) => (
+                    <span key={p.label} className="flex items-center gap-2">
+                      {i > 0 && <span className="text-slate-300">·</span>}
+                      <button type="button" onClick={() => setSelectedModules(p.keys())} className="text-xs text-teal-600 hover:underline font-semibold">
+                        {p.label}
+                      </button>
+                    </span>
+                  ))}
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2.5 max-h-[50vh] overflow-y-auto pr-1">
-                {SYSTEM_MODULES.map((m) => {
-                  const isChecked = selectedModules.includes(m.key)
-                  return (
-                    <div
-                      key={m.key}
-                      onClick={() => {
-                        if (isChecked) setSelectedModules(selectedModules.filter((k) => k !== m.key))
-                        else setSelectedModules([...selectedModules, m.key])
-                      }}
-                      className={`p-3 rounded-xl border flex items-start gap-2.5 cursor-pointer transition-all ${
-                        isChecked
-                          ? "border-teal-500 bg-teal-50/40 dark:bg-teal-950/20"
-                          : "border-slate-200 dark:border-slate-800 bg-slate-50/20 opacity-60 hover:opacity-100"
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={isChecked}
-                        onChange={() => {}}
-                        className="mt-0.5 h-4 w-4 rounded text-teal-600 pointer-events-none"
-                      />
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1 text-xs font-bold text-slate-900 dark:text-slate-100">
-                          <span>{m.icon}</span>
-                          <span>{m.name}</span>
-                        </div>
-                        <p className="text-[11px] text-slate-500 line-clamp-1 mt-0.5">{m.desc}</p>
-                      </div>
-                    </div>
-                  )
-                })}
+              <div className="max-h-[50vh] overflow-y-auto pr-1">
+                <ModuleSuitePicker selected={selectedModules} onChange={setSelectedModules} compact />
               </div>
             </div>
           )}

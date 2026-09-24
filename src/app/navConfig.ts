@@ -23,12 +23,12 @@ export const saasNav: NavItem[] = [
 ]
 
 export const dailyWorkNav: NavItem[] = [
-  { key: "console", path: "/console", labelKey: "nav.console", subKey: "screenSub.console" },
-  { key: "callbacks", path: "/callbacks", labelKey: "nav.callbacks", subKey: "screenSub.callbacks" },
-  { key: "enquiries", path: "/enquiries", labelKey: "nav.enquiries", subKey: "screenSub.enquiries" },
+  { key: "console", moduleKey: "telephony", path: "/console", labelKey: "nav.console", subKey: "screenSub.console" },
+  { key: "callbacks", moduleKey: "telephony", path: "/callbacks", labelKey: "nav.callbacks", subKey: "screenSub.callbacks" },
+  { key: "enquiries", moduleKey: "enquiries", path: "/enquiries", labelKey: "nav.enquiries", subKey: "screenSub.enquiries" },
   { key: "patients", path: "/patients", labelKey: "nav.patients", subKey: "screenSub.patients" },
   { key: "appointments", path: "/appointments", labelKey: "nav.appointments", subKey: "screenSub.appointments" },
-  { key: "inbox", path: "/inbox", labelKey: "nav.inbox", subKey: "screenSub.inbox" },
+  { key: "inbox", moduleKey: "inbox", path: "/inbox", labelKey: "nav.inbox", subKey: "screenSub.inbox" },
   { key: "dashboard", path: "/dashboard", labelKey: "nav.dashboard", subKey: "screenSub.dashboard" },
 ]
 
@@ -52,40 +52,41 @@ export const careNav: NavItem[] = [
   { key: "bloodbank", moduleKey: "bloodbank", path: "/bloodbank", labelKey: "Blood Bank", subKey: "Blood Units & Transfusion", requiredPermission: "bloodbank.view_bloodunit" },
 ]
 
-// NABH HIS/EMR modules. No moduleKey: these aren't subscription-gated
-// ERP modules, only permission-gated (the backend enforces the same).
+// NABH HIS/EMR modules. Most follow a licensable module (moduleKey, switched
+// per hospital in the SaaS console); Clinical Safety and Clinical Templates
+// are always on — every clinical module depends on them.
 export const nabhCareNav: NavItem[] = [
-  { key: "inpatient-flow", path: "/inpatient-flow", labelKey: "Inpatient Flow", subKey: "Bed board, discharge planning", requiredPermission: "ipd.view_admission" },
+  { key: "inpatient-flow", moduleKey: "ipd", path: "/inpatient-flow", labelKey: "Inpatient Flow", subKey: "Bed board, discharge planning", requiredPermission: "ipd.view_admission" },
   { key: "clinical-safety", path: "/clinical-safety", labelKey: "Clinical Safety", subKey: "Alerts, CDSS, assessments, consent", requiredPermission: "clinical.view_clinicalalert" },
-  { key: "infection-control", path: "/infection-control", labelKey: "Infection Control", subKey: "HAI, antimicrobials, exposures", requiredPermission: "infection_control.view_haiincident" },
-  { key: "telemedicine", path: "/telemedicine", labelKey: "Telemedicine", subKey: "Video consultations", requiredPermission: "telemedicine.view_teleconsultation" },
-  { key: "queue", path: "/queue", labelKey: "Queue & Tokens", subKey: "Counters, tokens, TV display", requiredPermission: "queue_mgmt.view_queuetoken" },
-  { key: "cathlab", path: "/cathlab", labelKey: "Cath Lab", subKey: "PCI, devices, door-to-device", requiredPermission: "cathlab.view_cathprocedure" },
-  { key: "oncology", path: "/oncology", labelKey: "Oncology", subKey: "Chemo, RT, tumour boards", requiredPermission: "oncology.view_cancercase" },
-  { key: "dietary", path: "/dietary", labelKey: "Dietary & Kitchen", subKey: "Diet orders, trays", requiredPermission: "dietary.view_dietorder" },
-  { key: "pharmacy-safety", path: "/pharmacy-safety", labelKey: "Medication Safety", subKey: "Recalls, reconciliation, emergency drugs", requiredPermission: "pharmacy.view_medicine" },
-  { key: "diagnostics-setup", path: "/diagnostics-setup", labelKey: "Diagnostics Setup", subKey: "Templates, analysers, imaging slots", requiredPermission: ["laboratory.view_labtest", "radiology.view_radiologyprocedure"] },
+  { key: "infection-control", moduleKey: "infection_control", path: "/infection-control", labelKey: "Infection Control", subKey: "HAI, antimicrobials, exposures", requiredPermission: "infection_control.view_haiincident" },
+  { key: "telemedicine", moduleKey: "telemedicine", path: "/telemedicine", labelKey: "Telemedicine", subKey: "Video consultations", requiredPermission: "telemedicine.view_teleconsultation" },
+  { key: "queue", moduleKey: "queue", path: "/queue", labelKey: "Queue & Tokens", subKey: "Counters, tokens, TV display", requiredPermission: "queue_mgmt.view_queuetoken" },
+  { key: "cathlab", moduleKey: "cathlab", path: "/cathlab", labelKey: "Cath Lab", subKey: "PCI, devices, door-to-device", requiredPermission: "cathlab.view_cathprocedure" },
+  { key: "oncology", moduleKey: "oncology", path: "/oncology", labelKey: "Oncology", subKey: "Chemo, RT, tumour boards", requiredPermission: "oncology.view_cancercase" },
+  { key: "dietary", moduleKey: "dietary", path: "/dietary", labelKey: "Dietary & Kitchen", subKey: "Diet orders, trays", requiredPermission: "dietary.view_dietorder" },
+  { key: "pharmacy-safety", moduleKey: "pharmacy", path: "/pharmacy-safety", labelKey: "Medication Safety", subKey: "Recalls, reconciliation, emergency drugs", requiredPermission: "pharmacy.view_medicine" },
+  { key: "diagnostics-setup", moduleKey: ["laboratory", "radiology"], path: "/diagnostics-setup", labelKey: "Diagnostics Setup", subKey: "Templates, analysers, imaging slots", requiredPermission: ["laboratory.view_labtest", "radiology.view_radiologyprocedure"] },
   { key: "clinical-templates", path: "/clinical-templates", labelKey: "Clinical Templates", subKey: "Specialty forms & builder", requiredPermission: "clinical.view_assessmenttemplate" },
-  { key: "mrd", path: "/mrd", labelKey: "Medical Records", subKey: "Files, ICD-10 coding", requiredPermission: "mrd.view_medicalrecordfile" },
+  { key: "mrd", moduleKey: "mrd", path: "/mrd", labelKey: "Medical Records", subKey: "Files, ICD-10 coding", requiredPermission: "mrd.view_medicalrecordfile" },
 ]
 
 export const nabhOpsNav: NavItem[] = [
-  { key: "quality", path: "/quality", labelKey: "Quality & KPIs", subKey: "Incidents, NABH KPIs", requiredPermission: "quality.view_safetyincident" },
-  { key: "schemes", path: "/schemes", labelKey: "Govt Schemes", subKey: "PM-JAY, CGHS, ECHS claims", requiredPermission: "schemes.view_schemecase" },
-  { key: "accounts", path: "/accounts", labelKey: "Accounts & Tally", subKey: "Payables, GST, insurance", requiredPermission: "finance.view_vendorinvoice" },
-  { key: "procurement", path: "/procurement", labelKey: "Procurement", subKey: "GRN, indents, suppliers", requiredPermission: "inventory.view_goodsreceiptnote" },
-  { key: "hr-talent", path: "/hr-talent", labelKey: "Payroll & Talent", subKey: "Payroll, roster, training", requiredPermission: "hr.view_payrollrun" },
-  { key: "support-services", path: "/support-services", labelKey: "Support Services", subKey: "Ambulance, CSSD, housekeeping, equipment", requiredPermission: "support_services.view_ambulancetrip" },
-  { key: "consultation-time", path: "/consultation-time", labelKey: "Consultation Time", subKey: "Minutes per patient, by doctor", requiredPermission: "appointments.view_appointment" },
-  { key: "predictive", path: "/predictive", labelKey: "Predictive Analytics", subKey: "Forecasts & risk", requiredPermission: "analytics.view_dailymislog" },
+  { key: "quality", moduleKey: "quality", path: "/quality", labelKey: "Quality & KPIs", subKey: "Incidents, NABH KPIs", requiredPermission: "quality.view_safetyincident" },
+  { key: "schemes", moduleKey: "schemes", path: "/schemes", labelKey: "Govt Schemes", subKey: "PM-JAY, CGHS, ECHS claims", requiredPermission: "schemes.view_schemecase" },
+  { key: "accounts", moduleKey: "finance", path: "/accounts", labelKey: "Accounts & Tally", subKey: "Payables, GST, insurance", requiredPermission: "finance.view_vendorinvoice" },
+  { key: "procurement", moduleKey: "inventory", path: "/procurement", labelKey: "Procurement", subKey: "GRN, indents, suppliers", requiredPermission: "inventory.view_goodsreceiptnote" },
+  { key: "hr-talent", moduleKey: "hr", path: "/hr-talent", labelKey: "Payroll & Talent", subKey: "Payroll, roster, training", requiredPermission: "hr.view_payrollrun" },
+  { key: "support-services", moduleKey: "support_services", path: "/support-services", labelKey: "Support Services", subKey: "Ambulance, CSSD, housekeeping, equipment", requiredPermission: "support_services.view_ambulancetrip" },
+  { key: "consultation-time", moduleKey: "opd", path: "/consultation-time", labelKey: "Consultation Time", subKey: "Minutes per patient, by doctor", requiredPermission: "appointments.view_appointment" },
+  { key: "predictive", moduleKey: "predictive", path: "/predictive", labelKey: "Predictive Analytics", subKey: "Forecasts & risk", requiredPermission: "analytics.view_dailymislog" },
 ]
 
 export const growthNav: NavItem[] = [
-  { key: "referrals", path: "/referrals", labelKey: "nav.referrals", subKey: "screenSub.referrals" },
-  { key: "packages", path: "/packages", labelKey: "nav.packages", subKey: "screenSub.packages" },
-  { key: "tpa", path: "/tpa", labelKey: "nav.tpa", subKey: "screenSub.tpa" },
-  { key: "feedback", path: "/feedback", labelKey: "nav.feedback", subKey: "screenSub.feedback" },
-  { key: "workflows", path: "/workflows", labelKey: "nav.workflows", subKey: "screenSub.workflows" },
+  { key: "referrals", moduleKey: "referrals", path: "/referrals", labelKey: "nav.referrals", subKey: "screenSub.referrals" },
+  { key: "packages", moduleKey: "packages", path: "/packages", labelKey: "nav.packages", subKey: "screenSub.packages" },
+  { key: "tpa", moduleKey: "tpa", path: "/tpa", labelKey: "nav.tpa", subKey: "screenSub.tpa" },
+  { key: "feedback", moduleKey: "feedback", path: "/feedback", labelKey: "nav.feedback", subKey: "screenSub.feedback" },
+  { key: "workflows", moduleKey: "workflows", path: "/workflows", labelKey: "nav.workflows", subKey: "screenSub.workflows" },
 ]
 
 // Pure-ERP finance/ops group — deliberately does NOT spread growthNav in.
@@ -116,7 +117,7 @@ export const allNav = [...saasNav, ...dailyWorkNav, ...growthNav, ...careNav, ..
 // second question precisely.
 export const erpModuleKeys: string[] = Array.from(
   new Set(
-    [...careNav, ...erpOpsNav].flatMap((item) => (item.moduleKey ? (Array.isArray(item.moduleKey) ? item.moduleKey : [item.moduleKey]) : [])),
+    [...careNav, ...erpOpsNav, ...nabhCareNav, ...nabhOpsNav].flatMap((item) => (item.moduleKey ? (Array.isArray(item.moduleKey) ? item.moduleKey : [item.moduleKey]) : [])),
   ),
 )
 
