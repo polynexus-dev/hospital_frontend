@@ -1,9 +1,8 @@
-import React from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Card, CardHeader } from "../../components/ui/Card"
 import { Pill, Chip } from "../../components/ui/Pill"
 import { LoadingState, EmptyState } from "../../components/ui/QueryStates"
-import { getChainOverview, type BranchMetric } from "../../api/enquiries"
+import { getChainOverview } from "../../api/enquiries"
 
 const INR = new Intl.NumberFormat("en-IN", {
   style: "currency",
@@ -29,8 +28,7 @@ export function MultiBranchChainAggregator() {
     return (
       <Card padded>
         <EmptyState
-          title="Could not load Multi-Branch Data"
-          description="Make sure this hospital is linked to a hospital group in hospital settings."
+          message="Could not load Multi-Branch Data. Make sure this hospital is linked to a hospital group in hospital settings."
         />
       </Card>
     )

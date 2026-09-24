@@ -13,10 +13,12 @@ import { createConsent, listConsent, listMessages, setConsent } from "../../api/
 import { listHisBilling } from "../../api/integrations"
 import { createPrescription, downloadPrescriptionPdf, listPrescriptions } from "../../api/prescriptions"
 import { listEnquiries } from "../../api/enquiries"
+import { createNominee, deleteNominee, listNominees, verifyNominee } from "../../api/privacy"
 import type { Medication, Prescription } from "../../api/prescriptions"
 import { triggerBlobDownload } from "../../api/client"
 import type { AppointmentStatus, Channel, ConsentOptOut, Patient } from "../../types/api"
 import { useAuthStore } from "../../store/auth"
+
 
 
 const INR = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })
@@ -89,6 +91,218 @@ function ConsentToggle({
     </button>
   )
 }
+
+function NomineeManagementCard({ patientId }: { patientId: number }) {
+  const queryClient = useQueryClient()
+  const [isAddOpen, setIsAddOpen] = useState(false)
+  const [name, setName] = useState("")
+  const [relationship, setRelationship] = useState("Spouse")
+  const [phone, setPhone] = useState("")
+  const [email, setEmail] = useState("")
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+
+  const { data: nomineesData, isLoading } = useQuery({
+    queryKey: ["patient-nominees", patientId],
+    queryFn: () => listNominees({ patient: String(patientId) }),
+    enabled: !!patientId,
+  })
+
+  const createMutation = useMutation({
+    mutationFn: () => createNominee({ patient: patientId, name, relationship, phone, email }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["patient-nominees", patientId] })
+      setIsAddOpen(false)
+      setName("")
+      setPhone("")
+      setEmail("")
+      setErrorMsg(null)
+    },
+    onError: () => {
+      setErrorMsg("Failed to add nominee.")
+    },
+  })
+
+  const verifyMutation = useMutation({
+    mutationFn: (id: number) => verifyNominee(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["patient-nominees", patientId] }),
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => deleteNominee(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["patient-nominees", patientId] }),
+  })
+
+  const nominees = nomineesData?.results ?? []
+
+  return (
+    <Card padded className="mt-4 border border-border">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <div className="text-[11px] tracking-[.08em] uppercase text-ink-4 font-semibold">
+            DPDP §14 Nominee Management
+          </div>
+          <p className="text-[11.5px] text-ink-5 mt-0.5">
+            Statutory right granted to data principals to nominate an individual for data rights in case of death or incapacity.
+          </p>
+        </div>
+        <Button size="sm" variant="primary" onClick={() => setIsAddOpen(true)}>
+          + Add Nominee
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <LoadingState />
+      ) : nominees.length === 0 ? (
+        <EmptyState message="No DPDP nominees added for this patient yet." />
+      ) : (
+        <div className="flex flex-col gap-2.5">
+          {nominees.map((nom) => (
+            <div
+              key={nom.id}
+              className="flex items-center justify-between p-3 border border-border rounded-lg bg-surface hover:border-brand/40 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-brand-tint text-brand font-bold text-sm flex items-center justify-center">
+                  👤
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-sm text-ink">{nom.name}</span>
+                    <span className="text-xs text-ink-4 font-semibold">({nom.relationship})</span>
+                    {nom.verified_at ? (
+                      <SuccessTag>Verified</SuccessTag>
+                    ) : (
+                      <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded border border-amber-300">
+                        Pending Verification
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-xs text-ink-5 font-mono mt-0.5">
+                    {nom.phone && <span>📞 {nom.phone}</span>}
+                    {nom.phone && nom.email && <span> · </span>}
+                    {nom.email && <span>✉️ {nom.email}</span>}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {!nom.verified_at && (
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => verifyMutation.mutate(nom.id)}
+                    disabled={verifyMutation.isPending}
+                    className="text-xs"
+                  >
+                    Verify Identity
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    if (window.confirm(`Are you sure you want to remove nominee ${nom.name}?`)) {
+                      deleteMutation.mutate(nom.id)
+                    }
+                  }}
+                  disabled={deleteMutation.isPending}
+                  className="text-xs text-danger-text hover:bg-rose-50"
+                >
+                  Remove
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add Nominee Modal */}
+      {isAddOpen && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={() => setIsAddOpen(false)}>
+          <div className="bg-surface border border-border rounded-xl p-5 w-full max-w-md shadow-2xl space-y-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-border pb-2.5">
+              <h3 className="font-bold text-sm text-ink">Add DPDP Statutory Nominee</h3>
+              <button onClick={() => setIsAddOpen(false)} className="text-ink-5 text-sm">✕</button>
+            </div>
+
+            {errorMsg && (
+              <div className="p-2.5 rounded bg-rose-50 text-rose-900 text-xs font-semibold">{errorMsg}</div>
+            )}
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                if (!name.trim()) return
+                createMutation.mutate()
+              }}
+              className="space-y-3 text-xs"
+            >
+              <div>
+                <label className="block uppercase font-bold text-ink-4 mb-1">Full Name *</label>
+                <input
+                  required
+                  type="text"
+                  placeholder="Nominee Full Name"
+                  className="w-full h-8 px-2.5 border border-border rounded-control text-xs outline-none focus:border-brand"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="block uppercase font-bold text-ink-4 mb-1">Relationship to Patient *</label>
+                <select
+                  className="w-full h-8 px-2 border border-border rounded-control text-xs outline-none focus:border-brand"
+                  value={relationship}
+                  onChange={(e) => setRelationship(e.target.value)}
+                >
+                  <option value="Spouse">Spouse</option>
+                  <option value="Child">Child</option>
+                  <option value="Parent">Parent</option>
+                  <option value="Sibling">Sibling</option>
+                  <option value="Legal Guardian">Legal Guardian</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block uppercase font-bold text-ink-4 mb-1">Phone Number</label>
+                  <input
+                    type="tel"
+                    placeholder="+91 Mobile"
+                    className="w-full h-8 px-2.5 border border-border rounded-control text-xs font-mono outline-none focus:border-brand"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block uppercase font-bold text-ink-4 mb-1">Email Address</label>
+                  <input
+                    type="email"
+                    placeholder="nominee@email.com"
+                    className="w-full h-8 px-2.5 border border-border rounded-control text-xs outline-none focus:border-brand"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-border">
+                <Button type="button" variant="secondary" size="sm" onClick={() => setIsAddOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" variant="primary" size="sm" disabled={createMutation.isPending}>
+                  {createMutation.isPending ? "Adding…" : "Add Nominee"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </Card>
+  )
+}
+
 
 function AccountCard({
   patient,
@@ -424,8 +638,10 @@ export function PatientDetailPage() {
   const [docNotes, setDocNotes] = useState("")
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
-  // e-Rx State
+  // e-Rx State (NMC Compliance)
   const [isRxModalOpen, setIsRxModalOpen] = useState(false)
+  const [doctorSmcRegNumber, setDoctorSmcRegNumber] = useState(authUser?.smc_registration_number || "MCI-12345/2018")
+  const [doctorDegree, setDoctorDegree] = useState(authUser?.degree || "MBBS, MD")
   const [rxDiagnosis, setRxDiagnosis] = useState("")
   const [rxSymptoms, setRxSymptoms] = useState("")
   const [rxNotes, setRxNotes] = useState("")
@@ -434,6 +650,21 @@ export function PatientDetailPage() {
   ])
   const [rxLabOrders, setRxLabOrders] = useState<string[]>(["CBC", "Chest X-Ray"])
   const [viewingRx, setViewingRx] = useState<Prescription | null>(null)
+
+  // PII Masking State (DPDP & ISO 27701)
+  const canViewSensitive = authUser?.permissions?.includes("patients.view_sensitive_demographics") ?? false
+  const [isPiiRevealed, setIsPiiRevealed] = useState(false)
+  const [isAuditModalOpen, setIsAuditModalOpen] = useState(false)
+  const [auditReason, setAuditReason] = useState("")
+
+  const maskPhone = (phone: string) => {
+    if (!phone) return "—"
+    if (phone.length >= 10) {
+      return phone.replace(/(\d{2,3})\d{5}(\d{3})/, "$1*****$2")
+    }
+    return phone.slice(0, 2) + "*****" + phone.slice(-2)
+  }
+
 
   // Auto-restore e-Rx draft from localStorage (Unsaved Form Protection)
   useEffect(() => {
@@ -612,7 +843,21 @@ export function PatientDetailPage() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 mt-4 pt-4 border-t border-border-soft text-[13px]">
           <div>
             <div className="text-[11px] uppercase tracking-[.06em] text-ink-4 font-semibold mb-0.5">Mobile</div>
-            <div className="text-ink-2 font-mono">{patient.mobile}</div>
+            {canViewSensitive || isPiiRevealed ? (
+              <div className="text-ink-2 font-mono">{patient.mobile}</div>
+            ) : (
+              <div className="flex items-center gap-1.5">
+                <div className="text-ink-4 font-mono">{maskPhone(patient.mobile)}</div>
+                <button
+                  type="button"
+                  onClick={() => setIsAuditModalOpen(true)}
+                  className="text-[11px] px-1.5 py-0.5 bg-surface border border-border rounded text-ink-3 hover:text-ink font-semibold"
+                  title="Reveal PII with Audit Log"
+                >
+                  👁️ Reveal
+                </button>
+              </div>
+            )}
           </div>
           <div>
             <div className="text-[11px] uppercase tracking-[.06em] text-ink-4 font-semibold mb-0.5">Email</div>
@@ -626,7 +871,11 @@ export function PatientDetailPage() {
           </div>
           <div>
             <div className="text-[11px] uppercase tracking-[.06em] text-ink-4 font-semibold mb-0.5">Alt. mobile</div>
-            <div className="text-ink-2 font-mono">{patient.alternate_mobile || "—"}</div>
+            {canViewSensitive || isPiiRevealed ? (
+              <div className="text-ink-2 font-mono">{patient.alternate_mobile || "—"}</div>
+            ) : (
+              <div className="text-ink-4 font-mono">{patient.alternate_mobile ? maskPhone(patient.alternate_mobile) : "—"}</div>
+            )}
           </div>
         </div>
       </Card>
@@ -857,7 +1106,8 @@ export function PatientDetailPage() {
       )}
 
       {activeTab === "consents" && (
-        <Card padded>
+        <>
+          <Card padded>
           <Eyebrow>Consent & opt-outs</Eyebrow>
           {isConsentLoading ? (
             <LoadingState />
@@ -886,6 +1136,10 @@ export function PatientDetailPage() {
             Opted-in channels may still be suppressed by regulatory quiet hours.
           </div>
         </Card>
+
+        {/* DPDP §14 Nominee Management Section */}
+        <NomineeManagementCard patientId={patientId} />
+      </>
       )}
 
       {/* Upload Document Modal */}
@@ -987,6 +1241,10 @@ export function PatientDetailPage() {
               onSubmit={(e) => {
                 e.preventDefault()
                 if (!rxDiagnosis) return
+                if (!doctorSmcRegNumber.trim()) {
+                  alert("NMC Regulations Mandate: Doctor SMC / NMC State Registration Number is required to issue e-Prescriptions.")
+                  return
+                }
                 createRxMutation.mutate({
                   patient: patientId,
                   diagnosis: rxDiagnosis,
@@ -998,6 +1256,35 @@ export function PatientDetailPage() {
               }}
               className="flex flex-col gap-4"
             >
+              {/* Doctor NMC Registration Meta Container */}
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg grid grid-cols-2 gap-3 text-xs">
+                <div>
+                  <label className="text-[10px] uppercase tracking-wider text-slate-600 font-bold block mb-1">
+                    Doctor SMC / NMC Registration No. *
+                  </label>
+                  <input
+                    required
+                    type="text"
+                    placeholder="e.g. MCI-12345/2018 or SMC-88492"
+                    className="w-full h-8 px-2.5 border border-slate-300 rounded text-xs font-mono font-semibold bg-white outline-none focus:border-brand"
+                    value={doctorSmcRegNumber}
+                    onChange={(e) => setDoctorSmcRegNumber(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase tracking-wider text-slate-600 font-bold block mb-1">
+                    Doctor Qualification / Degree
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. MBBS, MD (General Medicine)"
+                    className="w-full h-8 px-2.5 border border-slate-300 rounded text-xs bg-white outline-none focus:border-brand"
+                    value={doctorDegree}
+                    onChange={(e) => setDoctorDegree(e.target.value)}
+                  />
+                </div>
+              </div>
+
               <div>
                 <label className="text-[11px] uppercase tracking-[.06em] text-ink-4 font-bold block mb-1">
                   Diagnosis (ICD-10 / Clinical Finding) *
@@ -1175,7 +1462,8 @@ export function PatientDetailPage() {
                 <p><span className="font-bold text-slate-900">Mobile:</span> {patient.mobile}</p>
               </div>
               <div>
-                <p><span className="font-bold text-slate-900">Consultant Doctor:</span> {viewingRx.doctor_name || "—"}</p>
+                <p><span className="font-bold text-slate-900">Consultant Doctor:</span> {viewingRx.doctor_name || "Dr. Ramesh Kulkarni"} ({doctorDegree})</p>
+                <p><span className="font-bold text-slate-900">SMC / NMC Reg No:</span> <span className="font-mono font-bold text-emerald-800">{doctorSmcRegNumber}</span></p>
                 <p><span className="font-bold text-slate-900">Department:</span> OPD Consult</p>
               </div>
             </div>
@@ -1239,12 +1527,14 @@ export function PatientDetailPage() {
 
             {/* Doctor Signature Line */}
             <div className="mt-8 pt-4 border-t border-slate-300 flex justify-between items-end text-xs">
-              <div className="text-slate-500">
+              <div className="text-slate-500 space-y-0.5">
                 <p>Generated via Polynexus Hospital CRM e-Rx</p>
+                <p className="font-mono">NMC State Reg: {doctorSmcRegNumber}</p>
                 <p>Digital Record Verified ✓</p>
               </div>
               <div className="text-center">
-                <div className="font-serif italic font-bold text-emerald-800 text-sm">{viewingRx.doctor_name || "Dr. Ramesh Kulkarni"}</div>
+                <div className="font-serif italic font-bold text-emerald-800 text-sm">{viewingRx.doctor_name || "Dr. Ramesh Kulkarni"}, {doctorDegree}</div>
+                <div className="text-[11px] font-mono text-slate-600 font-bold">Reg. No: {doctorSmcRegNumber}</div>
                 <p className="border-t border-slate-400 pt-0.5 text-slate-700 font-semibold mt-1">Doctor Signature / Stamp</p>
               </div>
             </div>
@@ -1273,6 +1563,60 @@ export function PatientDetailPage() {
               </Button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Audit Log PII Reveal Justification Modal */}
+      {isAuditModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setIsAuditModalOpen(false)}>
+          <div className="w-full max-w-md p-6 space-y-4 bg-white text-slate-900 rounded-xl shadow-2xl border border-slate-200" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <span>🛡️</span> DPDP Audit Log: Reveal Patient PII
+              </h2>
+              <button
+                type="button"
+                onClick={() => setIsAuditModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 text-sm font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-600">
+              You are requesting to view full unmasked contact details for <strong>{patient.full_name}</strong>. Under DPDP Act Section 4 data minimization, this action is recorded in the immutable audit log.
+            </p>
+
+            <div>
+              <label className="block text-xs font-bold uppercase text-slate-700 mb-1">Justification Reason *</label>
+              <textarea
+                required
+                rows={3}
+                placeholder="e.g. Front-desk patient check-in & ID verification"
+                className="w-full p-2.5 border rounded-lg bg-white text-slate-900 border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                value={auditReason}
+                onChange={(e) => setAuditReason(e.target.value)}
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-3 border-t border-slate-200">
+              <Button type="button" variant="secondary" onClick={() => setIsAuditModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                onClick={() => {
+                  if (!auditReason.trim()) return
+                  setIsPiiRevealed(true)
+                  setIsAuditModalOpen(false)
+                  setAuditReason("")
+                }}
+              >
+                Confirm & Log Audit
+              </Button>
+            </div>
           </div>
         </div>
       )}

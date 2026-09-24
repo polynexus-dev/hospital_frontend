@@ -20,6 +20,8 @@ import { listCallbackTasks } from "../api/telephony"
 import { logoutRequest, switchHospital } from "../api/auth"
 import { listHospitals } from "../api/hospitals"
 import { AIChatbotWidget } from "../components/ui/AIChatbotWidget"
+import { useIdleTimeout } from "../hooks/useIdleTimeout"
+
 
 type Domain = "crm" | "erp"
 const ACTIVE_DOMAIN_KEY = "hms_active_domain"
@@ -63,11 +65,15 @@ export function Shell() {
   const navigate = useNavigate()
   const { t, i18n } = useTranslation()
   const { user, logout } = useAuthStore()
+  const { isLocked, unlockScreen } = useIdleTimeout()
+  const [unlockPasscode, setUnlockPasscode] = useState("")
+  const [unlockError, setUnlockError] = useState<string | null>(null)
   const [isBranchOpen, setIsBranchOpen] = useState(false)
   const [isCompactMode, setIsCompactMode] = useState(() => localStorage.getItem("crm_compact") === "true")
   const [isFabOpen, setIsFabOpen] = useState(false)
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
+
 
   // Role.domain (crm/erp/both, see docs/erp/03-rbac-and-roles.md §2d) drives
   // which product(s) this user's sidebar can show; a hospital not
@@ -738,7 +744,81 @@ export function Shell() {
       )}
 
       <AIChatbotWidget />
+
+      {/* ISO 27001 Workstation Lock Screen Backdrop Overlay */}
+      {isLocked && (
+        <div className="fixed inset-0 z-[100] backdrop-blur-md bg-slate-950/85 flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="bg-slate-900 border border-slate-700 text-white rounded-2xl p-8 w-full max-w-md shadow-2xl flex flex-col items-center text-center space-y-5">
+            <div className="w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center text-2xl shadow-inner">
+              🔒
+            </div>
+
+            <div>
+              <span className="text-[11px] font-mono uppercase tracking-widest text-emerald-400 font-bold bg-emerald-950/60 px-2.5 py-1 rounded-full border border-emerald-800">
+                ISO 27001 Workstation Security
+              </span>
+              <h2 className="text-xl font-bold tracking-tight text-white mt-3">Workstation Locked</h2>
+              <p className="text-xs text-slate-400 mt-1">
+                Inactive for 15 minutes. Patient clinical PHI data hidden. Enter passcode or PIN to unlock.
+              </p>
+            </div>
+
+            <div className="w-full bg-slate-800/80 p-3.5 rounded-xl border border-slate-700/80 flex items-center gap-3">
+              <Avatar name={user?.first_name || user?.email || "User"} size={40} />
+              <div className="text-left min-w-0 flex-1">
+                <div className="text-sm font-bold text-white truncate">{user?.first_name ? `${user.first_name} ${user.last_name || ""}` : user?.email}</div>
+                <div className="text-xs text-slate-400 truncate">{user?.role_name || "Hospital Staff"}</div>
+              </div>
+            </div>
+
+            {unlockError && (
+              <div className="text-xs text-rose-400 font-semibold bg-rose-950/50 border border-rose-800 px-3 py-1.5 rounded-lg w-full">
+                {unlockError}
+              </div>
+            )}
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                setUnlockError(null)
+                if (!unlockPasscode) {
+                  setUnlockError("Please enter your PIN or password.")
+                  return
+                }
+                unlockScreen(unlockPasscode)
+                setUnlockPasscode("")
+              }}
+              className="w-full space-y-3"
+            >
+              <input
+                autoFocus
+                type="password"
+                placeholder="Enter password or unlock PIN"
+                value={unlockPasscode}
+                onChange={(e) => setUnlockPasscode(e.target.value)}
+                className="w-full h-11 px-4 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-mono text-center tracking-widest focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="flex-1 h-10 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-colors"
+                >
+                  Log Out
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 h-10 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg transition-colors"
+                >
+                  Unlock Terminal
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
+
 

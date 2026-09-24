@@ -33,6 +33,8 @@ export interface User {
   role_domain?: "crm" | "erp" | "both" | null
   permissions: string[]
   preferred_language: Language
+  smc_registration_number?: string
+  degree?: string
   is_active: boolean
   is_staff: boolean
   is_superuser: boolean
@@ -76,6 +78,9 @@ export interface Patient {
   referring_doctor_name: string
   guardian: number | null
   relationship_to_guardian: string
+  guardian_name?: string
+  guardian_phone?: string
+  guardian_consent_recorded?: boolean
   next_recall_due_at: string | null
   recall_reason: string
   preferred_language: Language
@@ -247,6 +252,8 @@ export interface Doctor {
   email: string
   default_consultation_minutes: number
   is_active: boolean
+  smc_registration_number?: string
+  degree?: string
 }
 
 export interface Slot {

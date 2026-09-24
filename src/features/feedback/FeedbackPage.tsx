@@ -50,7 +50,7 @@ export function FeedbackPage() {
   const [isEditingGoogleUrl, setIsEditingGoogleUrl] = useState(false)
   const [sendingPromptId, setSendingPromptId] = useState<number | null>(null)
 
-  const { data: reputationData, isLoading: isReputationLoading } = useQuery({
+  const { data: reputationData } = useQuery({
     queryKey: ["reputation-summary"],
     queryFn: getReputationSummary,
   })
@@ -383,18 +383,18 @@ export function FeedbackPage() {
                     >
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-ink">{res.patient_name || `Patient #${res.patient}`}</span>
+                          <span className="font-bold text-ink">{(res as any).patient_name || `Patient #${res.patient}`}</span>
                           <span className="px-1.5 py-0.5 rounded font-bold text-[11px] bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
                             {res.score}/10 Promoter
                           </span>
-                          {res.doctor_name && (
+                          {(res as any).doctor_name && (
                             <span className="text-teal-700 dark:text-teal-300 font-semibold">
-                              🩺 Dr. {res.doctor_name.replace(/^Dr\.?\s*/i, "")}
+                              🩺 Dr. {(res as any).doctor_name.replace(/^Dr\.?\s*/i, "")}
                             </span>
                           )}
                         </div>
                         <div className="text-[11px] text-ink-4 font-mono">
-                          {res.patient_mobile || "Mobile not listed"} · Reviewed on {new Date(res.created_at).toLocaleDateString("en-IN")}
+                          {(res as any).patient_mobile || "Mobile not listed"} · Reviewed on {new Date(res.created_at).toLocaleDateString("en-IN")}
                         </div>
                         {res.comment && (
                           <div className="text-ink-3 italic mt-1 bg-page/70 p-1.5 rounded border border-border/60 max-w-lg">
