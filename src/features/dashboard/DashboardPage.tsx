@@ -4,11 +4,9 @@ import { LoadingState, ErrorState } from "../../components/ui/QueryStates"
 import {
   callPerformance,
   dailyMisPreview,
-  departmentDoctorVolume,
   doctorRevenue,
   enquiryFunnel,
   noShowEffectiveness,
-  revenueBySource,
   exportMISReport,
 } from "../../api/analytics"
 import { listDoctors } from "../../api/appointments"
@@ -62,21 +60,23 @@ export function DashboardPage() {
 
   const calls = useQuery({ queryKey: ["reports", "call-performance", dateParams], queryFn: () => callPerformance(dateParams) })
   const funnel = useQuery({ queryKey: ["reports", "enquiry-funnel", dateParams], queryFn: () => enquiryFunnel(dateParams) })
-  const deptVolume = useQuery({ queryKey: ["reports", "department-doctor-volume", dateParams], queryFn: () => departmentDoctorVolume(dateParams) })
   const noShow = useQuery({ queryKey: ["reports", "no-show-effectiveness", dateParams], queryFn: () => noShowEffectiveness(dateParams) })
   const mis = useQuery({ queryKey: ["reports", "daily-mis-preview", dateParams], queryFn: () => dailyMisPreview(dateParams) })
-  const revenue = useQuery({ queryKey: ["reports", "revenue-by-source", dateParams], queryFn: () => revenueBySource(dateParams) })
   const docRevenue = useQuery({ queryKey: ["reports", "doctor-revenue", dateParams], queryFn: () => doctorRevenue(dateParams) })
   const doctorsQuery = useQuery({ queryKey: ["doctors"], queryFn: () => listDoctors() })
 
   const doctorsList = useMemo(() => {
     const apiDocs = doctorsQuery.data?.results ?? []
     if (apiDocs.length > 0) {
-      return apiDocs.map((d) => ({
-        id: String(d.id),
-        name: `Dr. ${d.first_name || d.name || "Doctor"} ${d.last_name || ""}`.trim(),
-        dept: d.department_name?.toLowerCase() || "",
-      }))
+      return apiDocs.map((d) => {
+        const rawName = d.name || [d.first_name, d.last_name].filter(Boolean).join(" ") || "Doctor"
+        const formattedName = rawName.toLowerCase().startsWith("dr.") ? rawName : `Dr. ${rawName}`
+        return {
+          id: String(d.id),
+          name: formattedName.trim(),
+          dept: (d.department_name || d.speciality || "").toLowerCase(),
+        }
+      })
     }
     const revDocs = docRevenue.data?.rows ?? []
     if (revDocs.length > 0) {
@@ -205,7 +205,7 @@ export function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-3.5 bg-slate-50/50 px-3.5 pb-3.5 pt-1 min-h-screen font-sans text-slate-800">
-      
+
       {/* ── ACTION TOOLBAR: EXPORT BUTTONS ──────────────────────────────────── */}
       <div className="flex items-center justify-end gap-2.5">
         <button
@@ -354,7 +354,7 @@ export function DashboardPage() {
 
       {/* ── ROW 3: MIDDLE PANELS (REVENUE BY SOURCE & ENQUIRY STATUS) ─────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-        
+
         {/* Left Panel: Revenue by Source (8 cols) */}
         <div className="lg:col-span-8 bg-white border border-slate-200 rounded-xl p-5 shadow-2xs flex flex-col justify-between">
           <div>
@@ -513,7 +513,7 @@ export function DashboardPage() {
 
       {/* ── ROW 4: BOTTOM SECTION (DEPARTMENT VOLUME & MIS EXECUTIVES) ──────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-        
+
         {/* Left Bottom Card: Department Volume (6 cols) */}
         <div className="lg:col-span-6 bg-white border border-slate-200 rounded-xl p-5 shadow-2xs">
           <div className="flex items-center justify-between mb-4">

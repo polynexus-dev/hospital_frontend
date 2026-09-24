@@ -246,7 +246,10 @@ export interface EnquiryHistory {
 export interface Doctor {
   id: number
   department: number | null
+  department_name?: string
   name: string
+  first_name?: string
+  last_name?: string
   speciality: string
   phone: string
   email: string
