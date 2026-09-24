@@ -371,7 +371,7 @@ export function BroadcastCampaignManager() {
         {campaignsQuery.isLoading && <LoadingState />}
         {!campaignsQuery.isLoading && (!campaignsQuery.data?.results || campaignsQuery.data.results.length === 0) && (
           <EmptyState
-            message="No Broadcast Campaigns Yet. Launch your first WhatsApp or SMS health checkup camp or outreach broadcast using the cohorts above."
+            message="No broadcast campaigns yet. Launch your first WhatsApp or SMS health checkup camp or outreach broadcast using the cohorts above."
           />
         )}
 

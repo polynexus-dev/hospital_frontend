@@ -28,7 +28,7 @@ export function MultiBranchChainAggregator() {
     return (
       <Card padded>
         <EmptyState
-          message="Could not load Multi-Branch Data. Make sure this hospital is linked to a hospital group in hospital settings."
+          message="Could not load multi-branch data. Make sure this hospital is linked to a hospital group in hospital settings."
         />
       </Card>
     )

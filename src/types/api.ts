@@ -399,6 +399,9 @@ export interface NPSResponse {
   category: "promoter" | "passive" | "detractor"
   comment: string
   created_at: string
+  patient_name?: string
+  patient_mobile?: string
+  doctor_name?: string | null
 }
 
 export interface Complaint {
