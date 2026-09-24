@@ -64,6 +64,7 @@ export const nabhCareNav: NavItem[] = [
   { key: "dietary", path: "/dietary", labelKey: "Dietary & Kitchen", subKey: "Diet orders, trays", requiredPermission: "dietary.view_dietorder" },
   { key: "pharmacy-safety", path: "/pharmacy-safety", labelKey: "Medication Safety", subKey: "Recalls, reconciliation, emergency drugs", requiredPermission: "pharmacy.view_medicine" },
   { key: "diagnostics-setup", path: "/diagnostics-setup", labelKey: "Diagnostics Setup", subKey: "Templates, analysers, imaging slots", requiredPermission: ["laboratory.view_labtest", "radiology.view_radiologyprocedure"] },
+  { key: "clinical-templates", path: "/clinical-templates", labelKey: "Clinical Templates", subKey: "Specialty forms & builder", requiredPermission: "clinical.view_assessmenttemplate" },
   { key: "mrd", path: "/mrd", labelKey: "Medical Records", subKey: "Files, ICD-10 coding", requiredPermission: "mrd.view_medicalrecordfile" },
 ]
 

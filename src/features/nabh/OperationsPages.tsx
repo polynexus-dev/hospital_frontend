@@ -1,6 +1,7 @@
 import { ModuleHub } from "../../components/resource/ModuleHub"
 import { admissionField, col, opts, patientCol, patientField, userField } from "./fields"
 import { BedBoard } from "./BedBoard"
+import { BedBillingPanel, DoctorPayoutsPanel, payoutRulesResource } from "./BillingExtras"
 
 const caseField = { key: "case", label: "Cancer case", type: "fk" as const, source: "/oncology/cases/", sourceLabel: (r: any) => `#${r.id} ${r.patient_name} — ${r.primary_site} ${r.tnm ?? ""}`, required: true }
 
@@ -160,6 +161,9 @@ export function AccountsPage() {
             ],
           },
         },
+        { key: "bed-charges", label: "Bed charges", render: () => <BedBillingPanel /> },
+        { key: "payouts", label: "Doctor payouts", render: () => <DoctorPayoutsPanel /> },
+        { key: "payout-rules", label: "Payout rules", resource: payoutRulesResource },
         { key: "tariff", label: "Tariff", resource: { title: "Service tariff (rate master)", endpoint: "/finance/tariff/", createLabel: "Add service", columns: [col("code", "Code"), col("name", "Service"), col("department", "Dept"), col("rate", "Rate"), col("category_rates", "Category rates"), col("hsn_sac", "SAC/HSN"), col("gst_rate", "GST %")], fields: [{ key: "code", label: "Code", required: true }, { key: "name", label: "Name", required: true }, { key: "department", label: "Department" }, { key: "rate", label: "Base rate", type: "number", required: true }, { key: "category_rates", label: "Rates by patient category (JSON)", type: "json", placeholder: '{"private": 1500, "insurance": 1800, "corporate": 1350}' }, { key: "hsn_sac", label: "SAC / HSN", defaultValue: "9993" }, { key: "gst_rate", label: "GST %", type: "number", defaultValue: 0 }] } },
         {
           key: "insurance",

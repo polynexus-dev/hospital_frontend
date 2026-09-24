@@ -13,6 +13,7 @@ import {
   type Admission,
 } from "../../api/ipd"
 import { addNursingNote, listNursingNotes, listMedicationAdministrations, recordMedicationAdministration } from "../../api/nursing"
+import { BedChargesCard } from "../nabh/BillingExtras"
 
 const inputClass = "w-full h-8 px-2.5 border border-border-strong rounded-control text-[12.5px]"
 const textareaClass = "w-full border border-border rounded-control p-2 text-[12.5px] leading-relaxed outline-none focus:border-brand"
@@ -91,6 +92,8 @@ export function AdmissionDetailPanel({ admission, onDischarged }: { admission: A
 
   return (
     <div className="space-y-4">
+      <BedChargesCard admissionId={admission.id} />
+
       <div>
         <div className="text-[11px] font-semibold uppercase tracking-[.04em] text-ink-4 mb-1.5">Doctor progress notes</div>
         <div className="space-y-1.5 mb-1.5">
