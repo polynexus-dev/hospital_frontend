@@ -44,6 +44,27 @@ const FinancePage = lazy(() => import("./features/finance/FinancePage").then((m)
 const BillingPage = lazy(() => import("./features/billing/BillingPage").then((m) => ({ default: m.BillingPage })))
 const HRPage = lazy(() => import("./features/hr/HRPage").then((m) => ({ default: m.HRPage })))
 const InventoryPage = lazy(() => import("./features/inventory/InventoryPage").then((m) => ({ default: m.InventoryPage })))
+const ClinicalSafetyPage = lazy(() => import("./features/nabh/ClinicalSafetyPage").then((m) => ({ default: m.ClinicalSafetyPage })))
+const InfectionControlPage = lazy(() => import("./features/nabh/ClinicalSafetyPage").then((m) => ({ default: m.InfectionControlPage })))
+const QualityPage = lazy(() => import("./features/nabh/QualityPage").then((m) => ({ default: m.QualityPage })))
+const SupportServicesPage = lazy(() => import("./features/nabh/ServicesPages").then((m) => ({ default: m.SupportServicesPage })))
+const QueuePage = lazy(() => import("./features/nabh/ServicesPages").then((m) => ({ default: m.QueuePage })))
+const TelemedicinePage = lazy(() => import("./features/nabh/ServicesPages").then((m) => ({ default: m.TelemedicinePage })))
+const MRDPage = lazy(() => import("./features/nabh/ServicesPages").then((m) => ({ default: m.MRDPage })))
+const DietaryPage = lazy(() => import("./features/nabh/ServicesPages").then((m) => ({ default: m.DietaryPage })))
+const OncologyPage = lazy(() => import("./features/nabh/OperationsPages").then((m) => ({ default: m.OncologyPage })))
+const AccountsPage = lazy(() => import("./features/nabh/OperationsPages").then((m) => ({ default: m.AccountsPage })))
+const ProcurementPage = lazy(() => import("./features/nabh/OperationsPages").then((m) => ({ default: m.ProcurementPage })))
+const HRNabhPage = lazy(() => import("./features/nabh/OperationsPages").then((m) => ({ default: m.HRNabhPage })))
+const PharmacyNabhPage = lazy(() => import("./features/nabh/OperationsPages").then((m) => ({ default: m.PharmacyNabhPage })))
+const DiagnosticsSetupPage = lazy(() => import("./features/nabh/OperationsPages").then((m) => ({ default: m.DiagnosticsSetupPage })))
+const InpatientFlowPage = lazy(() => import("./features/nabh/OperationsPages").then((m) => ({ default: m.InpatientFlowPage })))
+const GovernancePage = lazy(() => import("./features/nabh/GovernancePage").then((m) => ({ default: m.GovernancePage })))
+const HelpCenter = lazy(() => import("./features/nabh/GovernancePage").then((m) => ({ default: m.HelpCenter })))
+const PredictivePage = lazy(() => import("./features/nabh/PredictivePage").then((m) => ({ default: m.PredictivePage })))
+const QueueDisplayBoard = lazy(() => import("./features/public/QueueDisplayBoard").then((m) => ({ default: m.QueueDisplayBoard })))
+const TeleJoinPage = lazy(() => import("./features/public/TeleJoinPage").then((m) => ({ default: m.TeleJoinPage })))
+const PatientPortal = lazy(() => import("./features/portal/PatientPortal").then((m) => ({ default: m.PatientPortal })))
 
 import { useAuthStore } from "./store/auth"
 
@@ -59,6 +80,10 @@ function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      {/* Public: TV queue board, patient teleconsult join, patient portal — no staff login. */}
+      <Route path="/display/:key" element={<Suspense fallback={<LoadingState />}><QueueDisplayBoard /></Suspense>} />
+      <Route path="/tele/join/:token" element={<Suspense fallback={<LoadingState />}><TeleJoinPage /></Suspense>} />
+      <Route path="/portal/*" element={<Suspense fallback={<LoadingState />}><PatientPortal /></Suspense>} />
 
       <Route element={<ProtectedRoute />}>
         <Route element={<Shell />}>
@@ -119,6 +144,26 @@ function App() {
           <Route element={<RequirePermission permission="inventory.view_item" moduleKey="inventory" />}>
             <Route path="/inventory" element={<Suspense fallback={<LoadingState />}><InventoryPage /></Suspense>} />
           </Route>
+
+          {/* NABH HIS/EMR modules — permission checks are enforced by the API; nav hides what a role can't use. */}
+          <Route path="/clinical-safety" element={<Suspense fallback={<LoadingState />}><ClinicalSafetyPage /></Suspense>} />
+          <Route path="/infection-control" element={<Suspense fallback={<LoadingState />}><InfectionControlPage /></Suspense>} />
+          <Route path="/quality" element={<Suspense fallback={<LoadingState />}><QualityPage /></Suspense>} />
+          <Route path="/support-services" element={<Suspense fallback={<LoadingState />}><SupportServicesPage /></Suspense>} />
+          <Route path="/queue" element={<Suspense fallback={<LoadingState />}><QueuePage /></Suspense>} />
+          <Route path="/telemedicine" element={<Suspense fallback={<LoadingState />}><TelemedicinePage /></Suspense>} />
+          <Route path="/mrd" element={<Suspense fallback={<LoadingState />}><MRDPage /></Suspense>} />
+          <Route path="/dietary" element={<Suspense fallback={<LoadingState />}><DietaryPage /></Suspense>} />
+          <Route path="/oncology" element={<Suspense fallback={<LoadingState />}><OncologyPage /></Suspense>} />
+          <Route path="/accounts" element={<Suspense fallback={<LoadingState />}><AccountsPage /></Suspense>} />
+          <Route path="/procurement" element={<Suspense fallback={<LoadingState />}><ProcurementPage /></Suspense>} />
+          <Route path="/hr-talent" element={<Suspense fallback={<LoadingState />}><HRNabhPage /></Suspense>} />
+          <Route path="/pharmacy-safety" element={<Suspense fallback={<LoadingState />}><PharmacyNabhPage /></Suspense>} />
+          <Route path="/diagnostics-setup" element={<Suspense fallback={<LoadingState />}><DiagnosticsSetupPage /></Suspense>} />
+          <Route path="/inpatient-flow" element={<Suspense fallback={<LoadingState />}><InpatientFlowPage /></Suspense>} />
+          <Route path="/governance" element={<Suspense fallback={<LoadingState />}><GovernancePage /></Suspense>} />
+          <Route path="/predictive" element={<Suspense fallback={<LoadingState />}><PredictivePage /></Suspense>} />
+          <Route path="/help" element={<Suspense fallback={<LoadingState />}><div className="p-6 space-y-4"><h1 className="text-2xl font-bold">Help Centre</h1><HelpCenter /></div></Suspense>} />
 
           <Route element={<RequireSaaSAdmin />}>
             <Route path="/saas" element={<Suspense fallback={<LoadingState />}><SaaSConsolePage /></Suspense>} />

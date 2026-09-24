@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react"
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom"
+import { AlertBell, IdleLock } from "./IdleLock"
 import { useTranslation } from "react-i18next"
 import { useQuery } from "@tanstack/react-query"
 import {
@@ -8,6 +9,8 @@ import {
   growthNav,
   careNav,
   erpOpsNav,
+  nabhCareNav,
+  nabhOpsNav,
   administrationNav,
   saasNav,
   hasNavAccess,
@@ -108,7 +111,9 @@ export function Shell() {
   ]
   const erpSections: NavSection[] = [
     { heading: "Clinical care", items: careNav },
+    { heading: "NABH clinical", items: nabhCareNav },
     { heading: "Finance & operations", items: erpOpsNav },
+    { heading: "Quality & operations", items: nabhOpsNav },
   ]
   const visibleSections = (activeDomain === "crm" ? crmSections : erpSections)
     .map((section) => ({
@@ -620,6 +625,8 @@ export function Shell() {
           </div>
         )}
 
+        <IdleLock />
+        <AlertBell />
         {/* Dynamic Outlet with Compact Mode Class */}
         <div className={`flex-1 overflow-y-auto p-5 ${isCompactMode ? "text-[12px] p-3 gap-2" : ""}`}>
           <Outlet />

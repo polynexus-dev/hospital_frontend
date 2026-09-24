@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Card, CardHeader, Eyebrow } from "../../components/ui/Card"
+import { Card, CardHeader } from "../../components/ui/Card"
 import { Button } from "../../components/ui/Button"
 import { Pill, Chip } from "../../components/ui/Pill"
 import { EmptyState, LoadingState } from "../../components/ui/QueryStates"
@@ -371,8 +371,7 @@ export function BroadcastCampaignManager() {
         {campaignsQuery.isLoading && <LoadingState />}
         {!campaignsQuery.isLoading && (!campaignsQuery.data?.results || campaignsQuery.data.results.length === 0) && (
           <EmptyState
-            title="No Broadcast Campaigns Yet"
-            description="Launch your first WhatsApp or SMS health checkup camp or outreach broadcast using the cohorts above."
+            message="No broadcast campaigns yet. Launch your first WhatsApp or SMS health checkup camp or outreach broadcast using the cohorts above."
           />
         )}
 

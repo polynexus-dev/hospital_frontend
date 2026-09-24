@@ -52,6 +52,30 @@ export const careNav: NavItem[] = [
   { key: "bloodbank", moduleKey: "bloodbank", path: "/bloodbank", labelKey: "Blood Bank", subKey: "Blood Units & Transfusion", requiredPermission: "bloodbank.view_bloodunit" },
 ]
 
+// NABH HIS/EMR modules. No moduleKey: these aren't subscription-gated
+// ERP modules, only permission-gated (the backend enforces the same).
+export const nabhCareNav: NavItem[] = [
+  { key: "inpatient-flow", path: "/inpatient-flow", labelKey: "Inpatient Flow", subKey: "Bed board, discharge planning", requiredPermission: "ipd.view_admission" },
+  { key: "clinical-safety", path: "/clinical-safety", labelKey: "Clinical Safety", subKey: "Alerts, CDSS, assessments, consent", requiredPermission: "clinical.view_clinicalalert" },
+  { key: "infection-control", path: "/infection-control", labelKey: "Infection Control", subKey: "HAI, antimicrobials, exposures", requiredPermission: "infection_control.view_haiincident" },
+  { key: "telemedicine", path: "/telemedicine", labelKey: "Telemedicine", subKey: "Video consultations", requiredPermission: "telemedicine.view_teleconsultation" },
+  { key: "queue", path: "/queue", labelKey: "Queue & Tokens", subKey: "Counters, tokens, TV display", requiredPermission: "queue_mgmt.view_queuetoken" },
+  { key: "oncology", path: "/oncology", labelKey: "Oncology", subKey: "Chemo, RT, tumour boards", requiredPermission: "oncology.view_cancercase" },
+  { key: "dietary", path: "/dietary", labelKey: "Dietary & Kitchen", subKey: "Diet orders, trays", requiredPermission: "dietary.view_dietorder" },
+  { key: "pharmacy-safety", path: "/pharmacy-safety", labelKey: "Medication Safety", subKey: "Recalls, reconciliation, emergency drugs", requiredPermission: "pharmacy.view_medicine" },
+  { key: "diagnostics-setup", path: "/diagnostics-setup", labelKey: "Diagnostics Setup", subKey: "Templates, analysers, imaging slots", requiredPermission: ["laboratory.view_labtest", "radiology.view_radiologyprocedure"] },
+  { key: "mrd", path: "/mrd", labelKey: "Medical Records", subKey: "Files, ICD-10 coding", requiredPermission: "mrd.view_medicalrecordfile" },
+]
+
+export const nabhOpsNav: NavItem[] = [
+  { key: "quality", path: "/quality", labelKey: "Quality & KPIs", subKey: "Incidents, NABH KPIs", requiredPermission: "quality.view_safetyincident" },
+  { key: "accounts", path: "/accounts", labelKey: "Accounts & Tally", subKey: "Payables, GST, insurance", requiredPermission: "finance.view_vendorinvoice" },
+  { key: "procurement", path: "/procurement", labelKey: "Procurement", subKey: "GRN, indents, suppliers", requiredPermission: "inventory.view_goodsreceiptnote" },
+  { key: "hr-talent", path: "/hr-talent", labelKey: "Payroll & Talent", subKey: "Payroll, roster, training", requiredPermission: "hr.view_payrollrun" },
+  { key: "support-services", path: "/support-services", labelKey: "Support Services", subKey: "Ambulance, CSSD, housekeeping, equipment", requiredPermission: "support_services.view_ambulancetrip" },
+  { key: "predictive", path: "/predictive", labelKey: "Predictive Analytics", subKey: "Forecasts & risk", requiredPermission: "analytics.view_dailymislog" },
+]
+
 export const growthNav: NavItem[] = [
   { key: "referrals", path: "/referrals", labelKey: "nav.referrals", subKey: "screenSub.referrals" },
   { key: "packages", path: "/packages", labelKey: "nav.packages", subKey: "screenSub.packages" },
@@ -72,10 +96,12 @@ export const erpOpsNav: NavItem[] = [
 
 export const administrationNav: NavItem[] = [
   { key: "admin", path: "/admin", labelKey: "nav.admin", subKey: "screenSub.admin", requiredPermission: "accounts.view_role" },
+  { key: "governance", path: "/governance", labelKey: "Security & Governance", subKey: "Policies, audit, backups", requiredPermission: "governance.view_auditrule" },
+  { key: "help", path: "/help", labelKey: "Help Centre", subKey: "Guides, FAQs, tutorials" },
   { key: "settings", path: "/settings", labelKey: "nav.settings", subKey: "screenSub.settings" },
 ]
 
-export const allNav = [...saasNav, ...dailyWorkNav, ...growthNav, ...careNav, ...erpOpsNav, ...administrationNav]
+export const allNav = [...saasNav, ...dailyWorkNav, ...growthNav, ...careNav, ...nabhCareNav, ...erpOpsNav, ...nabhOpsNav, ...administrationNav]
 
 // The real set of ERP module keys, derived from the nav items that
 // actually gate on one — not hardcoded, so it can't drift from

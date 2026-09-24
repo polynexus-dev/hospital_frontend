@@ -50,7 +50,7 @@ export function FeedbackPage() {
   const [isEditingGoogleUrl, setIsEditingGoogleUrl] = useState(false)
   const [sendingPromptId, setSendingPromptId] = useState<number | null>(null)
 
-  const { data: reputationData, isLoading: isReputationLoading } = useQuery({
+  const { data: reputationData } = useQuery({
     queryKey: ["reputation-summary"],
     queryFn: getReputationSummary,
   })
