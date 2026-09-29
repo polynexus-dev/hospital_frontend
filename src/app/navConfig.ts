@@ -24,6 +24,7 @@ export const saasNav: NavItem[] = [
 
 export const dailyWorkNav: NavItem[] = [
   { key: "console", moduleKey: "telephony", path: "/console", labelKey: "nav.console", subKey: "screenSub.console" },
+  { key: "call-logs", moduleKey: "telephony", path: "/call-logs", labelKey: "Call Logs", subKey: "Full call history & recordings" },
   { key: "callbacks", moduleKey: "telephony", path: "/callbacks", labelKey: "nav.callbacks", subKey: "screenSub.callbacks" },
   { key: "enquiries", moduleKey: "enquiries", path: "/enquiries", labelKey: "nav.enquiries", subKey: "screenSub.enquiries" },
   { key: "patients", path: "/patients", labelKey: "nav.patients", subKey: "screenSub.patients" },

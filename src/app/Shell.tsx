@@ -24,6 +24,8 @@ import { logoutRequest, switchHospital } from "../api/auth"
 import { listHospitals } from "../api/hospitals"
 import { AIChatbotWidget } from "../components/ui/AIChatbotWidget"
 import { useIdleTimeout } from "../hooks/useIdleTimeout"
+import { WebRTCHeaderBadge } from "../telephony/SIPStatusDot"
+import { IncomingCallReceiver } from "../telephony/IncomingCallReceiver"
 
 
 type Domain = "crm" | "erp"
@@ -598,6 +600,9 @@ export function Shell() {
             <span>Shortcuts</span>
           </button>
 
+          {/* WebRTC SIP Phone Browser Status */}
+          <WebRTCHeaderBadge />
+
           <div className="flex flex-none min-w-[86px] border border-border rounded-control overflow-hidden">
             <button
               onClick={() => i18n.changeLanguage("en")}
@@ -678,7 +683,7 @@ export function Shell() {
 
       {/* Global Quick Action Speed-Dial FAB Button — only shown in Hospital Ops mode */}
       {!isInSaasMode && (
-        <div className="fixed bottom-6 right-64 z-40 flex flex-col items-end gap-2">
+        <div className="fixed bottom-20 right-6 sm:bottom-6 sm:right-72 z-40 flex flex-col items-end gap-2">
           {isFabOpen && (
             <div className="bg-surface border border-border rounded-xl shadow-2xl p-2 flex flex-col gap-1.5 min-w-[200px] animate-in fade-in slide-in-from-bottom-2">
               <div className="px-2 py-1 text-[10px] uppercase font-bold text-ink-5 border-b border-border">
@@ -882,6 +887,9 @@ export function Shell() {
           </div>
         </div>
       )}
+
+      {/* WebRTC Telephony: Background Incoming Call Receiver & Floating Overlay */}
+      <IncomingCallReceiver />
     </div>
   )
 }

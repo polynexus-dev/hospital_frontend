@@ -13,6 +13,7 @@ import { LoadingState } from "./components/ui/QueryStates"
 // first-time visitor downloads just to see the login screen.
 const DashboardPage = lazy(() => import("./features/dashboard/DashboardPage").then((m) => ({ default: m.DashboardPage })))
 const ConsolePage = lazy(() => import("./features/console/ConsolePage").then((m) => ({ default: m.ConsolePage })))
+const CallLogsPage = lazy(() => import("./features/console/CallLogsPage").then((m) => ({ default: m.CallLogsPage })))
 const CallbacksPage = lazy(() => import("./features/callbacks/CallbacksPage").then((m) => ({ default: m.CallbacksPage })))
 const EnquiriesPage = lazy(() => import("./features/enquiries/EnquiriesPage").then((m) => ({ default: m.EnquiriesPage })))
 const PatientsListPage = lazy(() => import("./features/patients/PatientsListPage").then((m) => ({ default: m.PatientsListPage })))
@@ -95,6 +96,7 @@ function App() {
           <Route path="/" element={<HomeRedirect />} />
           <Route path="/dashboard" element={<Suspense fallback={<LoadingState />}><DashboardPage /></Suspense>} />
           <Route path="/console" element={<Suspense fallback={<LoadingState />}><ConsolePage /></Suspense>} />
+          <Route path="/call-logs" element={<Suspense fallback={<LoadingState />}><CallLogsPage /></Suspense>} />
           <Route path="/callbacks" element={<Suspense fallback={<LoadingState />}><CallbacksPage /></Suspense>} />
           <Route path="/enquiries" element={<Suspense fallback={<LoadingState />}><EnquiriesPage /></Suspense>} />
           <Route path="/patients" element={<Suspense fallback={<LoadingState />}><PatientsListPage /></Suspense>} />

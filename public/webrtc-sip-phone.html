@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<!--
+  ┌─────────────────────────────────────────────────────────────┐
+  │  WebRTC SIP Softphone — replaces Zoiper entirely            │
+  │  Registers extension 101 with HoduPBX via WebSocket.        │
+  │  Enhanced with ErrorController & Security Guardrails        │
+  └─────────────────────────────────────────────────────────────┘
+
+  HOW TO USE:
+  1. Open in Chrome/Edge (WebRTC required)
+  2. Click "Register" — browser registers as extension 101
+  3. Run click-to-call from your app — browser rings instead of Zoiper
+  4. Click "Answer" to bridge the call to the patient
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>WebRTC SIP Phone — Extension 101</title>
+  <script src="jssip.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f172a; color: #e2e8f0; min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px 0;
+    }
+    .phone {
+      background: #1e293b; border-radius: 16px; padding: 28px;
+      width: 400px; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      border: 1px solid #334155;
+    }
+    h1 { font-size: 16px; color: #94a3b8; margin-bottom: 20px; text-align: center; }
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: #0f172a; padding: 6px 14px; border-radius: 20px;
+      font-size: 13px; margin-bottom: 14px; width: 100%; justify-content: center;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .dot.offline  { background: #64748b; }
+    .dot.online   { background: #22c55e; animation: pulse 2s infinite; }
+    .dot.ringing  { background: #f59e0b; animation: pulse 0.5s infinite; }
+    .dot.incall   { background: #3b82f6; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    /* Error & Security Alert Banner */
+    .error-banner {
+      display: flex; align-items: flex-start; gap: 8px;
+      background: #450a0a; border: 1px solid #dc2626; color: #fecaca;
+      border-radius: 8px; padding: 10px 12px; font-size: 12px; margin-bottom: 14px;
+      line-height: 1.4; animation: fadeIn 0.2s ease-in-out;
+    }
+    .error-banner.warn {
+      background: #451a03; border-color: #f59e0b; color: #fef3c7;
+    }
+    .error-banner.info {
+      background: #082f49; border-color: #0284c7; color: #bae6fd;
+    }
+    .error-banner.success {
+      background: #064e3b; border-color: #10b981; color: #a7f3d0;
+    }
+    .dismiss-btn {
+      background: none; border: none; color: inherit; font-size: 14px;
+      cursor: pointer; padding: 0 4px; opacity: 0.8; line-height: 1;
+    }
+    .dismiss-btn:hover { opacity: 1; }
+
+    .config { background: #0f172a; border-radius: 10px; padding: 14px; margin-bottom: 16px; }
+    .config label { font-size: 11px; color: #64748b; display: block; margin-bottom: 4px; }
+    .config input {
+      width: 100%; background: #1e293b; border: 1px solid #334155;
+      border-radius: 6px; padding: 7px 10px; color: #e2e8f0; font-size: 13px;
+      margin-bottom: 10px;
+    }
+    .config input:focus { outline: none; border-color: #3b82f6; }
+    .btn {
+      width: 100%; padding: 11px; border-radius: 8px; border: none;
+      font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 8px;
+      transition: all 0.15s;
+    }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-register   { background: #3b82f6; color: #fff; }
+    .btn-autotry    { background: #8b5cf6; color: #fff; }
+    .btn-answer     { background: #22c55e; color: #fff; }
+    .btn-hangup     { background: #ef4444; color: #fff; }
+    .btn-unregister { background: #475569; color: #fff; }
+    .btn-c2c        { background: #10b981; color: #fff; }
+    .btn:not(:disabled):hover { filter: brightness(1.1); transform: translateY(-1px); }
+    .log {
+      background: #0f172a; border-radius: 8px; padding: 10px;
+      font-size: 11px; font-family: monospace; color: #64748b;
+      height: 170px; overflow-y: auto; margin-top: 12px;
+    }
+    .entry.info    { color: #94a3b8; }
+    .entry.success { color: #22c55e; }
+    .entry.warn    { color: #f59e0b; }
+    .entry.error   { color: #ef4444; }
+    audio { display: none; }
+  </style>
+</head>
+<body>
+<div class="phone">
+  <h1>📥 WebRTC Incoming Call Receiver</h1>
+  <div style="text-align:center;font-size:11px;color:#64748b;margin-top:-14px;margin-bottom:14px;">Extension 101 · Dedicated to Receive Calls</div>
+
+  <div class="status-badge">
+    <span class="dot offline" id="statusDot"></span>
+    <span id="statusText">Listening for Incoming Calls: Offline</span>
+  </div>
+
+  <!-- Error & Security Alert Banner -->
+  <div id="errorBanner" class="error-banner" style="display:none;">
+    <span id="errorBannerIcon">⚠️</span>
+    <span id="errorBannerText" style="flex:1;"></span>
+    <button class="dismiss-btn" onclick="ErrorController.dismiss()" title="Dismiss">✕</button>
+  </div>
+
+  <div class="config">
+    <label>HoduPBX WebSocket URL</label>
+    <input id="wsUrl" value="wss://ecallpbx.konnectcom.in:7443"/>
+    <label>SIP Domain</label>
+    <input id="sipDomain" value="ecallpbx.konnectcom.in"/>
+    <label>SIP Username <span style="color:#f59e0b;font-size:10px">(from HoduPBX: tenantID+ext)</span></label>
+    <input id="extNumber" value="1048101"/>
+    <label>Extension Password</label>
+    <input id="extPassword" placeholder="Enter Extension Password" type="password" value="Hospital@123"/>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:6px;font-size:12px;color:#94a3b8;">
+      <input type="checkbox" id="chkAutoAnswer" style="accent-color:#22c55e;cursor:pointer;"/>
+      <label for="chkAutoAnswer" style="margin:0;cursor:pointer;">⚡ Auto-Answer Incoming Calls (Optional)</label>
+    </div>
+  </div>
+
+  <button class="btn" style="background:#0284c7;color:#fff;margin-bottom:8px" id="btnMic" onclick="testMic()">🎙️ Enable Microphone Access</button>
+  <button class="btn btn-register"   id="btnRegister"  onclick="register()">📡 Register Extension</button>
+  <button class="btn btn-autotry"    id="btnAutoTry"   onclick="autoTry()">🔍 Auto-Detect Working Configuration</button>
+  <button class="btn btn-answer"     id="btnAnswer"    onclick="answer()"    disabled>📞 Answer Incoming Call</button>
+  <button class="btn btn-hangup"     id="btnHangup"    onclick="hangup()"    disabled>🔴 Hang Up</button>
+  <button class="btn btn-unregister" id="btnUnreg"     onclick="unregister()" disabled>❌ Unregister</button>
+
+  <div class="config" style="margin-top:14px;border:1px dashed #334155;">
+    <label style="color:#10b981;font-weight:600;">Click-to-Call Patient</label>
+    <input id="txtCallNumber" value="" placeholder="Phone Number (e.g. 9876543210)" maxlength="16" autocomplete="tel"/>
+    <button class="btn btn-c2c" id="btnClickToCall" onclick="triggerClickToCall()">📞 Dial via Click-to-Call API</button>
+  </div>
+
+  <audio id="remoteAudio" autoplay></audio>
+  <div class="log" id="log"></div>
+</div>
+<script>
+let ua = null, session = null;
+
+if (window.JsSIP) {
+  try { JsSIP.debug.enable('JsSIP:*'); } catch(e) {}
+}
+
+// ─── ERROR CONTROLLER & NOTIFICATION SYSTEM ────────────────────────────────────
+const ErrorController = {
+  bannerTimer: null,
+
+  show(message, type = 'error', autoDismissMs = 8000) {
+    const banner = document.getElementById('errorBanner');
+    const textEl = document.getElementById('errorBannerText');
+    const iconEl = document.getElementById('errorBannerIcon');
+    if (!banner || !textEl) return;
+
+    banner.className = `error-banner ${type}`;
+    iconEl.textContent = type === 'error' ? '❌' : type === 'warn' ? '⚠️' : type === 'success' ? '✅' : 'ℹ️';
+    textEl.textContent = message;
+    banner.style.display = 'flex';
+
+    if (this.bannerTimer) clearTimeout(this.bannerTimer);
+    if (autoDismissMs > 0) {
+      this.bannerTimer = setTimeout(() => this.dismiss(), autoDismissMs);
+    }
+    log(message, type);
+  },
+
+  dismiss() {
+    const banner = document.getElementById('errorBanner');
+    if (banner) banner.style.display = 'none';
+    if (this.bannerTimer) clearTimeout(this.bannerTimer);
+  },
+
+  /**
+   * Securely handles API response failures without leaking internal stack traces or crashing on HTML
+   */
+  async handleApiResponseError(res) {
+    let errorMsg = `Server error (${res.status})`;
+    try {
+      const contentType = res.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        const data = await res.json();
+        if (typeof data.detail === 'string') {
+          errorMsg = data.detail;
+        } else if (Array.isArray(data.non_field_errors) && data.non_field_errors.length) {
+          errorMsg = data.non_field_errors[0];
+        } else if (data.error) {
+          errorMsg = typeof data.error === 'string' ? data.error : JSON.stringify(data.error);
+        } else if (data.message) {
+          errorMsg = data.message;
+        } else {
+          const firstVal = Object.values(data)[0];
+          if (Array.isArray(firstVal) && firstVal.length) errorMsg = String(firstVal[0]);
+          else if (typeof firstVal === 'string') errorMsg = firstVal;
+        }
+      } else {
+        if (res.status === 502 || res.status === 504) {
+          errorMsg = 'Telephony backend is unreachable (Bad Gateway). Ensure Django and HoduPBX services are active.';
+        } else if (res.status === 404) {
+          errorMsg = 'Click-to-call API endpoint not found (404). Check API route.';
+        }
+      }
+    } catch (parseErr) {
+      errorMsg = `Failed to parse response (${res.status}).`;
+    }
+
+    switch (res.status) {
+      case 400:
+        this.show(`Bad Request: ${errorMsg}`, 'warn');
+        break;
+      case 401:
+        this.show('Authentication required: Your session has expired or token is invalid. Please log into the Hospital Console.', 'error');
+        break;
+      case 403:
+        this.show('Access Forbidden: Your account is not authorized to initiate calls.', 'error');
+        break;
+      case 404:
+        this.show('Call endpoint not found (404).', 'error');
+        break;
+      case 409:
+        this.show(`Call Conflict: ${errorMsg}`, 'warn');
+        break;
+      case 429:
+        this.show('Rate limit reached: Too many call requests. Please wait a few seconds before trying again.', 'warn');
+        break;
+      case 500:
+        this.show('Internal telephony server error. Please check PBX logs.', 'error');
+        break;
+      case 502:
+      case 503:
+      case 504:
+        this.show('Telephony PBX Gateway is unreachable. Please verify network connectivity.', 'error');
+        break;
+      default:
+        this.show(errorMsg, 'error');
+    }
+    return errorMsg;
+  },
+
+  /**
+   * Handles network and connection exceptions
+   */
+  handleNetworkError(err) {
+    let msg = 'Network error: Unable to contact hospital telephony server.';
+    if (!navigator.onLine) {
+      msg = 'Offline: Please check your Internet connection.';
+    } else if (err.name === 'AbortError') {
+      msg = 'Call initiation request timed out (15s). Please check server responsiveness.';
+    } else if (err.message && err.message.toLowerCase().includes('failed to fetch')) {
+      msg = 'Connection refused: Backend server is unreachable or blocked by CORS.';
+    }
+    this.show(msg, 'error');
+    return msg;
+  },
+
+  /**
+   * Handles media & microphone permissions
+   */
+  handleMediaError(err) {
+    let msg = 'Microphone error: ' + (err.message || 'Access denied');
+    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+      msg = 'Microphone permission blocked. Click the lock/settings icon in the URL bar to allow microphone access.';
+    } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+      msg = 'No microphone device found. Please connect an audio input device.';
+    } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+      msg = 'Microphone is already occupied by another application.';
+    }
+    this.show(msg, 'error');
+    return msg;
+  },
+
+  /**
+   * Handles SIP Registration and Call state failures
+   */
+  handleSipError(cause, status) {
+    let msg = `SIP registration error: ${cause || 'Unknown'}`;
+    if (status === 401 || status === 407) {
+      msg = 'SIP Authentication failed (401/407): Check Extension Number and Password.';
+    } else if (status === 403) {
+      msg = 'SIP Forbidden (403): Extension disabled or IP not whitelisted in PBX ACL.';
+    } else if (status === 404) {
+      msg = 'SIP Extension not found (404): Extension does not exist in PBX tenant.';
+    } else if (status === 408) {
+      msg = 'SIP Request Timeout (408): PBX server did not respond.';
+    } else if (status === 486) {
+      msg = 'Extension Busy (486): Extension is currently handling another call.';
+    } else if (cause === 'User Denied Media Access') {
+      msg = 'Microphone access denied: Cannot establish WebRTC audio session.';
+    }
+    this.show(msg, 'error');
+    return msg;
+  }
+};
+
+// ─── SECURITY CONTROLLER ───────────────────────────────────────────────────────
+const SecurityController = {
+  /**
+   * Sanitizes and validates phone numbers (E.164 standard, digits only, 7-15 length)
+   */
+  sanitizeAndValidatePhone(input) {
+    if (!input || typeof input !== 'string') return null;
+    const sanitized = input.trim().replace(/[\s\-\(\)\.]/g, '');
+    const phoneRegex = /^\+?[0-9]{7,15}$/;
+    if (!phoneRegex.test(sanitized)) return null;
+    return sanitized;
+  },
+
+  /**
+   * Safely retrieves the authenticated session JWT from local storage
+   */
+  getAuthToken() {
+    try {
+      const rawStore = localStorage.getItem('hospital_crm_auth_store');
+      if (rawStore) {
+        const parsed = JSON.parse(rawStore);
+        if (parsed?.state?.accessToken) return parsed.state.accessToken;
+      }
+    } catch (e) {}
+    return localStorage.getItem('token') || localStorage.getItem('access_token') || '';
+  },
+
+  /**
+   * Resolves the appropriate API base URL dynamically
+   */
+  getApiBaseUrl() {
+    const host = window.location.hostname;
+    if (host && host !== 'localhost' && host !== '127.0.0.1') {
+      return `${window.location.protocol}//${host}:8000/api/v1`;
+    }
+    return 'http://192.168.1.117:8000/api/v1';
+  }
+};
+
+function log(msg, type = 'info') {
+  const c = document.getElementById('log');
+  if (!c) return;
+  const t = new Date().toTimeString().slice(0,8);
+  const el = document.createElement('div');
+  el.className = `entry ${type}`;
+  el.textContent = `[${t}] ${msg}`;
+  c.appendChild(el);
+  c.scrollTop = c.scrollHeight;
+}
+
+function setStatus(text, cls) {
+  document.getElementById('statusText').textContent = text;
+  document.getElementById('statusDot').className = `dot ${cls}`;
+}
+
+function setBtns({ reg, ans, hup, unreg }) {
+  document.getElementById('btnRegister').disabled = !reg;
+  document.getElementById('btnAnswer').disabled   = !ans;
+  document.getElementById('btnHangup').disabled   = !hup;
+  document.getElementById('btnUnreg').disabled    = !unreg;
+}
+
+async function register(domain, extUser, authUser, pwd) {
+  ErrorController.dismiss();
+
+  // Pre-acquire microphone access
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    stream.getTracks().forEach(t => t.stop());
+    const btn = document.getElementById('btnMic');
+    if (btn) {
+      btn.style.background = '#059669';
+      btn.textContent = '🎤 Microphone Enabled ✓';
+    }
+  } catch (err) {
+    ErrorController.handleMediaError(err);
+  }
+
+  const wsUrl    = document.getElementById('wsUrl').value.trim();
+  const ext      = extUser  || document.getElementById('extNumber').value.trim();
+  const auth     = authUser || ext;
+  const password = pwd      || document.getElementById('extPassword').value.trim();
+  domain         = domain   || document.getElementById('sipDomain').value.trim();
+
+  if (!wsUrl || !domain || !ext || !password) {
+    ErrorController.show('Validation Error: All connection fields (WebSocket URL, Domain, Username, Password) are required.', 'warn');
+    return;
+  }
+
+  if (ua) { try { ua.stop(); } catch(e) {} ua = null; }
+
+  log(`Connecting: sip:${ext}@${domain} (auth: ${auth})`, 'info');
+  document.getElementById('sipDomain').value = domain;
+  document.getElementById('extNumber').value = ext;
+
+  try {
+    const socket = new JsSIP.WebSocketInterface(wsUrl);
+    ua = new JsSIP.UA({
+      sockets             : [socket],
+      uri                 : `sip:${ext}@${domain}`,
+      authorization_user  : auth,
+      password            : password,
+      user_agent          : 'HoduPhone',
+      register            : true,
+      session_timers      : false,
+      register_expires    : 300,
+      connection_recovery_min_interval: 2,
+      connection_recovery_max_interval: 30,
+    });
+
+    ua.on('registered', () => {
+      ErrorController.dismiss();
+      log(`✅ Registered! User=${ext} Domain=${domain}`, 'success');
+      setStatus(`Ready — ext ${ext}`, 'online');
+      setBtns({ reg: false, ans: false, hup: false, unreg: true });
+    });
+
+    ua.on('unregistered', () => {
+      log('Unregistered', 'warn');
+      setStatus('Not registered', 'offline');
+      setBtns({ reg: true, ans: false, hup: false, unreg: false });
+    });
+
+    ua.on('registrationFailed', e => {
+      let statusCode = e.response ? e.response.status_code : null;
+      let detail = e.cause || 'Rejected';
+      if (e.response) {
+        detail = `${e.response.status_code} ${e.response.reason_phrase || ''}`;
+      }
+      ErrorController.handleSipError(e.cause, statusCode);
+      log(`❌ Failed [${ext}@${domain}]: ${detail}`, 'error');
+      setStatus('Registration failed', 'offline');
+      setBtns({ reg: true, ans: false, hup: false, unreg: false });
+    });
+
+    ua.on('connected',    () => log('WebSocket connected ✓'));
+    ua.on('disconnected', () => {
+      log('WebSocket disconnected', 'warn');
+      ErrorController.show('WebSocket connection to HoduPBX lost. Attempting reconnection...', 'warn');
+    });
+
+    ua.on('newRTCSession', ({ originator, session: s }) => {
+      if (originator !== 'remote') return;
+      if (session) {
+        log('🚫 User is already on a call — rejecting incoming call with 486 Busy', 'warn');
+        try { s.terminate({ status_code: 486, reason_phrase: 'Busy Here' }); } catch(e) {}
+        return;
+      }
+      session = s;
+      const caller = s.remote_identity.uri.toString();
+      log(`📞 Incoming call from ${caller}`, 'success');
+      setStatus('📞 Incoming call...', 'ringing');
+      setBtns({ reg: false, ans: true, hup: true, unreg: false });
+
+      // Attach peer connection track listener immediately
+      s.on('peerconnection', ({ peerconnection }) => {
+        peerconnection.addEventListener('track', e => {
+          const audioEl = document.getElementById('remoteAudio');
+          if (e.streams && e.streams[0]) {
+            audioEl.srcObject = e.streams[0];
+            audioEl.play().catch(err => ErrorController.handleMediaError(err));
+          }
+        });
+      });
+
+      s.on('ended', () => { session = null; log('Call ended'); reset(); });
+      s.on('failed', e => {
+        session = null;
+        log(`Call Failed: ${e.cause}`, 'error');
+        if (e.cause === 'User Denied Media Access') {
+          ErrorController.handleMediaError(new Error('Browser blocked microphone access.'));
+        }
+        reset();
+      });
+      s.on('confirmed', () => {
+        log('Call answered — connected to HoduPBX bridge', 'success');
+        setStatus('🔵 In call', 'incall');
+        setBtns({ reg: false, ans: false, hup: true, unreg: false });
+      });
+
+      // Auto-answer if checked
+      const autoAns = document.getElementById('chkAutoAnswer') && document.getElementById('chkAutoAnswer').checked;
+      if (autoAns) {
+        log('⚡ Auto-answering call...', 'info');
+        setTimeout(answer, 300);
+      }
+    });
+
+    ua.start();
+    setStatus('Connecting...', 'offline');
+    setBtns({ reg: false, ans: false, hup: false, unreg: false });
+  } catch (err) {
+    ErrorController.show(`SIP Initialization Error: ${err.message}`, 'error');
+  }
+}
+
+async function testMic() {
+  ErrorController.dismiss();
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    log('🎤 Microphone access GRANTED! Audio is ready.', 'success');
+    stream.getTracks().forEach(t => t.stop());
+    const btn = document.getElementById('btnMic');
+    btn.style.background = '#059669';
+    btn.textContent = '🎤 Microphone Enabled ✓';
+    ErrorController.show('Microphone permission confirmed. Audio is ready.', 'success', 3000);
+  } catch (err) {
+    ErrorController.handleMediaError(err);
+  }
+}
+
+function answer() {
+  if (!session) {
+    ErrorController.show('No incoming call to answer', 'warn', 3000);
+    return;
+  }
+  try {
+    session.answer({
+      mediaConstraints: { audio: true, video: false },
+      pcConfig: {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' }
+        ]
+      },
+    });
+  } catch(err) {
+    ErrorController.show(`Answer error: ${err.message}`, 'error');
+  }
+}
+
+function hangup() {
+  if (session) {
+    try { session.terminate(); } catch(e) {}
+    session = null;
+  }
+  reset();
+}
+
+function unregister() {
+  if (ua) {
+    try { ua.unregister(); ua.stop(); } catch(e) {}
+    ua = null;
+  }
+  setStatus('Not registered', 'offline');
+  setBtns({ reg: true, ans: false, hup: false, unreg: false });
+  document.getElementById('remoteAudio').srcObject = null;
+}
+
+function reset() {
+  const reg = ua && ua.isRegistered();
+  setStatus(reg ? 'Ready — waiting' : 'Not registered', reg ? 'online' : 'offline');
+  setBtns({ reg: !reg, ans: false, hup: false, unreg: !!reg });
+  document.getElementById('remoteAudio').srcObject = null;
+}
+
+// Auto-try all common HoduPBX / FreeSWITCH configuration permutations
+async function autoTry() {
+  const passPlain = document.getElementById('extPassword').value.trim() || 'Hospital@123';
+  const passMd5   = '2ab76c1c2cb433a09dfe4a2a36e26905';
+
+  const combos = [
+    { domain: 'ecallpbx.konnectcom.in', ext: '1048101', auth: '1048101', pwd: passPlain },
+    { domain: '1048',                  ext: '101',     auth: '101',     pwd: passPlain },
+    { domain: '1048',                  ext: '1048101', auth: '1048101', pwd: passPlain },
+    { domain: 'ecallpbx.konnectcom.in', ext: '101',     auth: '101',     pwd: passPlain },
+    { domain: 'ecallpbx.konnectcom.in', ext: '101',     auth: '1048101', pwd: passPlain },
+    { domain: '74.225.89.85',          ext: '1048101', auth: '1048101', pwd: passPlain },
+    { domain: '74.225.89.85',          ext: '101',     auth: '101',     pwd: passPlain },
+    { domain: '1048.ecallpbx.konnectcom.in', ext: '101', auth: '101',   pwd: passPlain },
+    { domain: 'ecallpbx.konnectcom.in', ext: '1048101', auth: '1048101', pwd: passMd5 },
+    { domain: '1048',                  ext: '101',     auth: '101',     pwd: passMd5 },
+  ];
+
+  document.getElementById('btnAutoTry').disabled = true;
+  log('── Starting Auto-Detection ──', 'warn');
+
+  for (const c of combos) {
+    if (ua && ua.isRegistered()) {
+      log('🎉 Already registered!', 'success');
+      break;
+    }
+    unregister();
+    await new Promise(r => setTimeout(r, 400));
+
+    register(c.domain, c.ext, c.auth, c.pwd);
+
+    const result = await new Promise(resolve => {
+      let resolved = false;
+      const t = setTimeout(() => { if (!resolved) { resolved = true; resolve('timeout'); } }, 4000);
+
+      const check = setInterval(() => {
+        if (ua && ua.isRegistered()) {
+          clearInterval(check);
+          clearTimeout(t);
+          if (!resolved) { resolved = true; resolve('ok'); }
+        }
+      }, 150);
+
+      const prevHandler = ua.listeners('registrationFailed')[0];
+      ua.removeAllListeners('registrationFailed');
+      ua.on('registrationFailed', e => {
+        if (prevHandler) prevHandler(e);
+        clearInterval(check);
+        clearTimeout(t);
+        if (!resolved) { resolved = true; resolve('failed'); }
+      });
+    });
+
+    if (result === 'ok') {
+      log(`🎉 SUCCESS: sip:${c.ext}@${c.domain}`, 'success');
+      document.getElementById('sipDomain').value = c.domain;
+      document.getElementById('extNumber').value = c.ext;
+      document.getElementById('extPassword').value = c.pwd;
+      document.getElementById('btnAutoTry').disabled = false;
+      return;
+    }
+
+    log(`↳ Trying next combination...`, 'info');
+    unregister();
+    await new Promise(r => setTimeout(r, 500));
+  }
+
+  log('── All combinations tested. See SIP challenge details above. ──', 'error');
+  document.getElementById('btnAutoTry').disabled = false;
+}
+
+// Click-to-call API trigger with full Error Controller & Security Guardrails
+async function triggerClickToCall() {
+  ErrorController.dismiss();
+
+  if (session) {
+    ErrorController.show('Cannot place call: You are already on an active call. Please hang up first.', 'warn');
+    return;
+  }
+
+  const rawNumber = document.getElementById('txtCallNumber').value;
+  const sanitizedNumber = SecurityController.sanitizeAndValidatePhone(rawNumber);
+
+  if (!sanitizedNumber) {
+    ErrorController.show('Invalid Phone Number: Please enter a valid 7 to 15 digit phone number (e.g. 9876543210).', 'warn');
+    return;
+  }
+
+  const token = SecurityController.getAuthToken();
+  if (!token) {
+    log('⚠️ Notice: No active Hospital Console auth token found in session. Request may fail if endpoint requires authentication.', 'warn');
+  }
+
+  const btn = document.getElementById('btnClickToCall');
+  btn.disabled = true;
+  btn.textContent = '⏳ Initiating Call...';
+
+  log(`Initiating Click-to-Call to: ${sanitizedNumber}...`, 'info');
+
+  const abortCtrl = new AbortController();
+  const timeoutId = setTimeout(() => abortCtrl.abort(), 15000);
+
+  try {
+    const baseUrl = SecurityController.getApiBaseUrl();
+    const res = await fetch(`${baseUrl}/calls/click-to-call/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      },
+      body: JSON.stringify({ to_number: sanitizedNumber }),
+      signal: abortCtrl.signal
+    });
+
+    clearTimeout(timeoutId);
+
+    if (res.ok) {
+      const data = await res.json().catch(() => ({}));
+      log(`✅ Click-to-Call dispatched! Status: ${data.status || 'initiated'}`, 'success');
+      log(`Waiting for HoduPBX to ring Extension 101...`, 'info');
+      ErrorController.show(`Call dispatched to ${sanitizedNumber}! Waiting for HoduPBX bridge...`, 'success', 5000);
+    } else {
+      await ErrorController.handleApiResponseError(res);
+    }
+  } catch (err) {
+    clearTimeout(timeoutId);
+    ErrorController.handleNetworkError(err);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '📞 Dial via Click-to-Call API';
+  }
+}
+</script>
+</body>
+</html>
