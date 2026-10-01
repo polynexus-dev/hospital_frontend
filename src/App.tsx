@@ -27,7 +27,9 @@ const FeedbackPage = lazy(() => import("./features/feedback/FeedbackPage").then(
 const WorkflowsPage = lazy(() => import("./features/workflows/WorkflowsPage").then((m) => ({ default: m.WorkflowsPage })))
 const AdminPage = lazy(() => import("./features/admin/AdminPage").then((m) => ({ default: m.AdminPage })))
 const SettingsPage = lazy(() => import("./features/settings/SettingsPage").then((m) => ({ default: m.SettingsPage })))
+const BedManagementPage = lazy(() => import("./features/facilities/BedManagementPage").then((m) => ({ default: m.BedManagementPage })))
 const SaaSConsolePage = lazy(() => import("./features/saas/SaaSConsolePage").then((m) => ({ default: m.SaaSConsolePage })))
+const AnatomyExplorerPage = lazy(() => import("./features/anatomy/AnatomyExplorerPage").then((m) => ({ default: m.AnatomyExplorerPage })))
 
 // ERP module pages — built out in an earlier phase (see docs/erp/*) but
 // never actually routed here, so they were unreachable even for a user
@@ -108,6 +110,9 @@ function App() {
           <Route path="/tpa" element={<Suspense fallback={<LoadingState />}><TPAPage /></Suspense>} />
           <Route path="/feedback" element={<Suspense fallback={<LoadingState />}><FeedbackPage /></Suspense>} />
           <Route path="/workflows" element={<Suspense fallback={<LoadingState />}><WorkflowsPage /></Suspense>} />
+          <Route path="/facilities/beds" element={<Suspense fallback={<LoadingState />}><BedManagementPage /></Suspense>} />
+          <Route path="/facilities" element={<Suspense fallback={<LoadingState />}><BedManagementPage /></Suspense>} />
+          <Route path="/anatomy" element={<Suspense fallback={<LoadingState />}><AnatomyExplorerPage /></Suspense>} />
           <Route path="/settings" element={<Suspense fallback={<LoadingState />}><SettingsPage /></Suspense>} />
 
           <Route element={<RequirePermission permission="accounts.view_role" />}>

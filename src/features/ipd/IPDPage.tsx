@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react"
+import { Link } from "react-router-dom"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Card, CardHeader, Eyebrow } from "../../components/ui/Card"
 import { Button } from "../../components/ui/Button"
 import { Pill } from "../../components/ui/Pill"
 import type { Tone } from "../../components/ui/tone"
 import { LoadingState } from "../../components/ui/QueryStates"
-import { listBeds, listRooms, listWards, type Bed, type BedStatus } from "../../api/facilities"
+import { listBeds, listRooms, listWards, updateBedStatus, type Bed, type BedStatus } from "../../api/facilities"
 import { admitPatient, listAdmissions } from "../../api/ipd"
 import { listDoctors } from "../../api/appointments"
 import { listPatients } from "../../api/patients"
@@ -33,8 +34,11 @@ export function IPDPage() {
   const [showDischarged, setShowDischarged] = useState(false)
 
   const wardsQuery = useQuery({ queryKey: ["wards"], queryFn: () => listWards() })
-  const roomsQuery = useQuery({ queryKey: ["rooms"], queryFn: () => listRooms() })
-  const bedsQuery = useQuery({ queryKey: ["beds"], queryFn: () => listBeds() })
+  const roomsQuery = useQuery({ queryKey: ["rooms"], queryFn: () => listRooms({ page_size: "150" }) })
+  const bedsQuery = useQuery({
+    queryKey: ["facilities-beds"],
+    queryFn: () => listBeds({ page_size: "150" }),
+  })
   const admissionsQuery = useQuery({
     queryKey: ["admissions", showDischarged],
     queryFn: () => listAdmissions(showDischarged ? {} : { status: "admitted" }),
@@ -71,6 +75,7 @@ export function IPDPage() {
       setIsAdmitModalOpen(false)
       setAdmitDraft({ patient: 0, admitting_doctor: 0, bed: 0, admission_diagnosis: "" })
       queryClient.invalidateQueries({ queryKey: ["admissions"] })
+      queryClient.invalidateQueries({ queryKey: ["facilities-beds"] })
       queryClient.invalidateQueries({ queryKey: ["beds"] })
     },
   })
@@ -94,6 +99,9 @@ export function IPDPage() {
       <Card padded>
         <CardHeader>
           <Eyebrow>Bed board</Eyebrow>
+          <Link to="/facilities/beds" className="text-[12px] text-brand font-semibold hover:underline">
+            Manage beds →
+          </Link>
         </CardHeader>
         <div className="flex flex-col gap-3">
           {wards.map((ward) => (
@@ -153,12 +161,79 @@ export function IPDPage() {
                   <option key={d.id} value={d.id}>{d.name}</option>
                 ))}
               </select>
-              <select className="w-full h-9 px-3 border border-border-strong rounded-control text-[13px]" value={admitDraft.bed} onChange={(e) => setAdmitDraft({ ...admitDraft, bed: Number(e.target.value) })}>
-                <option value={0}>Select an available bed…</option>
-                {availableBeds.map((b) => (
-                  <option key={b.id} value={b.id}>{b.bed_number}</option>
-                ))}
-              </select>
+              <div>
+                {availableBeds.length === 0 ? (
+                  <div className="p-3 rounded-control bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-200 text-xs flex flex-col gap-2">
+                    <div className="font-semibold flex items-center gap-1.5">
+                      <span>⚠️ No Available Beds</span>
+                    </div>
+                    <div className="text-[11.5px] text-ink-3 leading-relaxed">
+                      {beds.length === 0
+                        ? "There are no beds registered in the system yet."
+                        : `All ${beds.length} registered bed${beds.length > 1 ? "s" : ""} in the hospital are currently occupied or reserved. Please free or create an available bed first.`}
+                    </div>
+                    <div className="pt-0.5 flex items-center justify-between">
+                      <Link
+                        to="/facilities/beds"
+                        onClick={() => setIsAdmitModalOpen(false)}
+                        className="inline-flex items-center justify-center gap-1 px-3 py-1.5 bg-brand text-white font-semibold rounded-control text-xs hover:bg-brand-hover transition-colors"
+                      >
+                        Open Bed Management →
+                      </Link>
+                    </div>
+                    {beds.length > 0 && (
+                      <div className="pt-2 flex flex-col gap-1.5 border-t border-amber-500/20">
+                        <div className="text-[11px] font-semibold text-amber-900 dark:text-amber-200">
+                          Or free an existing bed directly:
+                        </div>
+                        <div className="max-h-28 overflow-y-auto space-y-1">
+                          {beds.slice(0, 5).map((b) => (
+                            <div key={b.id} className="flex items-center justify-between bg-surface/90 p-1.5 rounded text-[11px] border border-border">
+                              <span className="font-medium text-ink-1">
+                                {b.bed_number} ({b.status})
+                                {b.patient?.name ? ` · ${b.patient.name}` : ""}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  try {
+                                    await updateBedStatus(b.id, "available")
+                                    queryClient.invalidateQueries({ queryKey: ["facilities-beds"] })
+                                    queryClient.invalidateQueries({ queryKey: ["beds"] })
+                                    setAdmitDraft((prev) => ({ ...prev, bed: b.id }))
+                                  } catch (err: any) {
+                                    console.error(err)
+                                  }
+                                }}
+                                className="px-2 py-0.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-[10.5px] cursor-pointer"
+                              >
+                                Free & Select
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <select
+                    className="w-full h-9 px-3 border border-border-strong rounded-control text-[13px] bg-surface"
+                    value={admitDraft.bed}
+                    onChange={(e) => setAdmitDraft({ ...admitDraft, bed: Number(e.target.value) })}
+                  >
+                    <option value={0}>Select an available bed…</option>
+                    {availableBeds.map((b) => {
+                      const room = rooms.find((r) => r.id === b.room)
+                      const ward = room ? wards.find((w) => w.id === room.ward) : null
+                      return (
+                        <option key={b.id} value={b.id}>
+                          {b.bed_number} ({b.bed_type.replace("_", " ")}) · {room ? `Room ${room.room_number}` : `Room #${b.room}`}{ward ? ` · ${ward.name}` : ""}
+                        </option>
+                      )
+                    })}
+                  </select>
+                )}
+              </div>
               <textarea
                 rows={2}
                 placeholder="Admission diagnosis"

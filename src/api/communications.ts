@@ -18,7 +18,7 @@ export interface SendMessagePayload {
   message?: string
   template?: number | null
   template_id?: number | null
-  context?: Record<string, string>
+  context?: Record<string, any>
   fallback_channel?: Channel
 }
 

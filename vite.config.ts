@@ -12,10 +12,10 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true,
-    allowedHosts: ['.hms.polynexus.in', 'localhost', '127.0.0.1'],
+    allowedHosts: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: 'http://192.168.1.117:8000',
         changeOrigin: true,
       },
     },
@@ -23,7 +23,7 @@ export default defineConfig({
   preview: {
     port: 8002,
     host: true,
-    allowedHosts: ['.hms.polynexus.in', 'localhost', '127.0.0.1'],
+    allowedHosts: true,
   },
   test: {
     environment: 'jsdom',
