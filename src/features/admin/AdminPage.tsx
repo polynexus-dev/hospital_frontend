@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Card, CardHeader, Eyebrow } from "../../components/ui/Card"
 import { StatTile } from "../../components/ui/StatTile"
@@ -134,6 +134,32 @@ export function AdminPage() {
   const roles = rolesData?.results ?? []
   const auditLogs = auditData?.results ?? []
 
+  const selectedRoleObj = useMemo(() => {
+    return roles.find((r) => String(r.id) === selectedRole)
+  }, [roles, selectedRole])
+
+  const effectivePermissions = useMemo(() => {
+    if (selectedRoleObj?.permissions && selectedRoleObj.permissions.length > 0) {
+      return selectedRoleObj.permissions
+    }
+    if (editingUser?.permissions && editingUser.permissions.length > 0) {
+      return editingUser.permissions
+    }
+    return []
+  }, [selectedRoleObj, editingUser])
+
+  const groupedPermissions = useMemo(() => {
+    const groups: Record<string, string[]> = {}
+    for (const perm of effectivePermissions) {
+      const parts = perm.split(".")
+      const app = parts.length > 1 ? parts[0] : "general"
+      const action = parts.length > 1 ? parts.slice(1).join(".") : perm
+      if (!groups[app]) groups[app] = []
+      groups[app].push(action)
+    }
+    return groups
+  }, [effectivePermissions])
+
   const isStubConnector = healthData?.his_connector === "stub"
   const connectorLabel = healthData ? (isStubConnector ? "Stub (not connected)" : healthData.his_connector) : "—"
   const connectorTone: Tone = isStubConnector ? "warn" : "ok"
@@ -266,10 +292,50 @@ export function AdminPage() {
                 </select>
                 {selectedRole ? (
                   <p className="text-xs text-ink-4 mt-1.5 leading-relaxed bg-brand-tint/30 p-2 rounded border border-brand/20">
-                    💡 <strong>Permissions:</strong> {roles.find((r) => String(r.id) === selectedRole)?.description || "Inherits all capabilities bundled with this role template."}
+                    💡 <strong>Role Description:</strong> {roles.find((r) => String(r.id) === selectedRole)?.description || "Inherits all capabilities bundled with this role template."}
                   </p>
                 ) : (
                   <p className="text-xs text-ink-4 mt-1">Staff accounts with no role have basic read access only.</p>
+                )}
+              </div>
+
+              {/* Django Model Permissions Inspector */}
+              <div className="border border-border rounded-lg p-3 bg-page/50">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-ink-3">
+                    Django Model Permissions ({effectivePermissions.length})
+                  </span>
+                  <span className="text-[11px] font-mono text-ink-4">Django Groups & RBAC</span>
+                </div>
+
+                {effectivePermissions.length === 0 ? (
+                  <div className="text-xs text-ink-4 italic p-2 bg-surface rounded border border-border-soft">
+                    No explicit model permissions found for this role.
+                  </div>
+                ) : (
+                  <div className="max-h-48 overflow-y-auto space-y-2 pr-1 divide-y divide-border-soft">
+                    {Object.entries(groupedPermissions).map(([appLabel, perms]) => (
+                      <div key={appLabel} className="pt-2 first:pt-0">
+                        <div className="flex items-center justify-between text-[11px] font-bold text-ink mb-1">
+                          <span className="capitalize text-brand flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-brand" />
+                            {appLabel}
+                          </span>
+                          <span className="text-[10px] text-ink-4 font-normal">{perms.length} permission{perms.length > 1 ? "s" : ""}</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {perms.map((p) => (
+                            <span
+                              key={p}
+                              className="px-1.5 py-0.5 rounded bg-surface border border-border-soft text-ink-2 text-[10.5px] font-mono shadow-2xs"
+                            >
+                              {p}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
 
@@ -358,12 +424,37 @@ export function AdminPage() {
             ) : (
               <div className="grid grid-cols-2 gap-2.5">
                 {roles.map((r) => (
-                  <Card key={r.id} padded>
-                    <div className="flex justify-between items-center gap-2">
-                      <div className="text-[13px] font-semibold">{r.name}</div>
-                      <NeutralTag>Role #{r.id}</NeutralTag>
+                  <Card key={r.id} padded className="flex flex-col justify-between gap-3">
+                    <div>
+                      <div className="flex justify-between items-center gap-2">
+                        <div className="text-[13px] font-semibold">{r.name}</div>
+                        <div className="flex items-center gap-1.5">
+                          {r.permissions && r.permissions.length > 0 && (
+                            <Pill tone="ok">{r.permissions.length} perms</Pill>
+                          )}
+                          <NeutralTag>Role #{r.id}</NeutralTag>
+                        </div>
+                      </div>
+                      {r.description && <div className="text-[12px] text-ink-4 mt-1">{r.description}</div>}
                     </div>
-                    {r.description && <div className="text-[12px] text-ink-4 mt-1">{r.description}</div>}
+
+                    {r.permissions && r.permissions.length > 0 && (
+                      <div className="pt-2 border-t border-border-soft">
+                        <div className="text-[10px] uppercase font-bold text-ink-4 tracking-wider mb-1.5">
+                          Django Model Permissions ({r.permissions.length})
+                        </div>
+                        <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto">
+                          {r.permissions.map((p) => (
+                            <span
+                              key={p}
+                              className="px-1.5 py-0.5 rounded bg-brand-tint/60 text-brand text-[10px] font-mono"
+                            >
+                              {p}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </Card>
                 ))}
               </div>

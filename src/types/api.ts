@@ -51,6 +51,7 @@ export interface Role {
   name: string
   description: string
   created_at: string
+  permissions?: string[]
 }
 
 export interface Patient {
