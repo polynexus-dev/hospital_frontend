@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react"
-import { Link } from "react-router-dom"
 import { api, extractApiError } from "../api/client"
 import { useAuthStore } from "../store/auth"
 
@@ -106,27 +105,7 @@ export function IdleLock() {
   )
 }
 
-/** Open clinical alerts for me / my departments — critical count pulses. */
+/** AlertBell is disabled */
 export function AlertBell() {
-  const user = useAuthStore((s) => s.user)
-  const [counts, setCounts] = useState<Record<string, number>>({})
-  useEffect(() => {
-    if (!user?.permissions?.includes("patients.access_clinical_detail")) return
-    const load = () => api.get<Record<string, number>>("/clinical/alerts/counts/").then(setCounts).catch(() => setCounts({}))
-    load()
-    const t = window.setInterval(load, 60_000)
-    return () => window.clearInterval(t)
-  }, [user])
-  const critical = counts.critical ?? 0
-  const total = Object.values(counts).reduce((a, b) => a + b, 0)
-  if (!total) return null
-  return (
-    <Link
-      to="/clinical-safety?tab=alerts"
-      title="Clinical alerts"
-      className={`fixed top-3 right-4 z-40 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shadow-lg ${critical ? "bg-rose-600 text-white animate-pulse" : "bg-amber-400 text-slate-900"}`}
-    >
-      🔔 {critical ? `${critical} critical` : `${total} alerts`}
-    </Link>
-  )
+  return null
 }

@@ -24,10 +24,13 @@ export const saasNav: NavItem[] = [
 
 export const dailyWorkNav: NavItem[] = [
   { key: "console", moduleKey: "telephony", path: "/console", labelKey: "nav.console", subKey: "screenSub.console" },
+  { key: "call-logs", moduleKey: "telephony", path: "/call-logs", labelKey: "Call Logs", subKey: "Full call history & recordings" },
   { key: "callbacks", moduleKey: "telephony", path: "/callbacks", labelKey: "nav.callbacks", subKey: "screenSub.callbacks" },
   { key: "enquiries", moduleKey: "enquiries", path: "/enquiries", labelKey: "nav.enquiries", subKey: "screenSub.enquiries" },
   { key: "patients", path: "/patients", labelKey: "nav.patients", subKey: "screenSub.patients" },
   { key: "appointments", path: "/appointments", labelKey: "nav.appointments", subKey: "screenSub.appointments" },
+  { key: "facilities-beds", path: "/facilities/beds", labelKey: "nav.facilitiesBeds", subKey: "screenSub.facilitiesBeds" },
+  { key: "anatomy", path: "/anatomy", labelKey: "nav.anatomy", subKey: "screenSub.anatomy" },
   { key: "inbox", moduleKey: "inbox", path: "/inbox", labelKey: "nav.inbox", subKey: "screenSub.inbox" },
   { key: "dashboard", path: "/dashboard", labelKey: "nav.dashboard", subKey: "screenSub.dashboard" },
 ]
@@ -93,6 +96,7 @@ export const growthNav: NavItem[] = [
 // It used to, which meant CRM's Referrals/Packages/TPA/Feedback/Workflows
 // silently reappeared under what's supposed to be an ERP-only section.
 export const erpOpsNav: NavItem[] = [
+  { key: "facilities-beds-erp", path: "/facilities/beds", labelKey: "nav.facilitiesBeds", subKey: "screenSub.facilitiesBeds" },
   { key: "finance", moduleKey: "finance", path: "/finance", labelKey: "Finance", subKey: "Ledger & Expenses", requiredPermission: "finance.view_ledger" },
   { key: "billing", moduleKey: "billing", path: "/billing", labelKey: "Billing & Claims", subKey: "Invoices & TPA Claims", requiredPermission: "billing.view_bill" },
   { key: "hr", moduleKey: "hr", path: "/hr", labelKey: "HR & Roster", subKey: "Staff Directory & Attendance", requiredPermission: "hr.view_employee" },

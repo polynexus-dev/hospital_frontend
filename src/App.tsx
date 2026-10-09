@@ -13,6 +13,7 @@ import { LoadingState } from "./components/ui/QueryStates"
 // first-time visitor downloads just to see the login screen.
 const DashboardPage = lazy(() => import("./features/dashboard/DashboardPage").then((m) => ({ default: m.DashboardPage })))
 const ConsolePage = lazy(() => import("./features/console/ConsolePage").then((m) => ({ default: m.ConsolePage })))
+const CallLogsPage = lazy(() => import("./features/console/CallLogsPage").then((m) => ({ default: m.CallLogsPage })))
 const CallbacksPage = lazy(() => import("./features/callbacks/CallbacksPage").then((m) => ({ default: m.CallbacksPage })))
 const EnquiriesPage = lazy(() => import("./features/enquiries/EnquiriesPage").then((m) => ({ default: m.EnquiriesPage })))
 const PatientsListPage = lazy(() => import("./features/patients/PatientsListPage").then((m) => ({ default: m.PatientsListPage })))
@@ -26,7 +27,9 @@ const FeedbackPage = lazy(() => import("./features/feedback/FeedbackPage").then(
 const WorkflowsPage = lazy(() => import("./features/workflows/WorkflowsPage").then((m) => ({ default: m.WorkflowsPage })))
 const AdminPage = lazy(() => import("./features/admin/AdminPage").then((m) => ({ default: m.AdminPage })))
 const SettingsPage = lazy(() => import("./features/settings/SettingsPage").then((m) => ({ default: m.SettingsPage })))
+const BedManagementPage = lazy(() => import("./features/facilities/BedManagementPage").then((m) => ({ default: m.BedManagementPage })))
 const SaaSConsolePage = lazy(() => import("./features/saas/SaaSConsolePage").then((m) => ({ default: m.SaaSConsolePage })))
+const AnatomyExplorerPage = lazy(() => import("./features/anatomy/AnatomyExplorerPage").then((m) => ({ default: m.AnatomyExplorerPage })))
 
 // ERP module pages — built out in an earlier phase (see docs/erp/*) but
 // never actually routed here, so they were unreachable even for a user
@@ -95,6 +98,7 @@ function App() {
           <Route path="/" element={<HomeRedirect />} />
           <Route path="/dashboard" element={<Suspense fallback={<LoadingState />}><DashboardPage /></Suspense>} />
           <Route path="/console" element={<Suspense fallback={<LoadingState />}><ConsolePage /></Suspense>} />
+          <Route path="/call-logs" element={<Suspense fallback={<LoadingState />}><CallLogsPage /></Suspense>} />
           <Route path="/callbacks" element={<Suspense fallback={<LoadingState />}><CallbacksPage /></Suspense>} />
           <Route path="/enquiries" element={<Suspense fallback={<LoadingState />}><EnquiriesPage /></Suspense>} />
           <Route path="/patients" element={<Suspense fallback={<LoadingState />}><PatientsListPage /></Suspense>} />
@@ -106,6 +110,9 @@ function App() {
           <Route path="/tpa" element={<Suspense fallback={<LoadingState />}><TPAPage /></Suspense>} />
           <Route path="/feedback" element={<Suspense fallback={<LoadingState />}><FeedbackPage /></Suspense>} />
           <Route path="/workflows" element={<Suspense fallback={<LoadingState />}><WorkflowsPage /></Suspense>} />
+          <Route path="/facilities/beds" element={<Suspense fallback={<LoadingState />}><BedManagementPage /></Suspense>} />
+          <Route path="/facilities" element={<Suspense fallback={<LoadingState />}><BedManagementPage /></Suspense>} />
+          <Route path="/anatomy" element={<Suspense fallback={<LoadingState />}><AnatomyExplorerPage /></Suspense>} />
           <Route path="/settings" element={<Suspense fallback={<LoadingState />}><SettingsPage /></Suspense>} />
 
           <Route element={<RequirePermission permission="accounts.view_role" />}>

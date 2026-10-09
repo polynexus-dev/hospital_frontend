@@ -122,14 +122,20 @@ export type CallDirection = "inbound" | "outbound"
 export type CallStatus = "answered" | "missed" | "rnr" | "busy" | "failed" | "voicemail"
 
 export interface Call {
-  id: number
+  id: number | string
   direction: CallDirection
+  direction_display?: string
   status: CallStatus
+  status_display?: string
   from_number: string
   to_number: string
   patient: number | null
+  patient_name?: string | null
+  enquiry?: number | null
   department: number | null
+  department_name?: string | null
   operator: number | null
+  operator_name?: string | null
   started_at: string
   answered_at: string | null
   ended_at: string | null
@@ -137,11 +143,31 @@ export interface Call {
   recording_url: string
   consent_recorded: boolean
   call_reason: string
+  call_reason_display?: string
   ivr_path: string
   notes: string
   provider_name: string
   provider_call_id: string
   created_at: string
+}
+
+export interface CallHistorySummary {
+  direction: "inbound" | "outbound"
+  from: string
+  to: string
+  total_calls: number
+  answered: number
+  missed: number
+  rnr: number
+  avg_duration_seconds: number
+}
+
+export interface CallHistoryResponse {
+  count: number
+  next: string | null
+  previous: string | null
+  summary?: CallHistorySummary
+  results: Call[]
 }
 
 export type CallbackStatus = "pending" | "in_progress" | "done" | "escalated"

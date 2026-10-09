@@ -355,10 +355,22 @@ export function InboxPage() {
       activeTemplates.find((t) => t.id === selectedTemplateId) ??
       (selectedThread.channel === "whatsapp" && activeTemplates.length > 0 ? activeTemplates[0] : null)
 
+    const patientNameStr = selectedPatientQuery.data
+      ? (selectedPatientQuery.data.full_name || `${selectedPatientQuery.data.first_name || ""} ${selectedPatientQuery.data.last_name || ""}`.trim())
+      : patientName(selectedThread.patient)
+
+    const doctorNameStr = latestEnquiry?.consulting_doctor_name || "Dr. Smith"
+
+    const now = new Date()
+    const formattedDate = now.toLocaleDateString("en-GB", { day: "2-digit", month: "short" })
+    const formattedTime = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })
+
+    const purpose = matchedTemplate?.purpose || "appointment_reminder_24h"
+
     sendMutation.mutate({
       patient: selectedThread.patient,
       channel: selectedThread.channel,
-      purpose: matchedTemplate?.purpose || "transactional",
+      purpose: purpose,
       body: text,
       message: text,
       ...(matchedTemplate
@@ -368,7 +380,14 @@ export function InboxPage() {
             template_name: matchedTemplate.name,
           }
         : {}),
-      context: { body: text },
+      context: {
+        patient_name: patientNameStr || "Tejas",
+        doctor_name: doctorNameStr || "Dr. Smith",
+        date: formattedDate,
+        time: formattedTime,
+        feedback_link: `https://hospital.demo/feedback/${selectedThread.patient}`,
+        body: text,
+      },
     })
   }
 
