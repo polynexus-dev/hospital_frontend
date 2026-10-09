@@ -193,7 +193,7 @@ function SubscriptionRow({
 }: {
   subscription: TenantSubscription
   hospital?: SaaSHospital
-  onInspect?: (hospitalId: number) => void
+  onInspect?: (hospitalId: string) => void
   onConfigureModules?: (hospital: SaaSHospital) => void
 }) {
   const queryClient = useQueryClient()
@@ -241,7 +241,7 @@ function SubscriptionRow({
           <Button
             size="sm"
             variant="secondary"
-            onClick={() => onInspect(Number(subscription.hospital))}
+            onClick={() => onInspect(String(subscription.hospital))}
             title="Switch context and inspect this hospital in Hospital Operations mode"
           >
             👁️ Inspect
