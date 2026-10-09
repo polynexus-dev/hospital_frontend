@@ -1,15 +1,15 @@
 import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Card, CardHeader, Eyebrow } from "../../components/ui/Card"
 import { StatTile } from "../../components/ui/StatTile"
 import { Button } from "../../components/ui/Button"
 import { NeutralTag, Pill, SuccessTag } from "../../components/ui/Pill"
 import { ErrorState, EmptyState, LoadingState } from "../../components/ui/QueryStates"
-import { listRoles, listUsers } from "../../api/accounts"
+import { listRoles, listUsers, updateUser } from "../../api/accounts"
 import { listAuditLogs } from "../../api/core"
 import { integrationHealth } from "../../api/integrations"
 import { API_BASE_URL } from "../../api/client"
-import type { AuditLog } from "../../types/api"
+import type { AuditLog, User } from "../../types/api"
 import type { Tone } from "../../components/ui/tone"
 import { EmergencyAccessTab } from "./EmergencyAccessTab"
 import { DataRightsTab } from "./DataRightsTab"
@@ -69,6 +69,12 @@ export function AdminPage() {
   const [activeTab, setActiveTab] = useState<TabKey>("users")
   const [exportingModel, setExportingModel] = useState<string | null>(null)
 
+  const queryClient = useQueryClient()
+  const [editingUser, setEditingUser] = useState<User | null>(null)
+  const [selectedRole, setSelectedRole] = useState<string>("")
+  const [selectedIsActive, setSelectedIsActive] = useState<boolean>(true)
+  const [saveSuccessMsg, setSaveSuccessMsg] = useState<string | null>(null)
+
   const { data: usersData, isLoading: isUsersLoading, isError: isUsersError } = useQuery({
     queryKey: ["admin-users"],
     queryFn: () => listUsers(),
@@ -78,7 +84,26 @@ export function AdminPage() {
   const { data: rolesData, isLoading: isRolesLoading } = useQuery({
     queryKey: ["admin-roles"],
     queryFn: () => listRoles(),
-    enabled: activeTab === "roles",
+  })
+
+  const handleOpenEditRole = (user: User) => {
+    setEditingUser(user)
+    setSelectedRole(user.role ? String(user.role) : "")
+    setSelectedIsActive(user.is_active)
+    setSaveSuccessMsg(null)
+  }
+
+  const updateUserMutation = useMutation({
+    mutationFn: ({ id, roleId, isActive }: { id: number; roleId: number | null; isActive: boolean }) =>
+      updateUser(id, { role: roleId, is_active: isActive }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] })
+      setSaveSuccessMsg("User role updated successfully!")
+      setTimeout(() => {
+        setEditingUser(null)
+        setSaveSuccessMsg(null)
+      }, 900)
+    },
   })
 
   const { data: auditData, isLoading: isAuditLoading, isError: isAuditError } = useQuery({
@@ -139,24 +164,39 @@ export function AdminPage() {
             <div className="text-[12px] text-ink-4">access accounts for this tenant hospital</div>
           </CardHeader>
           <div className="px-3.5 overflow-x-auto">
-            <div className="grid grid-cols-[1.3fr_1.6fr_1.1fr_0.7fr_0.9fr] gap-2.5 py-2.5 border-b border-border-soft text-[11px] tracking-[.06em] uppercase text-ink-4 font-semibold min-w-[760px]">
+            <div className="grid grid-cols-[1.3fr_1.6fr_1.1fr_0.7fr_0.7fr_0.9fr] gap-2.5 py-2.5 border-b border-border-soft text-[11px] tracking-[.06em] uppercase text-ink-4 font-semibold min-w-[860px]">
               <div>User</div>
               <div>Email</div>
               <div>Role</div>
               <div>Language</div>
               <div>Status</div>
+              <div>Actions</div>
             </div>
             {isUsersLoading && <LoadingState />}
             {isUsersError && <ErrorState />}
             {!isUsersLoading && !isUsersError && users.map((u) => (
-              <div key={u.id} className="grid grid-cols-[1.3fr_1.6fr_1.1fr_0.7fr_0.9fr] gap-2.5 py-2.5 border-b border-border-faint items-center text-[13px] min-w-[760px]">
+              <div key={u.id} className="grid grid-cols-[1.3fr_1.6fr_1.1fr_0.7fr_0.7fr_0.9fr] gap-2.5 py-2.5 border-b border-border-faint items-center text-[13px] min-w-[860px]">
                 <div className="font-semibold truncate">
                   {u.first_name || u.last_name ? `${u.first_name} ${u.last_name}` : u.email}
                 </div>
                 <div className="text-ink-3 truncate">{u.email}</div>
-                <div className="text-ink-3 truncate">{u.role_name || (u.is_staff ? "Administrator" : "Staff")}</div>
+                <div className="text-ink-3 truncate font-medium">
+                  {u.role_name || (u.is_staff ? "Administrator" : "Staff")}
+                </div>
                 <div className="uppercase"><NeutralTag>{u.preferred_language}</NeutralTag></div>
                 <div>{u.is_active ? <SuccessTag>ACTIVE</SuccessTag> : <NeutralTag>INACTIVE</NeutralTag>}</div>
+                <div>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => handleOpenEditRole(u)}
+                    className="flex items-center gap-1 text-xs"
+                    title="Assign role or change account status"
+                  >
+                    <span>✏️</span>
+                    <span>Edit Role</span>
+                  </Button>
+                </div>
               </div>
             ))}
             {!isUsersLoading && !isUsersError && users.length === 0 && (
@@ -164,6 +204,143 @@ export function AdminPage() {
             )}
           </div>
         </Card>
+      )}
+
+      {/* Edit User Role & Permissions Modal */}
+      {editingUser && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-role-title"
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => setEditingUser(null)}
+        >
+          <div
+            className="bg-surface border border-border rounded-xl shadow-2xl p-6 w-full max-w-lg animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-border mb-4">
+              <div>
+                <h3 id="edit-role-title" className="text-base font-bold text-ink">Manage User Role & Permissions</h3>
+                <p className="text-xs text-ink-4 mt-0.5">Assign hospital roles or toggle status for this staff member</p>
+              </div>
+              <button
+                onClick={() => setEditingUser(null)}
+                aria-label="Close"
+                className="text-ink-4 hover:text-ink text-sm p-1 rounded hover:bg-page transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="p-3 bg-page rounded-lg border border-border-soft flex items-center justify-between">
+                <div className="min-w-0 pr-2">
+                  <div className="text-sm font-bold text-ink truncate">
+                    {editingUser.first_name || editingUser.last_name
+                      ? `${editingUser.first_name} ${editingUser.last_name}`
+                      : editingUser.email}
+                  </div>
+                  <div className="text-xs text-ink-4 font-mono truncate">{editingUser.email}</div>
+                </div>
+                <div>
+                  {editingUser.is_saas_admin && <Pill tone="info">SaaS Admin</Pill>}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-ink-3 mb-1.5">
+                  Assigned Hospital Role
+                </label>
+                <select
+                  value={selectedRole}
+                  onChange={(e) => setSelectedRole(e.target.value)}
+                  className="w-full h-10 px-3 rounded-control border border-border bg-page text-sm text-ink font-medium focus:border-brand outline-none"
+                >
+                  <option value="">No Role Assigned (Staff)</option>
+                  {roles.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.name}
+                    </option>
+                  ))}
+                </select>
+                {selectedRole ? (
+                  <p className="text-xs text-ink-4 mt-1.5 leading-relaxed bg-brand-tint/30 p-2 rounded border border-brand/20">
+                    💡 <strong>Permissions:</strong> {roles.find((r) => String(r.id) === selectedRole)?.description || "Inherits all capabilities bundled with this role template."}
+                  </p>
+                ) : (
+                  <p className="text-xs text-ink-4 mt-1">Staff accounts with no role have basic read access only.</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-ink-3 mb-1.5">
+                  Account Status
+                </label>
+                <div className="flex items-center gap-4">
+                  <label className="flex items-center gap-2 text-xs font-semibold cursor-pointer">
+                    <input
+                      type="radio"
+                      name="account_status"
+                      checked={selectedIsActive}
+                      onChange={() => setSelectedIsActive(true)}
+                      className="text-brand focus:ring-brand"
+                    />
+                    <span>Active</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-xs font-semibold cursor-pointer text-ink-4">
+                    <input
+                      type="radio"
+                      name="account_status"
+                      checked={!selectedIsActive}
+                      onChange={() => setSelectedIsActive(false)}
+                      className="text-brand focus:ring-brand"
+                    />
+                    <span>Inactive (Suspended)</span>
+                  </label>
+                </div>
+              </div>
+
+              {saveSuccessMsg && (
+                <div className="p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300 text-xs font-semibold flex items-center gap-2">
+                  <span>✓</span>
+                  <span>{saveSuccessMsg}</span>
+                </div>
+              )}
+
+              {updateUserMutation.isError && (
+                <div className="p-2.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-300 text-xs font-semibold">
+                  Failed to update user. Please check permissions and try again.
+                </div>
+              )}
+
+              <div className="pt-3 border-t border-border flex justify-end gap-2">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => setEditingUser(null)}
+                  disabled={updateUserMutation.isPending}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  variant="primary"
+                  onClick={() => {
+                    updateUserMutation.mutate({
+                      id: editingUser.id,
+                      roleId: selectedRole ? Number(selectedRole) : null,
+                      isActive: selectedIsActive,
+                    })
+                  }}
+                  disabled={updateUserMutation.isPending}
+                >
+                  {updateUserMutation.isPending ? "Saving…" : "Save Role"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Roles & RBAC */}
