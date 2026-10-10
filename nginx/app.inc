@@ -1,0 +1,35 @@
+server_tokens off;
+root /usr/share/nginx/html;
+client_max_body_size 25m;
+
+gzip on;
+gzip_types text/css application/javascript application/json image/svg+xml;
+
+add_header X-Content-Type-Options nosniff always;
+add_header X-Frame-Options SAMEORIGIN always;
+add_header Referrer-Policy strict-origin-when-cross-origin always;
+
+location = /healthz { access_log off; return 200 "ok\n"; }
+
+location /api/ {
+    proxy_pass http://web:8000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_read_timeout 120s;
+}
+
+location /static/ {
+    proxy_pass http://web:8000;
+}
+
+location /assets/ {
+    expires 1y;
+    add_header Cache-Control "public, immutable";
+    try_files $uri =404;
+}
+
+location / {
+    add_header Cache-Control "no-cache";
+    try_files $uri /index.html;
+}
