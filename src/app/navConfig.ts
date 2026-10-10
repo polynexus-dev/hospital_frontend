@@ -30,12 +30,13 @@ export const dailyWorkNav: NavItem[] = [
   { key: "patients", path: "/patients", labelKey: "nav.patients", subKey: "screenSub.patients", requiredPermission: "patients.view_patient" },
   { key: "appointments", path: "/appointments", labelKey: "nav.appointments", subKey: "screenSub.appointments", requiredPermission: "appointments.view_appointment" },
   { key: "facilities-beds", path: "/facilities/beds", labelKey: "nav.facilitiesBeds", subKey: "screenSub.facilitiesBeds" },
-  { key: "anatomy", path: "/anatomy", labelKey: "nav.anatomy", subKey: "screenSub.anatomy" },
   { key: "inbox", moduleKey: "inbox", path: "/inbox", labelKey: "nav.inbox", subKey: "screenSub.inbox" },
   { key: "dashboard", path: "/dashboard", labelKey: "nav.dashboard", subKey: "screenSub.dashboard" },
 ]
 
 export const careNav: NavItem[] = [
+  // Clinical tool (HMS core licence): doctors and nurses, not front office.
+  { key: "anatomy", moduleKey: "opd", path: "/anatomy", labelKey: "nav.anatomy", subKey: "screenSub.anatomy", requiredPermission: "patients.access_clinical_detail" },
   { key: "ipd", moduleKey: "ipd", path: "/ipd", labelKey: "nav.ipd", subKey: "screenSub.ipd", requiredPermission: "ipd.view_admission" },
   {
     key: "diagnostics",
