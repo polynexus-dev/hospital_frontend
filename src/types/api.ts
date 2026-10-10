@@ -1257,6 +1257,23 @@ export interface OnPremiseLicense {
   revoked_at: string | null
   revoke_reason: string
   status: "active" | "expired" | "revoked"
+  days_left: number
+  latest_usage: LicenseUsageReport | null
+}
+
+export interface LicenseUsageReport {
+  id: number
+  generated_at: string
+  app_version: string
+  active_users: number
+  beds: number
+  report: {
+    usage: Record<string, number>
+    hospitals?: string[]
+    licence?: { license_id: string; state: string; max_active_users?: number | null; max_beds?: number | null }
+  }
+  seal_ok: boolean
+  created_at: string
 }
 
 export interface GenerateLicensePayload {
@@ -1269,4 +1286,35 @@ export interface GenerateLicensePayload {
   max_users: number
   max_beds: number
   tier?: string
+}
+
+/** GET /subscription/ — the requesting hospital's own plan (SaaS mode). */
+export interface MySubscription {
+  mode: "saas" | "on_premise"
+  hospital_name?: string
+  subscription?: {
+    tier: string
+    tier_label: string
+    billing_cycle: string
+    billing_cycle_label: string
+    status: "active" | "suspended" | "cancelled"
+    status_label: string
+    base_price: string
+    started_at: string
+    next_billing_date: string | null
+    max_staff_users: number
+  } | null
+  active_users?: number
+  enabled_modules?: string[] | null
+  invoices?: {
+    id: number
+    invoice_number: string
+    billing_period_start: string
+    billing_period_end: string
+    amount: string
+    status: "unpaid" | "paid" | "overdue"
+    due_date: string
+    paid_at: string | null
+  }[]
+  outstanding?: string
 }

@@ -19,6 +19,7 @@ export const saasNav: NavItem[] = [
   { key: "saas-tenants", path: "/saas?tab=subscriptions", labelKey: "Tenants & Subscriptions", subKey: "Hospital onboarding & module flags" },
   { key: "saas-invoices", path: "/saas?tab=invoices", labelKey: "Billing & Invoices", subKey: "Platform subscription invoices" },
   { key: "saas-usage", path: "/saas?tab=usage", labelKey: "Usage & Telemetry", subKey: "API usage & database storage" },
+  { key: "saas-licences", path: "/saas?tab=licences", labelKey: "On-Premise Licences", subKey: "Renewals due, usage reports" },
   { key: "saas-tickets", path: "/saas?tab=tickets", labelKey: "Support Tickets", subKey: "Help requests from hospital tenants" },
 ]
 

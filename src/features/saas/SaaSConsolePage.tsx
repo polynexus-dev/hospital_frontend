@@ -30,16 +30,18 @@ import type { Tone } from "../../components/ui/tone"
 import { TenantModulesModal, SYSTEM_MODULES } from "./TenantModulesModal"
 import { PermissionMatrixModal } from "../admin/PermissionMatrixModal"
 import { LicenseGeneratorModal } from "./LicenseGeneratorModal"
+import { LicencesTab } from "./LicencesTab"
 import { TenantOnboardModal } from "./TenantOnboardModal"
 
 
-type TabKey = "overview" | "subscriptions" | "invoices" | "usage" | "tickets"
+type TabKey = "overview" | "subscriptions" | "invoices" | "usage" | "licences" | "tickets"
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "overview", label: "Platform Overview" },
   { key: "subscriptions", label: "Tenants & Subscriptions" },
   { key: "invoices", label: "Invoices" },
   { key: "usage", label: "Usage" },
+  { key: "licences", label: "On-Premise Licences" },
   { key: "tickets", label: "Support Tickets" },
 ]
 
@@ -1128,6 +1130,8 @@ export function SaaSConsolePage() {
           </div>
         </Card>
       )}
+
+      {activeTab === "licences" && <LicencesTab />}
 
       {activeTab === "tickets" && (
         <Card>

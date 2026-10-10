@@ -11,3 +11,8 @@ export function getLicenseStatus() {
 export function uploadLicense(license: string) {
   return api.post<LicenseStatus>("/licensing/upload/", { license })
 }
+
+/** The usage report file (counts only) for the hospital to send to Polynexus. */
+export function downloadUsageReport() {
+  return api.getBlob("/licensing/usage-report/")
+}

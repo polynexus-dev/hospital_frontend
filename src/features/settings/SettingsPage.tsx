@@ -3,6 +3,7 @@ import { AvatarSquare } from "../../components/ui/Avatar"
 import { useAuthStore } from "../../store/auth"
 import { TwoFactorAuthCard } from "./TwoFactorAuthCard"
 import { LicenseCard } from "./LicenseCard"
+import { SubscriptionCard } from "./SubscriptionCard"
 
 function Field({ label, value }: { label: string; value: string }) {
   return (
@@ -56,6 +57,8 @@ export function SettingsPage() {
       </div>
 
       <TwoFactorAuthCard />
+
+      <SubscriptionCard />
 
       <LicenseCard />
 

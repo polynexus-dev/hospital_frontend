@@ -2,6 +2,7 @@ import { api } from "./client"
 import type {
   GenerateLicensePayload,
   OnboardTenantPayload,
+  LicenseUsageReport,
   OnPremiseLicense,
   Paginated,
   PermissionMatrix,
@@ -90,6 +91,17 @@ export function generateLicense(hospitalId: string, data: GenerateLicensePayload
 
 export function listLicenses(hospitalId: string) {
   return api.get<Paginated<OnPremiseLicense>>(`/saas-admin/licenses/?hospital=${hospitalId}`)
+}
+
+/** Every on-premise licence, renewals due first. */
+export function listAllLicenses(params: { status?: string; expiring_within?: string; search?: string } = {}) {
+  const clean = Object.fromEntries(Object.entries(params).filter(([, v]) => v)) as Record<string, string>
+  return api.get<Paginated<OnPremiseLicense>>(`/saas-admin/licenses/${qs(clean)}`)
+}
+
+/** A usage report file a hospital exported from Settings → License (its text contents). */
+export function uploadUsageReport(report: string) {
+  return api.post<LicenseUsageReport>("/saas-admin/licenses/usage-reports/", { report })
 }
 
 export function downloadLicense(id: number) {

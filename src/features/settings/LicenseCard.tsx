@@ -4,7 +4,9 @@ import { Card, Eyebrow } from "../../components/ui/Card"
 import { Pill } from "../../components/ui/Pill"
 import type { Tone } from "../../components/ui/tone"
 import { ApiError } from "../../api/client"
-import { getLicenseStatus, uploadLicense } from "../../api/licensing"
+import { downloadUsageReport, getLicenseStatus, uploadLicense } from "../../api/licensing"
+import { triggerBlobDownload } from "../../api/client"
+import { Button } from "../../components/ui/Button"
 import type { LicenseState } from "../../types/api"
 import { featureLabel } from "../saas/licenceFeatures"
 
@@ -100,6 +102,12 @@ export function LicenseCard() {
             <input ref={fileInput} type="file" accept=".lic" className="hidden" onChange={(e) => { take(e.target.files?.[0]); e.target.value = "" }} />
           </div>
           {uploadError && <p className="mt-2 text-[12px] text-rose-600">{uploadError}</p>}
+          <div className="mt-3.5 flex items-center justify-between gap-3">
+            <span className="text-[12px] text-ink-4">Usage report for renewal: user, bed and patient counts only, no patient details.</span>
+            <Button size="sm" variant="secondary" onClick={async () => triggerBlobDownload(await downloadUsageReport(), `usage-${data.license_id ?? "report"}-${new Date().toISOString().slice(0, 10)}.json`)}>
+              Download usage report
+            </Button>
+          </div>
           {done && <p className="mt-2 text-[12px] text-emerald-600 font-semibold">License installed.</p>}
         </>
       )}
