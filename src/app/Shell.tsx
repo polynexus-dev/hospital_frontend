@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react"
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom"
 import { IdleLock } from "./IdleLock"
 import { LicenseBanner } from "./LicenseBanner"
+import { useLicensedFeature } from "./useLicensedFeature"
 import { useTranslation } from "react-i18next"
 import { useQuery } from "@tanstack/react-query"
 import {
@@ -67,6 +68,7 @@ function NavRow({ item }: { item: (typeof allNav)[number] }) {
 }
 
 export function Shell() {
+  const aiAssistLicensed = useLicensedFeature("ai_assist")
   const location = useLocation()
   const navigate = useNavigate()
   const { t, i18n } = useTranslation()
@@ -793,7 +795,7 @@ export function Shell() {
         </div>
       )}
 
-      <AIChatbotWidget />
+      {aiAssistLicensed && <AIChatbotWidget />}
 
       {/* ISO 27001 Workstation Lock Screen Backdrop Overlay */}
       {isLocked && (

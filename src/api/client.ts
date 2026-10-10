@@ -26,6 +26,10 @@ export function getSubdomain(): string | null {
 export function getApiBaseUrl(): string {
   const envUrl = import.meta.env.VITE_API_BASE_URL
   if (envUrl && envUrl.startsWith("http")) return envUrl
+  // A path (production images build with "/api/v1"): the API is behind the
+  // same nginx as the page, whatever host and port that is — including
+  // localhost:8080 on an on-premise install.
+  if (envUrl && envUrl.startsWith("/") && typeof window !== "undefined") return `${window.location.origin}${envUrl}`
 
   if (typeof window !== "undefined") {
     const hostname = window.location.hostname

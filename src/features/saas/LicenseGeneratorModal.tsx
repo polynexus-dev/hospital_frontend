@@ -5,7 +5,7 @@ import { Pill } from "../../components/ui/Pill"
 import { ApiError, triggerBlobDownload } from "../../api/client"
 import { downloadLicense, generateLicense, listLicenses, revokeLicense } from "../../api/saas"
 import type { OnPremiseLicense, SaaSHospital } from "../../types/api"
-import { ModuleSuitePicker, knownModules } from "./TenantModulesModal"
+import { LICENCE_FEATURES } from "./licenceFeatures"
 
 const DAY = 24 * 60 * 60 * 1000
 const TIERS = ["starter", "pro", "enterprise"] as const
@@ -33,13 +33,15 @@ const labelClass = "block text-xs font-semibold text-slate-600 dark:text-slate-3
 export function LicenseGeneratorModal({ hospital, onClose }: { hospital: SaaSHospital; onClose: () => void }) {
   const queryClient = useQueryClient()
   const [fingerprint, setFingerprint] = useState("")
-  const [anyMachine, setAnyMachine] = useState(false)
+  const [binding, setBinding] = useState(true)
+  const [deploymentId, setDeploymentId] = useState("")
   const [expiresOn, setExpiresOn] = useState(isoDate(new Date(Date.now() + 365 * DAY)))
   const [graceDays, setGraceDays] = useState(14)
   const [tier, setTier] = useState<string>("enterprise")
   const [maxUsers, setMaxUsers] = useState(50)
   const [maxBeds, setMaxBeds] = useState(100)
-  const [modules, setModules] = useState<string[]>(knownModules(hospital.enabled_modules))
+  const [features, setFeatures] = useState<string[]>(["hms_core"])
+  const toggleFeature = (key: string) => setFeatures((f) => (f.includes(key) ? f.filter((k) => k !== key) : [...f, key]))
   const [issued, setIssued] = useState<OnPremiseLicense | null>(null)
 
   const history = useQuery({ queryKey: ["saas-licenses", hospital.id], queryFn: () => listLicenses(hospital.id) })
@@ -53,8 +55,10 @@ export function LicenseGeneratorModal({ hospital, onClose }: { hospital: SaaSHos
       generateLicense(hospital.id, {
         duration_days: durationDays,
         grace_period_days: graceDays,
-        modules,
-        machine_fingerprint: anyMachine ? "*" : fingerprint.trim(),
+        features,
+        deployment_id: deploymentId.trim() || null,
+        hardware_binding: binding,
+        machine_fingerprint: binding ? fingerprint.trim() : "",
         max_users: maxUsers,
         max_beds: maxBeds,
         tier,
@@ -67,7 +71,7 @@ export function LicenseGeneratorModal({ hospital, onClose }: { hospital: SaaSHos
   })
   const revoke = useMutation({ mutationFn: (lic: OnPremiseLicense) => revokeLicense(lic.id, "Revoked from SaaS console"), onSuccess: refresh })
 
-  const canGenerate = modules.length > 0 && durationDays >= 1 && (anyMachine || fingerprint.trim().length === 64)
+  const canGenerate = features.length > 0 && durationDays >= 1 && (!binding || fingerprint.trim().length === 64 || fingerprint.trim() === "*")
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
@@ -91,19 +95,30 @@ export function LicenseGeneratorModal({ hospital, onClose }: { hospital: SaaSHos
         <div className="flex-1 overflow-y-auto py-4 pr-1 space-y-5">
           <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
-              <label className={labelClass} htmlFor="lic-fp">Machine fingerprint</label>
+              <label className={labelClass} htmlFor="lic-dep">Deployment ID</label>
               <input
-                id="lic-fp"
-                value={anyMachine ? "*" : fingerprint}
-                disabled={anyMachine}
-                onChange={(e) => setFingerprint(e.target.value)}
-                placeholder="64-character hash from: python manage.py get_machine_fingerprint"
+                id="lic-dep"
+                value={deploymentId}
+                onChange={(e) => setDeploymentId(e.target.value)}
+                placeholder="From the installer (install.sh / install.ps1). Leave blank to generate one."
                 className={`${inputClass} font-mono`}
               />
-              <label className="mt-1.5 flex items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
-                <input type="checkbox" checked={anyMachine} onChange={(e) => setAnyMachine(e.target.checked)} />
-                Any machine (cloud VMs that auto-scale) — not bound to one server
+            </div>
+            <div className="md:col-span-2">
+              <label className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">
+                <input type="checkbox" checked={binding} onChange={(e) => setBinding(e.target.checked)} />
+                Bind to one machine (hardware binding)
               </label>
+              {binding && (
+                <input
+                  id="lic-fp"
+                  aria-label="Machine fingerprint"
+                  value={fingerprint}
+                  onChange={(e) => setFingerprint(e.target.value)}
+                  placeholder="64-character fingerprint printed by the installer"
+                  className={`${inputClass} font-mono`}
+                />
+              )}
             </div>
             <div>
               <label className={labelClass} htmlFor="lic-exp">Expires on</label>
@@ -131,8 +146,15 @@ export function LicenseGeneratorModal({ hospital, onClose }: { hospital: SaaSHos
           </section>
 
           <section>
-            <div className="text-sm font-bold mb-2">Licensed modules</div>
-            <ModuleSuitePicker selected={modules} onChange={setModules} compact />
+            <div className="text-sm font-bold mb-2">Licensed features</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {LICENCE_FEATURES.map((f) => (
+                <label key={f.key} className={`flex items-center gap-2 rounded-lg border p-2.5 text-xs cursor-pointer ${features.includes(f.key) ? "border-teal-500 bg-teal-50/50 dark:bg-teal-950/20" : "border-slate-200 dark:border-slate-800"}`}>
+                  <input type="checkbox" checked={features.includes(f.key)} onChange={() => toggleFeature(f.key)} />
+                  {f.label}
+                </label>
+              ))}
+            </div>
           </section>
 
           <section>
@@ -149,7 +171,7 @@ export function LicenseGeneratorModal({ hospital, onClose }: { hospital: SaaSHos
                       <div className="font-mono font-semibold">{lic.license_id}</div>
                       <div className="text-slate-500">
                         until {new Date(lic.expires_at).toLocaleDateString()} · {lic.max_active_users || "∞"} users · {lic.max_beds || "∞"} beds ·{" "}
-                        {lic.machine_fingerprint === "*" ? "any machine" : `${lic.machine_fingerprint.slice(0, 12)}…`}
+                        {lic.machine_fingerprint === "*" || lic.machine_fingerprint === "-" ? "any machine" : `${lic.machine_fingerprint.slice(0, 12)}…`} · {lic.features?.length ?? 0} features
                       </div>
                     </div>
                     <div className="flex items-center gap-2">

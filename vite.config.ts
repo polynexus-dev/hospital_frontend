@@ -20,6 +20,19 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    rolldownOptions: {
+      output: {
+        // Third-party code in vendor-*.js, our code everywhere else: the
+        // production image obfuscates only our code (see Dockerfile) —
+        // obfuscating public libraries adds no protection and breaks some
+        // of them (i18next's self-referencing class).
+        codeSplitting: {
+          groups: [{ name: 'vendor', test: /node_modules/ }],
+        },
+      },
+    },
+  },
   preview: {
     port: 8002,
     host: true,

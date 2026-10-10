@@ -29,6 +29,18 @@ export const AVAILABLE_MODELS: AnatomyModelDef[] = [
   }
 ]
 
+/** Whether a built-in model file is actually installed. A missing file
+ *  doesn't 404: the web server answers with the app's index.html (SPA
+ *  fallback), so an HTML response means "not there" too. */
+export async function modelFileAvailable(url: string): Promise<boolean> {
+  try {
+    const res = await fetch(url, { method: "HEAD" })
+    return res.ok && !(res.headers.get("content-type") ?? "").includes("text/html")
+  } catch {
+    return false
+  }
+}
+
 /**
  * Filter to identify and sanitize genital / private anatomy parts
  * Hides and strips reproductive and genital organs while strictly preserving
@@ -494,6 +506,9 @@ export function AnatomyExplorerPage() {
   const [loadStatusMessage, setLoadStatusMessage] = useState<string>("Initiating 3D Model Stream...")
   const [loadBytesDetail, setLoadBytesDetail] = useState<string>("")
   const [loadError, setLoadError] = useState<string | null>(null)
+  // A built-in model whose file isn't part of this installation.
+  const [missingModel, setMissingModel] = useState<AnatomyModelDef | null>(null)
+  const verifiedModelUrls = useRef<Set<string>>(new Set())
 
   // 2D screen coordinate of active bone for leader line annotation
   const [boneScreenPos, setBoneScreenPos] = useState<{ x: number; y: number } | null>(null)
@@ -613,8 +628,25 @@ export function AnatomyExplorerPage() {
 
     setIsLoading(true)
     setLoadError(null)
+    setMissingModel(null)
     setLoadPercent(0)
     setLoadBytesDetail("")
+
+    // Built-in models are large files shipped separately from the code;
+    // check the file is really there before streaming it.
+    const preset = customFile ? undefined : AVAILABLE_MODELS.find((m) => m.id === modelId)
+    if (preset && !verifiedModelUrls.current.has(preset.url)) {
+      modelFileAvailable(preset.url).then((available) => {
+        if (available) {
+          verifiedModelUrls.current.add(preset.url)
+          loadModel(modelId)
+        } else {
+          setMissingModel(preset)
+          setIsLoading(false)
+        }
+      })
+      return
+    }
 
     // Terminate any active worker
     if (workerRef.current) {
@@ -1313,6 +1345,24 @@ export function AnatomyExplorerPage() {
                     · Finalizing Mesh
                   </span>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Built-in model file not installed */}
+          {missingModel && (
+            <div role="status" className="absolute inset-0 z-30 flex items-center justify-center p-6">
+              <div className="max-w-md rounded-card border border-border bg-surface p-6 text-center shadow-sm">
+                <div className="text-[15px] font-semibold text-ink">3D model not installed</div>
+                <p className="mt-2 text-[13px] text-ink-3">
+                  The <span className="font-semibold">{missingModel.name}</span> model isn't included in this installation,
+                  so it can't be shown. The body-part list and descriptions still work.
+                </p>
+                <p className="mt-3 text-[12px] text-ink-4">
+                  Ask your administrator or Polynexus support to add the model file
+                  (<span className="font-mono">{missingModel.url}</span>). You can also load a model from your computer
+                  with the file upload option.
+                </p>
               </div>
             </div>
           )}

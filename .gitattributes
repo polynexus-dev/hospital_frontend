@@ -1,0 +1,6 @@
+*.sh text eol=lf
+nginx/* text eol=lf
+Dockerfile* text eol=lf
+public/models/*.glb filter=lfs diff=lfs merge=lfs -text
+public/models/*.obj filter=lfs diff=lfs merge=lfs -text
+public/models/*.gltf filter=lfs diff=lfs merge=lfs -text

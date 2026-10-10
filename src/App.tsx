@@ -112,7 +112,9 @@ function App() {
           <Route path="/workflows" element={<Suspense fallback={<LoadingState />}><WorkflowsPage /></Suspense>} />
           <Route path="/facilities/beds" element={<Suspense fallback={<LoadingState />}><BedManagementPage /></Suspense>} />
           <Route path="/facilities" element={<Suspense fallback={<LoadingState />}><BedManagementPage /></Suspense>} />
-          <Route path="/anatomy" element={<Suspense fallback={<LoadingState />}><AnatomyExplorerPage /></Suspense>} />
+          <Route element={<RequirePermission permission="patients.access_clinical_detail" moduleKey="opd" />}>
+            <Route path="/anatomy" element={<Suspense fallback={<LoadingState />}><AnatomyExplorerPage /></Suspense>} />
+          </Route>
           <Route path="/settings" element={<Suspense fallback={<LoadingState />}><SettingsPage /></Suspense>} />
 
           <Route element={<RequirePermission permission="accounts.view_role" />}>

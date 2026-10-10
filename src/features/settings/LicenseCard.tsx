@@ -6,6 +6,7 @@ import type { Tone } from "../../components/ui/tone"
 import { ApiError } from "../../api/client"
 import { getLicenseStatus, uploadLicense } from "../../api/licensing"
 import type { LicenseState } from "../../types/api"
+import { featureLabel } from "../saas/licenceFeatures"
 
 const STATE: Record<LicenseState, { label: string; tone: Tone }> = {
   valid: { label: "Active", tone: "ok" },
@@ -14,6 +15,8 @@ const STATE: Record<LicenseState, { label: string; tone: Tone }> = {
   expired: { label: "Expired — read-only", tone: "bad" },
   tampered: { label: "Invalid", tone: "bad" },
   invalid_machine: { label: "Wrong server", tone: "bad" },
+  wrong_deployment: { label: "Wrong deployment", tone: "bad" },
+  not_yet_valid: { label: "Not started yet", tone: "warn" },
   missing: { label: "Not installed", tone: "bad" },
 }
 
@@ -73,7 +76,11 @@ export function LicenseCard() {
           <Row label="Valid until">{formatDate(data.expires_at)}{data.grace_ends_at && data.state !== "valid" ? ` (read-only after ${formatDate(data.grace_ends_at)})` : ""}</Row>
           <Row label="User limit">{data.max_active_users ? data.max_active_users : "Unlimited"}</Row>
           <Row label="Bed limit">{data.max_beds ? data.max_beds : "Unlimited"}</Row>
-          <Row label="Licensed modules">{data.enabled_modules?.length ? data.enabled_modules.join(", ") : "All"}</Row>
+          <Row label="Licensed features">
+            {data.features ? (data.features.length ? data.features.map(featureLabel).join(", ") : "None") : data.enabled_modules?.join(", ") || "All"}
+          </Row>
+          <Row label="Deployment ID"><span className="font-mono text-[11.5px]">{data.installed_deployment_id || "—"}</span></Row>
+          <Row label="Hardware binding">{data.hardware_binding === false ? "Not bound to a machine" : "Bound to this server"}</Row>
           <Row label="This server's fingerprint"><span className="font-mono text-[11.5px]">{data.machine_fingerprint}</span></Row>
 
           <div
@@ -89,7 +96,7 @@ export function LicenseCard() {
             }`}
           >
             <div className="font-semibold">{upload.isPending ? "Verifying…" : "Drop a new license.lic here, or click to choose"}</div>
-            <div className="text-ink-4 text-[12px] mt-1">Send the fingerprint above to support when renewing; the new license takes effect immediately.</div>
+            <div className="text-ink-4 text-[12px] mt-1">Send the deployment ID and fingerprint above to support when renewing; the new license takes effect immediately.</div>
             <input ref={fileInput} type="file" accept=".lic" className="hidden" onChange={(e) => { take(e.target.files?.[0]); e.target.value = "" }} />
           </div>
           {uploadError && <p className="mt-2 text-[12px] text-rose-600">{uploadError}</p>}

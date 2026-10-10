@@ -4,7 +4,7 @@ import { getLicenseStatus } from "../api/licensing"
 import { useAuthStore } from "../store/auth"
 import type { LicenseStatus } from "../types/api"
 
-const BLOCKING = new Set(["expired", "tampered", "invalid_machine", "missing"])
+const BLOCKING = new Set(["expired", "tampered", "invalid_machine", "wrong_deployment", "not_yet_valid", "missing"])
 
 function headline(s: LicenseStatus) {
   switch (s.state) {
