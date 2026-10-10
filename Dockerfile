@@ -14,6 +14,13 @@ COPY package*.json ./
 RUN npm ci
 COPY . .
 ENV VITE_API_BASE_URL=/api/v1
+# The 3D anatomy models are Git LFS files: without `git lfs pull` they're tiny
+# pointer files, and the bundle would ship a broken model. Refuse to build.
+RUN for f in public/models/*.glb public/models/*.gltf public/models/*.obj; do \
+      if [ -f "$f" ] && head -c 100 "$f" | grep -q "git-lfs.github.com"; then \
+        echo "$f is a Git LFS pointer, not the model. Run 'git lfs pull' in the Frontend repo, then build again." >&2; exit 1; \
+      fi; \
+    done
 RUN rm -f .env .env.* \
     && npx tsc -b \
     && npx vite build --sourcemap false \
