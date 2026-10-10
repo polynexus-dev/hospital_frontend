@@ -2,6 +2,7 @@ import { Card, Eyebrow } from "../../components/ui/Card"
 import { AvatarSquare } from "../../components/ui/Avatar"
 import { useAuthStore } from "../../store/auth"
 import { TwoFactorAuthCard } from "./TwoFactorAuthCard"
+import { LicenseCard } from "./LicenseCard"
 
 function Field({ label, value }: { label: string; value: string }) {
   return (
@@ -55,6 +56,8 @@ export function SettingsPage() {
       </div>
 
       <TwoFactorAuthCard />
+
+      <LicenseCard />
 
       {user.hospital_enabled_modules && user.hospital_enabled_modules.length > 0 && (
         <Card padded>

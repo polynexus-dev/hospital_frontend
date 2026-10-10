@@ -1,7 +1,10 @@
 import { api } from "./client"
 import type {
+  GenerateLicensePayload,
   OnboardTenantPayload,
+  OnPremiseLicense,
   Paginated,
+  PermissionMatrix,
   PlatformAnalytics,
   PublicTenantBranding,
   SaaSHospital,
@@ -70,6 +73,31 @@ export function onboardHospital(data: OnboardTenantPayload) {
 
 export function updateHospitalModules(id: string, enabledModules: string[]) {
   return api.post<SaaSHospital>(`/saas-admin/hospitals/${id}/modules/`, { enabled_modules: enabledModules })
+}
+
+export function getHospitalPermissions(id: string) {
+  return api.get<PermissionMatrix>(`/saas-admin/hospitals/${id}/permissions/`)
+}
+
+/** `null` lifts the ceiling: everything in the hospital's enabled modules. */
+export function setHospitalPermissions(id: string, permissions: string[] | null) {
+  return api.put<PermissionMatrix>(`/saas-admin/hospitals/${id}/permissions/`, { permissions })
+}
+
+export function generateLicense(hospitalId: string, data: GenerateLicensePayload) {
+  return api.post<OnPremiseLicense>(`/saas-admin/hospitals/${hospitalId}/generate-license/`, { ...data, response: "json" })
+}
+
+export function listLicenses(hospitalId: string) {
+  return api.get<Paginated<OnPremiseLicense>>(`/saas-admin/licenses/?hospital=${hospitalId}`)
+}
+
+export function downloadLicense(id: number) {
+  return api.getBlob(`/saas-admin/licenses/${id}/download/`)
+}
+
+export function revokeLicense(id: number, reason: string) {
+  return api.post<OnPremiseLicense>(`/saas-admin/licenses/${id}/revoke/`, { reason })
 }
 
 export function toggleHospitalStatus(id: string) {

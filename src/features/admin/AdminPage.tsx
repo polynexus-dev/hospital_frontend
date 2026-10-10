@@ -5,15 +5,16 @@ import { StatTile } from "../../components/ui/StatTile"
 import { Button } from "../../components/ui/Button"
 import { NeutralTag, Pill, SuccessTag } from "../../components/ui/Pill"
 import { ErrorState, EmptyState, LoadingState } from "../../components/ui/QueryStates"
-import { listRoles, listUsers, updateUser } from "../../api/accounts"
+import { createRole, getRolePermissions, getUserPermissions, listRoles, listUsers, setRolePermissions, setUserPermissions, updateUser } from "../../api/accounts"
 import { listAuditLogs } from "../../api/core"
 import { integrationHealth } from "../../api/integrations"
-import { API_BASE_URL } from "../../api/client"
-import type { AuditLog, User } from "../../types/api"
+import { API_BASE_URL, ApiError } from "../../api/client"
+import type { AuditLog, Role, User } from "../../types/api"
 import type { Tone } from "../../components/ui/tone"
 import { EmergencyAccessTab } from "./EmergencyAccessTab"
 import { DataRightsTab } from "./DataRightsTab"
 import { GrievancesTab } from "./GrievancesTab"
+import { PermissionMatrixModal } from "./PermissionMatrixModal"
 
 type TabKey = "users" | "roles" | "export" | "audit" | "integrations" | "emergency_access" | "data_rights" | "grievances"
 
@@ -74,6 +75,18 @@ export function AdminPage() {
   const [selectedRole, setSelectedRole] = useState<string>("")
   const [selectedIsActive, setSelectedIsActive] = useState<boolean>(true)
   const [saveSuccessMsg, setSaveSuccessMsg] = useState<string | null>(null)
+  const [permRole, setPermRole] = useState<Role | null>(null)
+  const [permUser, setPermUser] = useState<User | null>(null)
+  const [newRole, setNewRole] = useState<{ name: string; description: string } | null>(null)
+
+  const createRoleMutation = useMutation({
+    mutationFn: (data: { name: string; description: string }) => createRole(data),
+    onSuccess: (role) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-roles"] })
+      setNewRole(null)
+      setPermRole(role) // straight on to choosing what it can do
+    },
+  })
 
   const { data: usersData, isLoading: isUsersLoading, isError: isUsersError } = useQuery({
     queryKey: ["admin-users"],
@@ -285,8 +298,8 @@ export function AdminPage() {
                 >
                   <option value="">No Role Assigned (Staff)</option>
                   {roles.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.name}
+                    <option key={r.id} value={r.id} disabled={r.assignable === false && String(r.id) !== selectedRole}>
+                      {r.name}{r.assignable === false ? " — beyond your access" : ""}
                     </option>
                   ))}
                 </select>
@@ -339,6 +352,13 @@ export function AdminPage() {
                 )}
               </div>
 
+              <div className="flex items-center justify-between gap-3 text-xs text-ink-4">
+                <span>Need one more permission for just this person? Grant it on top of their role.</span>
+                <Button size="sm" variant="secondary" onClick={() => { setPermUser(editingUser); setEditingUser(null) }}>
+                  Extra permissions
+                </Button>
+              </div>
+
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-ink-3 mb-1.5">
                   Account Status
@@ -376,7 +396,7 @@ export function AdminPage() {
 
               {updateUserMutation.isError && (
                 <div className="p-2.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-300 text-xs font-semibold">
-                  Failed to update user. Please check permissions and try again.
+                  {(updateUserMutation.error instanceof ApiError && (updateUserMutation.error.body as { detail?: string } | null)?.detail) || "Failed to update user. Please check permissions and try again."}
                 </div>
               )}
 
@@ -409,14 +429,59 @@ export function AdminPage() {
         </div>
       )}
 
+      {permRole && (
+        <PermissionMatrixModal
+          title="Permissions"
+          subtitle={`Role: ${permRole.name} — everyone with this role gets these.`}
+          queryKey={["role-permissions", permRole.id]}
+          load={() => getRolePermissions(permRole.id)}
+          save={(codes) => setRolePermissions(permRole.id, codes ?? [])}
+          onSaved={() => queryClient.invalidateQueries({ queryKey: ["admin-roles"] })}
+          onClose={() => setPermRole(null)}
+        />
+      )}
+      {permUser && (
+        <PermissionMatrixModal
+          title="Extra permissions"
+          subtitle={`${permUser.email} — on top of their role${permUser.role_name ? ` (${permUser.role_name})` : ""}. Role permissions show ticked and locked.`}
+          queryKey={["user-permissions", permUser.id]}
+          load={() => getUserPermissions(permUser.id)}
+          save={(codes) => setUserPermissions(permUser.id, codes ?? [])}
+          onSaved={() => queryClient.invalidateQueries({ queryKey: ["admin-users"] })}
+          onClose={() => setPermUser(null)}
+        />
+      )}
+
       {/* Roles & RBAC */}
       {activeTab === "roles" && (
         <Card>
           <CardHeader>
             <div className="text-[13px] font-semibold">Hospital roles</div>
-            <div className="text-[12px] text-ink-4">backed by Django groups</div>
+            <Button size="sm" variant="primary" onClick={() => setNewRole({ name: "", description: "" })}>+ New role</Button>
           </CardHeader>
           <div className="p-3.5">
+            {newRole && (
+              <form
+                className="mb-3 p-3 rounded-lg border border-border bg-page/50 flex flex-wrap items-end gap-2"
+                onSubmit={(e) => { e.preventDefault(); createRoleMutation.mutate(newRole) }}
+              >
+                <label className="flex-1 min-w-48 text-xs font-semibold text-ink-3">
+                  Role name
+                  <input required autoFocus value={newRole.name} onChange={(e) => setNewRole({ ...newRole, name: e.target.value })}
+                    className="mt-1 w-full rounded-lg border border-border bg-surface px-2.5 py-1.5 text-sm font-normal text-ink" />
+                </label>
+                <label className="flex-[2] min-w-48 text-xs font-semibold text-ink-3">
+                  Description
+                  <input value={newRole.description} onChange={(e) => setNewRole({ ...newRole, description: e.target.value })}
+                    className="mt-1 w-full rounded-lg border border-border bg-surface px-2.5 py-1.5 text-sm font-normal text-ink" />
+                </label>
+                <Button size="sm" variant="secondary" type="button" onClick={() => setNewRole(null)}>Cancel</Button>
+                <Button size="sm" variant="primary" type="submit" disabled={createRoleMutation.isPending}>
+                  {createRoleMutation.isPending ? "Creating…" : "Create & set permissions"}
+                </Button>
+                {createRoleMutation.isError && <div className="w-full text-xs text-rose-600">Couldn't create the role — the name may already be in use.</div>}
+              </form>
+            )}
             {isRolesLoading ? (
               <LoadingState />
             ) : roles.length === 0 ? (
@@ -436,6 +501,7 @@ export function AdminPage() {
                         </div>
                       </div>
                       {r.description && <div className="text-[12px] text-ink-4 mt-1">{r.description}</div>}
+                      <Button size="sm" variant="secondary" className="mt-2" onClick={() => setPermRole(r)}>Edit permissions</Button>
                     </div>
 
                     {r.permissions && r.permissions.length > 0 && (

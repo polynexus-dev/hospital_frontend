@@ -1,0 +1,29 @@
+# On-premise frontend image: minified + obfuscated production build served
+# by nginx, which also proxies /api to the backend container.
+#
+#   docker build -f Dockerfile.frontend -t <registry>/hms-frontend:<version> .
+
+FROM node:20-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+
+# Same-origin API through the nginx proxy below. No .env from the build
+# context: secrets and per-environment SIP settings don't belong in an image.
+ENV VITE_API_BASE_URL=/api/v1
+RUN rm -f .env .env.* \
+    && npx tsc -b \
+    && npx vite build --sourcemap false \
+    && npx --yes javascript-obfuscator@4 dist/assets --output dist/assets \
+        --compact true \
+        --identifier-names-generator hexadecimal \
+        --string-array true --string-array-encoding base64 --string-array-threshold 0.75 \
+        --rename-globals false --self-defending false --control-flow-flattening false \
+        --source-map false \
+    && ! find dist -name "*.map" | grep -q .
+
+FROM nginx:1.27-alpine
+COPY nginx.onprem.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/dist /usr/share/nginx/html
+EXPOSE 80

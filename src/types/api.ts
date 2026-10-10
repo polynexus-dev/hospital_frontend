@@ -50,8 +50,38 @@ export interface Role {
   department: number | null
   name: string
   description: string
+  template?: string
   created_at: string
   permissions?: string[]
+  /** Whether the requesting user may give this role to someone. */
+  assignable?: boolean
+}
+
+export interface PermissionCatalogModel {
+  model: string
+  label: string
+  perms: Partial<Record<"add" | "view" | "change" | "delete", string>>
+  other: { code: string; label: string }[]
+}
+
+export interface PermissionCatalogApp {
+  app: string
+  label: string
+  module: string | null
+  models: PermissionCatalogModel[]
+}
+
+/** GET/PUT …/permissions/ — see apps.accounts.permission_catalog. */
+export interface PermissionMatrix {
+  catalog: PermissionCatalogApp[]
+  selected: string[]
+  /** Role / user editors: what the caller may change. */
+  grantable?: string[]
+  /** User editor: permissions from the user's role (read-only there). */
+  inherited?: string[]
+  locked_reason?: string
+  /** SaaS ceiling editor: false = no limit beyond enabled modules. */
+  restricted?: boolean
 }
 
 export interface Patient {
@@ -1178,4 +1208,56 @@ export interface PlatformAnalytics {
   total_revenue: number
   total_patients: number
   module_adoption_percent: Record<string, number>
+}
+
+export type LicenseState = "valid" | "expiring_soon" | "grace_period" | "expired" | "tampered" | "invalid_machine" | "missing"
+
+/** GET /licensing/status/ — details only for hospital admins. */
+export interface LicenseStatus {
+  mode: "saas" | "on_premise"
+  state?: LicenseState
+  message?: string
+  expires_at?: string | null
+  grace_ends_at?: string | null
+  days_left?: number | null
+  read_only?: boolean
+  support?: { email: string; phone: string }
+  license_id?: string | null
+  hospital_name?: string | null
+  tier?: string | null
+  issued_at?: string | null
+  enabled_modules?: string[] | null
+  max_active_users?: number | null
+  max_beds?: number | null
+  licensed_fingerprint?: string | null
+  machine_fingerprint?: string
+}
+
+export interface OnPremiseLicense {
+  id: number
+  hospital: string
+  hospital_name: string
+  license_id: string
+  tier: string
+  issued_at: string
+  expires_at: string
+  grace_period_days: number
+  enabled_modules: string[]
+  max_active_users: number
+  max_beds: number
+  machine_fingerprint: string
+  issued_by_email: string | null
+  revoked_at: string | null
+  revoke_reason: string
+  status: "active" | "expired" | "revoked"
+}
+
+export interface GenerateLicensePayload {
+  duration_days: number
+  grace_period_days: number
+  modules: string[]
+  machine_fingerprint: string
+  max_users: number
+  max_beds: number
+  tier?: string
 }

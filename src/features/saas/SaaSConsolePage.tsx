@@ -11,6 +11,7 @@ import { switchHospital } from "../../api/auth"
 import { useAuthStore } from "../../store/auth"
 import {
   downloadInvoicePdf,
+  getHospitalPermissions,
   listHospitals,
   listInvoices,
   listSaaSTickets,
@@ -20,12 +21,15 @@ import {
   onboardHospital,
   platformAnalytics,
   resolveTicket,
+  setHospitalPermissions,
   updateHospitalModules,
   updateSubscription,
 } from "../../api/saas"
 import type { OnboardTenantPayload, SaaSHospital, SaaSSupportTicket, TenantInvoice, TenantSubscription } from "../../types/api"
 import type { Tone } from "../../components/ui/tone"
 import { TenantModulesModal, SYSTEM_MODULES } from "./TenantModulesModal"
+import { PermissionMatrixModal } from "../admin/PermissionMatrixModal"
+import { LicenseGeneratorModal } from "./LicenseGeneratorModal"
 import { TenantOnboardModal } from "./TenantOnboardModal"
 
 
@@ -190,11 +194,15 @@ function SubscriptionRow({
   hospital,
   onInspect,
   onConfigureModules,
+  onConfigurePermissions,
+  onIssueLicense,
 }: {
   subscription: TenantSubscription
   hospital?: SaaSHospital
   onInspect?: (hospitalId: string) => void
   onConfigureModules?: (hospital: SaaSHospital) => void
+  onConfigurePermissions?: (hospital: SaaSHospital) => void
+  onIssueLicense?: (hospital: SaaSHospital) => void
 }) {
   const queryClient = useQueryClient()
 
@@ -235,6 +243,21 @@ function SubscriptionRow({
             title="Configure active clinical and operational modules"
           >
             ⚙️ Modules
+          </Button>
+        )}
+        {hospital && onConfigurePermissions && (
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => onConfigurePermissions(hospital)}
+            title="Limit which features this hospital's admin can use and grant to staff"
+          >
+            🔐 Permissions
+          </Button>
+        )}
+        {hospital && onIssueLicense && (
+          <Button size="sm" variant="secondary" onClick={() => onIssueLicense(hospital)} title="Issue a signed license file for an on-premise installation">
+            📜 License
           </Button>
         )}
         {onInspect && (
@@ -318,6 +341,8 @@ export function SaaSConsolePage() {
   const queryClient = useQueryClient()
   const [isOnboardModalOpen, setIsOnboardModalOpen] = useState(false)
   const [modulesHospital, setModulesHospital] = useState<SaaSHospital | null>(null)
+  const [permissionsHospital, setPermissionsHospital] = useState<SaaSHospital | null>(null)
+  const [licenseHospital, setLicenseHospital] = useState<SaaSHospital | null>(null)
 
   const analytics = useQuery({
     queryKey: ["saas-analytics"],
@@ -1028,6 +1053,8 @@ export function SaaSConsolePage() {
                   hospital={matchedHosp}
                   onInspect={handleInspect}
                   onConfigureModules={(h) => setModulesHospital(h)}
+                  onConfigurePermissions={(h) => setPermissionsHospital(h)}
+                  onIssueLicense={(h) => setLicenseHospital(h)}
                 />
               )
             })}
@@ -1149,6 +1176,18 @@ export function SaaSConsolePage() {
         />
       )}
 
+      {licenseHospital && <LicenseGeneratorModal hospital={licenseHospital} onClose={() => setLicenseHospital(null)} />}
+      {permissionsHospital && (
+        <PermissionMatrixModal
+          mode="ceiling"
+          title="Hospital permissions"
+          subtitle={`${permissionsHospital.name} — what its admin may use and hand out to staff, within its enabled modules.`}
+          queryKey={["saas-hospital-permissions", permissionsHospital.id]}
+          load={() => getHospitalPermissions(permissionsHospital.id)}
+          save={(codes) => setHospitalPermissions(permissionsHospital.id, codes)}
+          onClose={() => setPermissionsHospital(null)}
+        />
+      )}
       {modulesHospital && (
         <TenantModulesModal
           hospital={modulesHospital}
