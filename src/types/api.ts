@@ -1210,7 +1210,7 @@ export interface PlatformAnalytics {
   module_adoption_percent: Record<string, number>
 }
 
-export type LicenseState = "valid" | "expiring_soon" | "grace_period" | "expired" | "tampered" | "invalid_machine" | "missing"
+export type LicenseState = "valid" | "expiring_soon" | "grace_period" | "expired" | "tampered" | "invalid_machine" | "wrong_deployment" | "not_yet_valid" | "missing"
 
 /** GET /licensing/status/ — details only for hospital admins. */
 export interface LicenseStatus {
@@ -1224,8 +1224,13 @@ export interface LicenseStatus {
   support?: { email: string; phone: string }
   license_id?: string | null
   hospital_name?: string | null
+  deployment_id?: string | null
+  installed_deployment_id?: string
   tier?: string | null
   issued_at?: string | null
+  starts_at?: string | null
+  features?: string[] | null
+  hardware_binding?: boolean
   enabled_modules?: string[] | null
   max_active_users?: number | null
   max_beds?: number | null
@@ -1242,6 +1247,8 @@ export interface OnPremiseLicense {
   issued_at: string
   expires_at: string
   grace_period_days: number
+  features: string[]
+  deployment_id: string
   enabled_modules: string[]
   max_active_users: number
   max_beds: number
@@ -1255,7 +1262,9 @@ export interface OnPremiseLicense {
 export interface GenerateLicensePayload {
   duration_days: number
   grace_period_days: number
-  modules: string[]
+  features: string[]
+  deployment_id?: string | null
+  hardware_binding: boolean
   machine_fingerprint: string
   max_users: number
   max_beds: number
