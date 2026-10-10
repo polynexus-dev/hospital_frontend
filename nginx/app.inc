@@ -11,6 +11,12 @@ add_header Referrer-Policy strict-origin-when-cross-origin always;
 
 location = /healthz { access_log off; return 200 "ok\n"; }
 
+# Let's Encrypt domain checks (deploy/configure-domain).
+location ^~ /.well-known/acme-challenge/ {
+    root /var/www/acme;
+    default_type text/plain;
+}
+
 location /api/ {
     proxy_pass http://web:8000;
     proxy_set_header Host $host;
