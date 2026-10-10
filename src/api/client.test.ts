@@ -132,3 +132,19 @@ describe("api client", () => {
     expect(options.body).toBe(JSON.stringify({ first_name: "Asha", mobile: "9800000000" }))
   })
 })
+
+describe("getApiBaseUrl", () => {
+  afterEach(() => vi.unstubAllEnvs())
+
+  it("uses a full URL as given (development)", async () => {
+    vi.stubEnv("VITE_API_BASE_URL", "http://192.168.1.10:8000/api/v1")
+    const { getApiBaseUrl } = await import("./client")
+    expect(getApiBaseUrl()).toBe("http://192.168.1.10:8000/api/v1")
+  })
+
+  it("resolves a path against the page's own origin, even on localhost (on-premise behind nginx)", async () => {
+    vi.stubEnv("VITE_API_BASE_URL", "/api/v1")
+    const { getApiBaseUrl } = await import("./client")
+    expect(getApiBaseUrl()).toBe(`${window.location.origin}/api/v1`)
+  })
+})

@@ -1,5 +1,6 @@
-# Production frontend: Vite build (minified, no source maps, obfuscated by
-# default) served by nginx, which is also the deployment's reverse proxy
+# Production frontend: Vite build (minified, no source maps; our code is
+# obfuscated by default, third-party libraries in vendor-*.js are left as is
+# because obfuscating them protects nothing and breaks some) served by nginx, which is also the deployment's reverse proxy
 # (/api -> web:8000). TLS turns on when certificates are mounted at
 # /etc/nginx/certs (see nginx/select-config.sh).
 #
@@ -16,8 +17,9 @@ ENV VITE_API_BASE_URL=/api/v1
 RUN rm -f .env .env.* \
     && npx tsc -b \
     && npx vite build --sourcemap false \
+    && ls dist/assets/vendor-*.js >/dev/null \
     && if [ "$OBFUSCATE" = "1" ]; then \
-         npx --yes javascript-obfuscator@4 dist/assets --output dist/assets \
+         npx --yes javascript-obfuscator@4 dist/assets --output dist/assets --exclude "**/vendor-*.js" \
            --compact true --identifier-names-generator hexadecimal \
            --string-array true --string-array-encoding base64 --string-array-threshold 0.75 \
            --rename-globals false --self-defending false --control-flow-flattening false --source-map false; \
