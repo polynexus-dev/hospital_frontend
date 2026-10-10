@@ -39,6 +39,10 @@ export interface User {
   is_staff: boolean
   is_superuser: boolean
   is_saas_admin: boolean
+  /** Polynexus staff code (e.g. PNX-0007), signed into every licence they issue. */
+  staff_code?: string | null
+  /** "approver" = SaaS Owner (signs licences), "issuer" = may request them. */
+  licence_role?: "approver" | "issuer" | null
   is_2fa_enabled: boolean
   requires_mfa: boolean
   date_joined: string
@@ -1210,7 +1214,7 @@ export interface PlatformAnalytics {
   module_adoption_percent: Record<string, number>
 }
 
-export type LicenseState = "valid" | "expiring_soon" | "grace_period" | "expired" | "tampered" | "invalid_machine" | "wrong_deployment" | "not_yet_valid" | "missing"
+export type LicenseState = "valid" | "expiring_soon" | "grace_period" | "expired" | "tampered" | "invalid_machine" | "wrong_deployment" | "not_yet_valid" | "missing" | "revoked"
 
 /** GET /licensing/status/ — details only for hospital admins. */
 export interface LicenseStatus {
@@ -1236,6 +1240,9 @@ export interface LicenseStatus {
   max_beds?: number | null
   licensed_fingerprint?: string | null
   machine_fingerprint?: string
+  /** Staff codes signed into the licence: who requested it and the Owner who approved it. */
+  issued_by?: string | null
+  approved_by?: string | null
 }
 
 export interface OnPremiseLicense {
@@ -1254,6 +1261,10 @@ export interface OnPremiseLicense {
   max_beds: number
   machine_fingerprint: string
   issued_by_email: string | null
+  issued_by_code: string | null
+  approved_by_code: string | null
+  /** Whether a paid invoice covers the period this licence was issued for. */
+  paid: boolean
   revoked_at: string | null
   revoke_reason: string
   status: "active" | "expired" | "revoked"
@@ -1276,6 +1287,35 @@ export interface LicenseUsageReport {
   created_at: string
 }
 
+export interface LicenseRequest {
+  id: number
+  hospital: string
+  hospital_name: string
+  params: Partial<GenerateLicensePayload> & { duration_days: number; features: string[] }
+  status: "pending" | "approved" | "rejected" | "cancelled"
+  requested_by_code: string | null
+  requested_by_email: string
+  decided_by_code: string | null
+  decided_at: string | null
+  decision_note: string
+  license: number | null
+  license_id: string | null
+  created_at: string
+}
+
+/** Polynexus staff, as SaaS Owners manage them for licensing. */
+export interface SaaSStaff {
+  id: number
+  email: string
+  name: string
+  staff_code: string | null
+  saas_role: string
+  saas_role_label: string
+  can_issue_licenses: boolean
+  is_blocked: boolean
+  is_2fa_enabled: boolean
+}
+
 export interface GenerateLicensePayload {
   duration_days: number
   grace_period_days: number
@@ -1286,6 +1326,8 @@ export interface GenerateLicensePayload {
   max_users: number
   max_beds: number
   tier?: string
+  /** A current 6-digit code from the issuer's authenticator app. */
+  otp: string
 }
 
 /** GET /subscription/ — the requesting hospital's own plan (SaaS mode). */

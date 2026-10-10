@@ -42,7 +42,9 @@ export function LicenseGeneratorModal({ hospital, onClose }: { hospital: SaaSHos
   const [maxBeds, setMaxBeds] = useState(100)
   const [features, setFeatures] = useState<string[]>(["hms_core"])
   const toggleFeature = (key: string) => setFeatures((f) => (f.includes(key) ? f.filter((k) => k !== key) : [...f, key]))
+  const [otp, setOtp] = useState("")
   const [issued, setIssued] = useState<OnPremiseLicense | null>(null)
+  const [pending, setPending] = useState(false)
 
   const history = useQuery({ queryKey: ["saas-licenses", hospital.id], queryFn: () => listLicenses(hospital.id) })
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["saas-licenses", hospital.id] })
@@ -62,16 +64,26 @@ export function LicenseGeneratorModal({ hospital, onClose }: { hospital: SaaSHos
         max_users: maxUsers,
         max_beds: maxBeds,
         tier,
+        otp: otp.trim(),
       }),
-    onSuccess: async (lic) => {
-      setIssued(lic)
+    onSuccess: async (result) => {
+      setOtp("")
+      if ("request" in result) {
+        // Not an Owner: nothing is signed until a SaaS Owner approves it.
+        setIssued(null)
+        setPending(true)
+        return
+      }
+      setPending(false)
+      setIssued(result)
       refresh()
-      await download(lic)
+      await download(result)
     },
   })
   const revoke = useMutation({ mutationFn: (lic: OnPremiseLicense) => revokeLicense(lic.id, "Revoked from SaaS console"), onSuccess: refresh })
 
-  const canGenerate = features.length > 0 && durationDays >= 1 && (!binding || fingerprint.trim().length === 64 || fingerprint.trim() === "*")
+  const canGenerate = features.length > 0 && durationDays >= 1 && /^\d{6}$/.test(otp.trim())
+    && (!binding || fingerprint.trim().length === 64 || fingerprint.trim() === "*")
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
@@ -170,6 +182,7 @@ export function LicenseGeneratorModal({ hospital, onClose }: { hospital: SaaSHos
                     <div className="min-w-0">
                       <div className="font-mono font-semibold">{lic.license_id}</div>
                       <div className="text-slate-500">
+                        {lic.issued_by_code && <>by {lic.issued_by_code}{lic.approved_by_code && lic.approved_by_code !== lic.issued_by_code ? `, approved ${lic.approved_by_code}` : ""} · </>}
                         until {new Date(lic.expires_at).toLocaleDateString()} · {lic.max_active_users || "∞"} users · {lic.max_beds || "∞"} beds ·{" "}
                         {lic.machine_fingerprint === "*" || lic.machine_fingerprint === "-" ? "any machine" : `${lic.machine_fingerprint.slice(0, 12)}…`} · {lic.features?.length ?? 0} features
                       </div>
@@ -201,12 +214,24 @@ export function LicenseGeneratorModal({ hospital, onClose }: { hospital: SaaSHos
           <span className="text-xs">
             {generate.isError ? <span className="text-rose-600">{errorText(generate.error)}</span>
               : issued ? <span className="text-emerald-600 font-semibold">{issued.license_id} issued and downloaded.</span>
+              : pending ? <span className="text-amber-600 font-semibold">Sent to a SaaS Owner for approval — track it under On-Premise Licences.</span>
               : <span className="text-slate-500">The hospital uploads the file in Settings → License, or places it at ./license/hospital.lic.</span>}
           </span>
           <div className="flex items-center gap-2">
+            <input
+              aria-label="Authenticator code"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={6}
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+              placeholder="2FA code"
+              title="A current 6-digit code from your authenticator app — required for every licence"
+              className={`${inputClass} w-28 font-mono`}
+            />
             <Button variant="secondary" onClick={onClose}>Close</Button>
             <Button variant="primary" disabled={!canGenerate || generate.isPending} onClick={() => generate.mutate()}>
-              {generate.isPending ? "Signing…" : "Generate & Download License"}
+              {generate.isPending ? "Signing…" : "Request / Generate License"}
             </Button>
           </div>
         </div>

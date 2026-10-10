@@ -2,6 +2,7 @@ import { api } from "./client"
 import type {
   GenerateLicensePayload,
   OnboardTenantPayload,
+  LicenseRequest,
   LicenseUsageReport,
   OnPremiseLicense,
   Paginated,
@@ -9,6 +10,7 @@ import type {
   PlatformAnalytics,
   PublicTenantBranding,
   SaaSHospital,
+  SaaSStaff,
   SaaSSupportTicket,
   TenantInvoice,
   TenantSubscription,
@@ -85,8 +87,51 @@ export function setHospitalPermissions(id: string, permissions: string[] | null)
   return api.put<PermissionMatrix>(`/saas-admin/hospitals/${id}/permissions/`, { permissions })
 }
 
+/** A SaaS Owner's request is signed at once (the licence comes back); anyone
+ *  else's waits for an Owner's approval (`{ detail, request }`, HTTP 202). */
 export function generateLicense(hospitalId: string, data: GenerateLicensePayload) {
-  return api.post<OnPremiseLicense>(`/saas-admin/hospitals/${hospitalId}/generate-license/`, { ...data, response: "json" })
+  return api.post<OnPremiseLicense | { detail: string; request: LicenseRequest }>(
+    `/saas-admin/hospitals/${hospitalId}/generate-license/`, { ...data, response: "json" },
+  )
+}
+
+export function listLicenseRequests(status = "") {
+  return api.get<Paginated<LicenseRequest>>(`/saas-admin/license-requests/${qs(status ? { status } : {})}`)
+}
+
+/** SaaS Owners only; needs the Owner's current 2FA code. */
+export function approveLicenseRequest(id: number, otp: string) {
+  return api.post<{ request: LicenseRequest; license: OnPremiseLicense }>(`/saas-admin/license-requests/${id}/approve/`, { otp })
+}
+
+export function rejectLicenseRequest(id: number, note: string) {
+  return api.post<LicenseRequest>(`/saas-admin/license-requests/${id}/reject/`, { note })
+}
+
+export function cancelLicenseRequest(id: number) {
+  return api.post<LicenseRequest>(`/saas-admin/license-requests/${id}/cancel/`)
+}
+
+/** Signed list of revoked licence IDs — save as Backend/apps/licensing/revocations.lic before `make bundle`. */
+export function downloadRevocationList() {
+  return api.getBlob("/saas-admin/licenses/revocation-list/")
+}
+
+// SaaS Owners only: who may issue licences, and blocking staff who leave.
+export function listSaaSStaff() {
+  return api.get<Paginated<SaaSStaff>>("/saas-admin/staff/")
+}
+
+export function setLicenceRight(id: number, grant: boolean, otp: string) {
+  return api.post<SaaSStaff>(`/saas-admin/staff/${id}/licence-right/`, { grant, otp })
+}
+
+export function blockSaaSStaff(id: number, reason: string, otp: string) {
+  return api.post<SaaSStaff>(`/saas-admin/staff/${id}/block/`, { reason, otp })
+}
+
+export function unblockSaaSStaff(id: number) {
+  return api.post<SaaSStaff>(`/saas-admin/staff/${id}/unblock/`)
 }
 
 export function listLicenses(hospitalId: string) {
@@ -94,7 +139,7 @@ export function listLicenses(hospitalId: string) {
 }
 
 /** Every on-premise licence, renewals due first. */
-export function listAllLicenses(params: { status?: string; expiring_within?: string; search?: string } = {}) {
+export function listAllLicenses(params: { status?: string; expiring_within?: string; search?: string; issued_by?: string } = {}) {
   const clean = Object.fromEntries(Object.entries(params).filter(([, v]) => v)) as Record<string, string>
   return api.get<Paginated<OnPremiseLicense>>(`/saas-admin/licenses/${qs(clean)}`)
 }

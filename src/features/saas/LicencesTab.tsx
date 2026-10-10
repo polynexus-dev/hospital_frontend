@@ -6,8 +6,10 @@ import { Pill } from "../../components/ui/Pill"
 import { EmptyState, ErrorState, LoadingState } from "../../components/ui/QueryStates"
 import type { Tone } from "../../components/ui/tone"
 import { ApiError, triggerBlobDownload } from "../../api/client"
-import { downloadLicense, listAllLicenses, revokeLicense, uploadUsageReport } from "../../api/saas"
+import { downloadLicense, downloadRevocationList, listAllLicenses, revokeLicense, uploadUsageReport } from "../../api/saas"
+import { useAuthStore } from "../../store/auth"
 import type { OnPremiseLicense } from "../../types/api"
+import { LicenceRequestsPanel, LicenceTeamPanel } from "./LicenceControls"
 
 const STATUS_FILTERS = [
   { key: "", label: "All" },
@@ -31,9 +33,21 @@ function expiryText(lic: OnPremiseLicense) {
 
 const date = (iso: string) => new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
 
-/** SaaS console → Licences: every on-premise licence, renewals due first,
- *  with real usage from the reports hospitals send in. */
+/** SaaS console → Licences: requests awaiting approval, every on-premise
+ *  licence (renewals due first, with who issued it and real usage from the
+ *  reports hospitals send in), and — for SaaS Owners — the licence team. */
 export function LicencesTab() {
+  const licenceRole = useAuthStore((s) => s.user?.licence_role)
+  return (
+    <div className="space-y-4">
+      {licenceRole && <LicenceRequestsPanel />}
+      <LicenceRegister canManage={!!licenceRole} isOwner={licenceRole === "approver"} />
+      {licenceRole === "approver" && <LicenceTeamPanel />}
+    </div>
+  )
+}
+
+function LicenceRegister({ canManage, isOwner }: { canManage: boolean; isOwner: boolean }) {
   const queryClient = useQueryClient()
   const [status, setStatus] = useState("")
   const [expiringSoon, setExpiringSoon] = useState(false)
@@ -69,9 +83,17 @@ export function LicencesTab() {
           <div className="text-[13px] font-semibold">On-premise licences</div>
           <div className="text-[12px] text-ink-4">Renewals due first. Usage comes from the reports hospitals send (Settings → License → Download usage report).</div>
         </div>
-        <Button size="sm" variant="primary" onClick={() => fileInput.current?.click()} disabled={upload.isPending}>
-          {upload.isPending ? "Reading…" : "Upload usage report"}
-        </Button>
+        {canManage && (
+          <div className="flex gap-1.5">
+            <Button size="sm" variant="secondary" title="Save as Backend/apps/licensing/revocations.lic before building a release"
+              onClick={async () => triggerBlobDownload(await downloadRevocationList(), "revocations.lic")}>
+              Revocation list
+            </Button>
+            <Button size="sm" variant="primary" onClick={() => fileInput.current?.click()} disabled={upload.isPending}>
+              {upload.isPending ? "Reading…" : "Upload usage report"}
+            </Button>
+          </div>
+        )}
         <input ref={fileInput} type="file" accept=".json" className="hidden"
           onChange={(e) => { const f = e.target.files?.[0]; if (f) { setUploadMessage(null); upload.mutate(f) } e.target.value = "" }} />
       </CardHeader>
@@ -82,7 +104,7 @@ export function LicencesTab() {
         ))}
         <Button size="sm" variant={expiringSoon ? "primary" : "secondary"} onClick={() => setExpiringSoon((v) => !v)}>Expiring in 60 days</Button>
         <input
-          type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search hospital or licence ID"
+          type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search hospital, licence ID or staff code"
           className="ml-auto min-w-56 rounded-control border border-border bg-page px-3 py-1.5 text-[13px]"
         />
       </div>
@@ -101,6 +123,7 @@ export function LicencesTab() {
               <tr className="text-left text-ink-4 border-b border-border">
                 <th className="py-2 pr-3 font-semibold">Hospital</th>
                 <th className="py-2 pr-3 font-semibold">Licence</th>
+                <th className="py-2 pr-3 font-semibold">Issued by</th>
                 <th className="py-2 pr-3 font-semibold">Expires</th>
                 <th className="py-2 pr-3 font-semibold">Users</th>
                 <th className="py-2 pr-3 font-semibold">Last usage report</th>
@@ -118,6 +141,13 @@ export function LicencesTab() {
                     <td className="py-2.5 pr-3">
                       <div className="font-mono text-[12px]">{lic.license_id}</div>
                       <div className="text-[11px] text-ink-4">{lic.features?.length ?? 0} features · {lic.tier || "—"}</div>
+                    </td>
+                    <td className="py-2.5 pr-3">
+                      <div className="font-mono text-[12px]">{lic.issued_by_code ?? "—"}</div>
+                      {lic.approved_by_code && lic.approved_by_code !== lic.issued_by_code && (
+                        <div className="text-[11px] text-ink-4">approved {lic.approved_by_code}</div>
+                      )}
+                      {!lic.paid && lic.status !== "revoked" && <Pill tone="warn">No paid invoice</Pill>}
                     </td>
                     <td className="py-2.5 pr-3">
                       <div>{date(lic.expires_at)}</div>
@@ -140,10 +170,12 @@ export function LicencesTab() {
                       {lic.status !== "revoked" && (
                         <div className="flex justify-end gap-1.5">
                           <Button size="sm" variant="secondary" onClick={async () => triggerBlobDownload(await downloadLicense(lic.id), `${lic.license_id}.lic`)}>Download</Button>
-                          <Button size="sm" variant="secondary" disabled={revoke.isPending}
-                            onClick={() => window.confirm(`Revoke ${lic.license_id}? Re-downloads stop; an offline server keeps it until it expires or is replaced.`) && revoke.mutate(lic)}>
-                            Revoke
-                          </Button>
+                          {isOwner && (
+                            <Button size="sm" variant="secondary" disabled={revoke.isPending}
+                              onClick={() => window.confirm(`Revoke ${lic.license_id}? Re-downloads stop now, and the server stops accepting it after its next upgrade (the revocation list ships in every release).`) && revoke.mutate(lic)}>
+                              Revoke
+                            </Button>
+                          )}
                         </div>
                       )}
                     </td>

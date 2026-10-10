@@ -20,6 +20,7 @@ const STATE: Record<LicenseState, { label: string; tone: Tone }> = {
   wrong_deployment: { label: "Wrong deployment", tone: "bad" },
   not_yet_valid: { label: "Not started yet", tone: "warn" },
   missing: { label: "Not installed", tone: "bad" },
+  revoked: { label: "Revoked", tone: "bad" },
 }
 
 function formatDate(iso?: string | null) {
@@ -75,6 +76,10 @@ export function LicenseCard() {
         <>
           <Row label="License ID">{data.license_id ?? "—"}</Row>
           <Row label="Issued to">{data.hospital_name ?? "—"}</Row>
+          <Row label="Issued by">
+            <span className="font-mono text-[12px]">{data.issued_by || "—"}</span>
+            {data.approved_by && data.approved_by !== data.issued_by && <span className="text-ink-4 font-normal"> (approved by <span className="font-mono">{data.approved_by}</span>)</span>}
+          </Row>
           <Row label="Valid until">{formatDate(data.expires_at)}{data.grace_ends_at && data.state !== "valid" ? ` (read-only after ${formatDate(data.grace_ends_at)})` : ""}</Row>
           <Row label="User limit">{data.max_active_users ? data.max_active_users : "Unlimited"}</Row>
           <Row label="Bed limit">{data.max_beds ? data.max_beds : "Unlimited"}</Row>
