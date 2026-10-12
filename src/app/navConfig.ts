@@ -24,6 +24,7 @@ export const saasNav: NavItem[] = [
 ]
 
 export const dailyWorkNav: NavItem[] = [
+  { key: "opd-desk", path: "/opd-desk", labelKey: "OPD Registration", subKey: "Register, visit, bill & collect", requiredPermission: "patients.add_patient" },
   { key: "console", moduleKey: "telephony", path: "/console", labelKey: "nav.console", subKey: "screenSub.console" },
   { key: "call-logs", moduleKey: "telephony", path: "/call-logs", labelKey: "Call Logs", subKey: "Full call history & recordings" },
   { key: "callbacks", moduleKey: "telephony", path: "/callbacks", labelKey: "nav.callbacks", subKey: "screenSub.callbacks" },
@@ -36,6 +37,7 @@ export const dailyWorkNav: NavItem[] = [
 ]
 
 export const careNav: NavItem[] = [
+  { key: "opd-desk-hms", path: "/opd-desk", labelKey: "OPD Registration", subKey: "Register, visit, bill & collect", requiredPermission: "patients.add_patient" },
   // Clinical tool (HMS core licence): doctors and nurses, not front office.
   { key: "anatomy", moduleKey: "opd", path: "/anatomy", labelKey: "nav.anatomy", subKey: "screenSub.anatomy", requiredPermission: "patients.access_clinical_detail" },
   { key: "ipd", moduleKey: "ipd", path: "/ipd", labelKey: "nav.ipd", subKey: "screenSub.ipd", requiredPermission: "ipd.view_admission" },
