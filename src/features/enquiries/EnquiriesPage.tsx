@@ -278,7 +278,7 @@ function ContactedStageModal({ enquiry, onClose }: { enquiry: Enquiry; onClose: 
   const [isSuccess, setIsSuccess] = useState(false)
   const [successInfo, setSuccessInfo] = useState<{ appointmentTime: string } | null>(null)
 
-  const doctors = useQuery({ queryKey: ["doctors"], queryFn: listDoctors })
+  const doctors = useQuery({ queryKey: ["doctors"], queryFn: () => listDoctors() })
   const slots = useQuery({
     queryKey: ["slots", selectedDoctorId, selectedDate],
     queryFn: () => listSlots({ doctor: String(selectedDoctorId), date: selectedDate }),
@@ -568,7 +568,7 @@ function FollowUpStageModal({ enquiry, onClose }: { enquiry: Enquiry; onClose: (
   const [reason, setReason] = useState("Follow-up consultation")
   const [isSuccess, setIsSuccess] = useState(false)
 
-  const doctors = useQuery({ queryKey: ["doctors"], queryFn: listDoctors })
+  const doctors = useQuery({ queryKey: ["doctors"], queryFn: () => listDoctors() })
   const slots = useQuery({
     queryKey: ["slots", selectedDoctorId, selectedDate],
     queryFn: () => listSlots({ doctor: String(selectedDoctorId), date: selectedDate }),

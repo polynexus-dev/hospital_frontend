@@ -74,7 +74,7 @@ export function CreateTreatmentEstimateModal({ open, onClose, onCreated, default
 
   const { data: doctorsData } = useQuery({
     queryKey: ["appointments", "doctors"],
-    queryFn: listDoctors,
+    queryFn: () => listDoctors(),
     enabled: open,
   })
 
