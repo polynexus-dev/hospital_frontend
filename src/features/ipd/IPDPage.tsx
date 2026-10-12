@@ -163,7 +163,7 @@ export function IPDPage() {
               </select>
               <div>
                 {availableBeds.length === 0 ? (
-                  <div className="p-3 rounded-control bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-200 text-xs flex flex-col gap-2">
+                  <div className="p-3 rounded-control bg-warning/10 border border-warning/30 text-warning-text dark:text-amber-200 text-xs flex flex-col gap-2">
                     <div className="font-semibold flex items-center gap-1.5">
                       <span>⚠️ No Available Beds</span>
                     </div>
@@ -182,8 +182,8 @@ export function IPDPage() {
                       </Link>
                     </div>
                     {beds.length > 0 && (
-                      <div className="pt-2 flex flex-col gap-1.5 border-t border-amber-500/20">
-                        <div className="text-[11px] font-semibold text-amber-900 dark:text-amber-200">
+                      <div className="pt-2 flex flex-col gap-1.5 border-t border-warning/20">
+                        <div className="text-[11px] font-semibold text-warning-text dark:text-amber-200">
                           Or free an existing bed directly:
                         </div>
                         <div className="max-h-28 overflow-y-auto space-y-1">
@@ -205,7 +205,7 @@ export function IPDPage() {
                                     console.error(err)
                                   }
                                 }}
-                                className="px-2 py-0.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-[10.5px] cursor-pointer"
+                                className="px-2 py-0.5 rounded bg-success hover:bg-success-text text-white font-semibold text-[10.5px] cursor-pointer"
                               >
                                 Free & Select
                               </button>

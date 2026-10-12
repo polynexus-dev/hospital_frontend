@@ -100,23 +100,23 @@ export function BloodBankPage() {
     <div className="p-6 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+          <h1 className="text-2xl font-bold tracking-tight text-ink dark:text-slate-100">
             Blood Bank & Transfusion Management
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-sm text-ink-4 dark:text-slate-400">
             Track blood unit inventory, voluntary donors, cross-match requests, and patient transfusions.
           </p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => setShowDonorModal(true)}
-            className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 rounded-lg"
+            className="px-4 py-2 text-sm font-medium text-ink-2 dark:text-slate-200 bg-chip-bg dark:bg-slate-700 hover:bg-border-soft rounded-lg"
           >
             + Register Donor
           </button>
           <button
             onClick={() => setShowUnitModal(true)}
-            className="px-4 py-2 text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 rounded-lg shadow-sm"
+            className="px-4 py-2 text-sm font-medium text-white bg-danger hover:bg-danger rounded-lg shadow-sm"
           >
             + Add Blood Unit
           </button>
@@ -124,13 +124,13 @@ export function BloodBankPage() {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-slate-200 dark:border-slate-700 flex gap-4">
+      <div className="border-b border-border dark:border-slate-700 flex gap-4">
         <button
           onClick={() => setActiveTab("units")}
           className={`pb-2 text-sm font-semibold border-b-2 transition-colors ${
             activeTab === "units"
-              ? "border-rose-600 text-rose-600 dark:text-rose-400"
-              : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              ? "border-danger text-danger-text dark:text-rose-400"
+              : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
           Blood Inventory ({units.length})
@@ -139,8 +139,8 @@ export function BloodBankPage() {
           onClick={() => setActiveTab("donors")}
           className={`pb-2 text-sm font-semibold border-b-2 transition-colors ${
             activeTab === "donors"
-              ? "border-rose-600 text-rose-600 dark:text-rose-400"
-              : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              ? "border-danger text-danger-text dark:text-rose-400"
+              : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
           Donors ({donors.length})
@@ -149,8 +149,8 @@ export function BloodBankPage() {
           onClick={() => setActiveTab("crossmatches")}
           className={`pb-2 text-sm font-semibold border-b-2 transition-colors ${
             activeTab === "crossmatches"
-              ? "border-rose-600 text-rose-600 dark:text-rose-400"
-              : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              ? "border-danger text-danger-text dark:text-rose-400"
+              : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
           Cross-Match Requests ({crossmatches.length})
@@ -158,12 +158,12 @@ export function BloodBankPage() {
       </div>
 
       {loading ? (
-        <div className="py-12 text-center text-slate-500">Loading Blood Bank records...</div>
+        <div className="py-12 text-center text-ink-4">Loading Blood Bank records...</div>
       ) : activeTab === "units" ? (
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-hidden">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-xs font-semibold text-slate-500 uppercase">
+              <tr className="border-b border-border dark:border-slate-700 bg-page dark:bg-slate-900/50 text-xs font-semibold text-ink-4 uppercase">
                 <th className="px-4 py-3">Group</th>
                 <th className="px-4 py-3">Component</th>
                 <th className="px-4 py-3">Collection Date</th>
@@ -172,30 +172,30 @@ export function BloodBankPage() {
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+            <tbody className="divide-y divide-border dark:divide-slate-700">
               {units.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan={6} className="px-4 py-8 text-center text-ink-4">
                     No blood units in inventory.
                   </td>
                 </tr>
               ) : (
                 units.map((u) => (
-                  <tr key={u.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
-                    <td className="px-4 py-3 font-bold text-rose-600 dark:text-rose-400">{u.blood_group}</td>
-                    <td className="px-4 py-3 uppercase text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  <tr key={u.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
+                    <td className="px-4 py-3 font-bold text-danger-text dark:text-rose-400">{u.blood_group}</td>
+                    <td className="px-4 py-3 uppercase text-xs font-semibold text-ink-2 dark:text-slate-300">
                       {u.component.replace("_", " ")}
                     </td>
-                    <td className="px-4 py-3 text-slate-500">{u.collection_date}</td>
-                    <td className="px-4 py-3 text-slate-500">{u.expiry_date}</td>
+                    <td className="px-4 py-3 text-ink-4">{u.collection_date}</td>
+                    <td className="px-4 py-3 text-ink-4">{u.expiry_date}</td>
                     <td className="px-4 py-3 capitalize font-medium">
                       <span
                         className={`px-2 py-0.5 text-xs rounded-full ${
                           u.status === "available"
-                            ? "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300"
+                            ? "bg-success-bg text-success-text dark:bg-green-900/40 dark:text-green-300"
                             : u.status === "issued"
-                            ? "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300"
-                            : "bg-slate-100 text-slate-700"
+                            ? "bg-brand-tint text-brand-dark dark:bg-blue-900/40 dark:text-blue-300"
+                            : "bg-chip-bg text-ink-2"
                         }`}
                       >
                         {u.status}
@@ -205,7 +205,7 @@ export function BloodBankPage() {
                       {u.status === "available" && (
                         <button
                           onClick={() => setSelectedUnit(u)}
-                          className="px-3 py-1 text-xs font-semibold bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300 rounded hover:bg-rose-200"
+                          className="px-3 py-1 text-xs font-semibold bg-danger-bg text-danger-text dark:bg-rose-900/40 dark:text-rose-300 rounded hover:bg-danger-border"
                         >
                           Transfuse
                         </button>
@@ -218,30 +218,30 @@ export function BloodBankPage() {
           </table>
         </div>
       ) : activeTab === "donors" ? (
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-hidden">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-xs font-semibold text-slate-500 uppercase">
+              <tr className="border-b border-border dark:border-slate-700 bg-page dark:bg-slate-900/50 text-xs font-semibold text-ink-4 uppercase">
                 <th className="px-4 py-3">Donor Name</th>
                 <th className="px-4 py-3">Blood Group</th>
                 <th className="px-4 py-3">Phone</th>
                 <th className="px-4 py-3">Last Donation Date</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+            <tbody className="divide-y divide-border dark:divide-slate-700">
               {donors.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan={4} className="px-4 py-8 text-center text-ink-4">
                     No registered donors found.
                   </td>
                 </tr>
               ) : (
                 donors.map((d) => (
-                  <tr key={d.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
-                    <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">{d.name}</td>
-                    <td className="px-4 py-3 font-bold text-rose-600">{d.blood_group}</td>
-                    <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{d.phone || "N/A"}</td>
-                    <td className="px-4 py-3 text-slate-500">{d.last_donation_date || "First time"}</td>
+                  <tr key={d.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
+                    <td className="px-4 py-3 font-medium text-ink dark:text-slate-100">{d.name}</td>
+                    <td className="px-4 py-3 font-bold text-danger-text">{d.blood_group}</td>
+                    <td className="px-4 py-3 text-ink-3 dark:text-slate-400">{d.phone || "N/A"}</td>
+                    <td className="px-4 py-3 text-ink-4">{d.last_donation_date || "First time"}</td>
                   </tr>
                 ))
               )}
@@ -249,10 +249,10 @@ export function BloodBankPage() {
           </table>
         </div>
       ) : (
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-hidden">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-xs font-semibold text-slate-500 uppercase">
+              <tr className="border-b border-border dark:border-slate-700 bg-page dark:bg-slate-900/50 text-xs font-semibold text-ink-4 uppercase">
                 <th className="px-4 py-3">Patient</th>
                 <th className="px-4 py-3">Required Group</th>
                 <th className="px-4 py-3">Component</th>
@@ -260,23 +260,23 @@ export function BloodBankPage() {
                 <th className="px-4 py-3">Requested At</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+            <tbody className="divide-y divide-border dark:divide-slate-700">
               {crossmatches.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan={5} className="px-4 py-8 text-center text-ink-4">
                     No cross-match requests.
                   </td>
                 </tr>
               ) : (
                 crossmatches.map((cm) => (
-                  <tr key={cm.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
-                    <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">
+                  <tr key={cm.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
+                    <td className="px-4 py-3 font-medium text-ink dark:text-slate-100">
                       {cm.patient_detail ? `${cm.patient_detail.first_name} ${cm.patient_detail.last_name}` : `Patient #${cm.patient}`}
                     </td>
-                    <td className="px-4 py-3 font-bold text-rose-600">{cm.blood_group_required}</td>
-                    <td className="px-4 py-3 uppercase text-xs font-semibold text-slate-600">{cm.component}</td>
-                    <td className="px-4 py-3 capitalize font-semibold text-slate-800 dark:text-slate-200">{cm.status}</td>
-                    <td className="px-4 py-3 text-slate-500">{new Date(cm.created_at).toLocaleDateString()}</td>
+                    <td className="px-4 py-3 font-bold text-danger-text">{cm.blood_group_required}</td>
+                    <td className="px-4 py-3 uppercase text-xs font-semibold text-ink-3">{cm.component}</td>
+                    <td className="px-4 py-3 capitalize font-semibold text-ink dark:text-slate-200">{cm.status}</td>
+                    <td className="px-4 py-3 text-ink-4">{new Date(cm.created_at).toLocaleDateString()}</td>
                   </tr>
                 ))
               )}
@@ -289,10 +289,10 @@ export function BloodBankPage() {
       {showDonorModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-800 max-w-md w-full rounded-xl p-6 space-y-4">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Register Blood Donor</h2>
+            <h2 className="text-lg font-bold text-ink dark:text-slate-100">Register Blood Donor</h2>
             <form onSubmit={handleCreateDonor} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Donor Name</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Donor Name</label>
                 <input
                   type="text"
                   required
@@ -303,7 +303,7 @@ export function BloodBankPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Blood Group</label>
+                  <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Blood Group</label>
                   <select
                     value={donorBloodGroup}
                     onChange={(e) => setDonorBloodGroup(e.target.value)}
@@ -317,7 +317,7 @@ export function BloodBankPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Phone</label>
+                  <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Phone</label>
                   <input
                     type="text"
                     value={donorPhone}
@@ -327,7 +327,7 @@ export function BloodBankPage() {
                 </div>
               </div>
               <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setShowDonorModal(false)} className="px-4 py-2 text-sm text-slate-500">
+                <button type="button" onClick={() => setShowDonorModal(false)} className="px-4 py-2 text-sm text-ink-4">
                   Cancel
                 </button>
                 <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-slate-800 dark:bg-slate-700 rounded-lg">
@@ -343,10 +343,10 @@ export function BloodBankPage() {
       {showUnitModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-800 max-w-md w-full rounded-xl p-6 space-y-4">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Add Blood Unit to Inventory</h2>
+            <h2 className="text-lg font-bold text-ink dark:text-slate-100">Add Blood Unit to Inventory</h2>
             <form onSubmit={handleCreateUnit} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Donor ID (Optional)</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Donor ID (Optional)</label>
                 <input
                   type="number"
                   value={unitDonorId}
@@ -356,7 +356,7 @@ export function BloodBankPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Blood Group</label>
+                  <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Blood Group</label>
                   <select
                     value={unitBloodGroup}
                     onChange={(e) => setUnitBloodGroup(e.target.value)}
@@ -370,7 +370,7 @@ export function BloodBankPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Component</label>
+                  <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Component</label>
                   <select
                     value={unitComponent}
                     onChange={(e) => setUnitComponent(e.target.value as any)}
@@ -384,10 +384,10 @@ export function BloodBankPage() {
                 </div>
               </div>
               <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setShowUnitModal(false)} className="px-4 py-2 text-sm text-slate-500">
+                <button type="button" onClick={() => setShowUnitModal(false)} className="px-4 py-2 text-sm text-ink-4">
                   Cancel
                 </button>
-                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-rose-600 rounded-lg">
+                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-danger rounded-lg">
                   Save Unit
                 </button>
               </div>
@@ -400,10 +400,10 @@ export function BloodBankPage() {
       {selectedUnit && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-800 max-w-md w-full rounded-xl p-6 space-y-4">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Issue Blood Transfusion</h2>
+            <h2 className="text-lg font-bold text-ink dark:text-slate-100">Issue Blood Transfusion</h2>
             <form onSubmit={handleTransfuse} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Target Patient ID</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Target Patient ID</label>
                 <input
                   type="number"
                   required
@@ -413,7 +413,7 @@ export function BloodBankPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Reaction / Monitoring Notes</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Reaction / Monitoring Notes</label>
                 <textarea
                   rows={3}
                   value={transNotes}
@@ -423,10 +423,10 @@ export function BloodBankPage() {
                 />
               </div>
               <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setSelectedUnit(null)} className="px-4 py-2 text-sm text-slate-500">
+                <button type="button" onClick={() => setSelectedUnit(null)} className="px-4 py-2 text-sm text-ink-4">
                   Cancel
                 </button>
-                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-rose-600 rounded-lg">
+                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-danger rounded-lg">
                   Confirm Transfusion
                 </button>
               </div>

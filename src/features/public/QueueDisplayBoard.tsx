@@ -68,13 +68,13 @@ export function QueueDisplayBoard() {
             <div className="text-8xl font-black text-emerald-300 my-2">{b.now_serving?.label ?? "—"}</div>
             <div className="text-sm uppercase tracking-widest text-slate-400 mt-4">Next</div>
             <div className="flex flex-wrap gap-3 mt-2 text-3xl font-bold">
-              {b.waiting.length ? b.waiting.map((w) => <span key={w} className="bg-slate-700 rounded-xl px-3 py-1">{w}</span>) : <span className="text-slate-500 text-xl">No one waiting</span>}
+              {b.waiting.length ? b.waiting.map((w) => <span key={w} className="bg-slate-700 rounded-xl px-3 py-1">{w}</span>) : <span className="text-ink-4 text-xl">No one waiting</span>}
             </div>
             <div className="mt-auto pt-6 text-xl text-amber-300">≈ {b.estimated_minutes} min wait · {b.waiting_count} in queue</div>
           </div>
         ))}
       </div>
-      {data.announcement && <div className="mt-6 text-2xl bg-amber-400 text-slate-900 rounded-xl px-6 py-3 font-semibold overflow-hidden whitespace-nowrap">{data.announcement}</div>}
+      {data.announcement && <div className="mt-6 text-2xl bg-warning text-ink rounded-xl px-6 py-3 font-semibold overflow-hidden whitespace-nowrap">{data.announcement}</div>}
     </div>
   )
 }

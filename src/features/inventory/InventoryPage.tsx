@@ -184,29 +184,29 @@ export function InventoryPage() {
     <div className="p-6 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+          <h1 className="text-2xl font-bold tracking-tight text-ink dark:text-slate-100">
             Inventory & Procurement
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-sm text-ink-4 dark:text-slate-400">
             Item catalog, stock batches, purchase order procurement, and inventory movements.
           </p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => setShowCatModal(true)}
-            className="px-3 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700"
+            className="px-3 py-2 text-sm font-medium text-ink-2 bg-white border border-border-strong rounded-lg hover:bg-page dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700"
           >
             + Category
           </button>
           <button
             onClick={() => setShowItemModal(true)}
-            className="px-3 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm"
+            className="px-3 py-2 text-sm font-medium text-white bg-brand hover:bg-brand-dark rounded-lg shadow-sm"
           >
             + New Item
           </button>
           <button
             onClick={() => setShowPoModal(true)}
-            className="px-3 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm"
+            className="px-3 py-2 text-sm font-medium text-white bg-success hover:bg-success-text rounded-lg shadow-sm"
           >
             + New PO
           </button>
@@ -214,13 +214,13 @@ export function InventoryPage() {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-slate-200 dark:border-slate-700 flex gap-4">
+      <div className="border-b border-border dark:border-slate-700 flex gap-4">
         <button
           onClick={() => setActiveTab("items")}
           className={`pb-2 text-sm font-semibold border-b-2 transition-colors ${
             activeTab === "items"
-              ? "border-indigo-600 text-indigo-600 dark:text-indigo-400"
-              : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              ? "border-brand text-brand dark:text-indigo-400"
+              : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
           Item Catalog ({items.length})
@@ -229,8 +229,8 @@ export function InventoryPage() {
           onClick={() => setActiveTab("stock")}
           className={`pb-2 text-sm font-semibold border-b-2 transition-colors ${
             activeTab === "stock"
-              ? "border-indigo-600 text-indigo-600 dark:text-indigo-400"
-              : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              ? "border-brand text-brand dark:text-indigo-400"
+              : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
           Stock Levels ({stockLevels.length})
@@ -239,8 +239,8 @@ export function InventoryPage() {
           onClick={() => setActiveTab("po")}
           className={`pb-2 text-sm font-semibold border-b-2 transition-colors ${
             activeTab === "po"
-              ? "border-indigo-600 text-indigo-600 dark:text-indigo-400"
-              : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              ? "border-brand text-brand dark:text-indigo-400"
+              : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
           Purchase Orders ({orders.length})
@@ -249,8 +249,8 @@ export function InventoryPage() {
           onClick={() => setActiveTab("transactions")}
           className={`pb-2 text-sm font-semibold border-b-2 transition-colors ${
             activeTab === "transactions"
-              ? "border-indigo-600 text-indigo-600 dark:text-indigo-400"
-              : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              ? "border-brand text-brand dark:text-indigo-400"
+              : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
           Stock Movements ({transactions.length})
@@ -258,12 +258,12 @@ export function InventoryPage() {
       </div>
 
       {loading ? (
-        <div className="py-12 text-center text-slate-500">Loading inventory data...</div>
+        <div className="py-12 text-center text-ink-4">Loading inventory data...</div>
       ) : activeTab === "items" ? (
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-hidden">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-xs font-semibold text-slate-500 uppercase">
+              <tr className="border-b border-border dark:border-slate-700 bg-page dark:bg-slate-900/50 text-xs font-semibold text-ink-4 uppercase">
                 <th className="px-4 py-3">Item Code</th>
                 <th className="px-4 py-3">Item Name</th>
                 <th className="px-4 py-3">Category</th>
@@ -271,21 +271,21 @@ export function InventoryPage() {
                 <th className="px-4 py-3">Min Stock</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+            <tbody className="divide-y divide-border dark:divide-slate-700">
               {items.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan={5} className="px-4 py-8 text-center text-ink-4">
                     No items found in catalog.
                   </td>
                 </tr>
               ) : (
                 items.map((i) => (
-                  <tr key={i.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
-                    <td className="px-4 py-3 font-semibold text-indigo-600">{i.code}</td>
-                    <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">{i.name}</td>
-                    <td className="px-4 py-3 text-slate-500">{i.category_name || `Cat #${i.category}`}</td>
-                    <td className="px-4 py-3 text-slate-500 uppercase text-xs">{i.unit_of_measure}</td>
-                    <td className="px-4 py-3 font-semibold text-slate-700">{i.min_stock_level}</td>
+                  <tr key={i.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
+                    <td className="px-4 py-3 font-semibold text-brand">{i.code}</td>
+                    <td className="px-4 py-3 font-medium text-ink dark:text-slate-100">{i.name}</td>
+                    <td className="px-4 py-3 text-ink-4">{i.category_name || `Cat #${i.category}`}</td>
+                    <td className="px-4 py-3 text-ink-4 uppercase text-xs">{i.unit_of_measure}</td>
+                    <td className="px-4 py-3 font-semibold text-ink-2">{i.min_stock_level}</td>
                   </tr>
                 ))
               )}
@@ -297,15 +297,15 @@ export function InventoryPage() {
           <div className="flex justify-end">
             <button
               onClick={() => setShowStockModal(true)}
-              className="px-3 py-1.5 text-xs font-semibold text-white bg-indigo-600 rounded hover:bg-indigo-700"
+              className="px-3 py-1.5 text-xs font-semibold text-white bg-brand rounded hover:bg-brand-dark"
             >
               + Log Batch Stock
             </button>
           </div>
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-hidden">
             <table className="w-full text-left border-collapse text-sm">
               <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-xs font-semibold text-slate-500 uppercase">
+                <tr className="border-b border-border dark:border-slate-700 bg-page dark:bg-slate-900/50 text-xs font-semibold text-ink-4 uppercase">
                   <th className="px-4 py-3">Item</th>
                   <th className="px-4 py-3">Batch No</th>
                   <th className="px-4 py-3">Qty On Hand</th>
@@ -313,21 +313,21 @@ export function InventoryPage() {
                   <th className="px-4 py-3">Expiry Date</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+              <tbody className="divide-y divide-border dark:divide-slate-700">
                 {stockLevels.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
+                    <td colSpan={5} className="px-4 py-8 text-center text-ink-4">
                       No active stock batches recorded.
                     </td>
                   </tr>
                 ) : (
                   stockLevels.map((s) => (
-                    <tr key={s.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
+                    <tr key={s.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
                       <td className="px-4 py-3 font-medium">{s.item_name || `Item #${s.item}`}</td>
-                      <td className="px-4 py-3 text-xs font-semibold text-slate-700">{s.batch_number}</td>
-                      <td className="px-4 py-3 font-bold text-emerald-600">{s.quantity_on_hand}</td>
+                      <td className="px-4 py-3 text-xs font-semibold text-ink-2">{s.batch_number}</td>
+                      <td className="px-4 py-3 font-bold text-success">{s.quantity_on_hand}</td>
                       <td className="px-4 py-3 font-semibold">₹{s.unit_cost}</td>
-                      <td className="px-4 py-3 text-xs text-slate-500">{s.expiry_date || "N/A"}</td>
+                      <td className="px-4 py-3 text-xs text-ink-4">{s.expiry_date || "N/A"}</td>
                     </tr>
                   ))
                 )}
@@ -336,10 +336,10 @@ export function InventoryPage() {
           </div>
         </div>
       ) : activeTab === "po" ? (
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-hidden">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-xs font-semibold text-slate-500 uppercase">
+              <tr className="border-b border-border dark:border-slate-700 bg-page dark:bg-slate-900/50 text-xs font-semibold text-ink-4 uppercase">
                 <th className="px-4 py-3">PO Number</th>
                 <th className="px-4 py-3">Vendor</th>
                 <th className="px-4 py-3">Status</th>
@@ -347,24 +347,24 @@ export function InventoryPage() {
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+            <tbody className="divide-y divide-border dark:divide-slate-700">
               {orders.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan={5} className="px-4 py-8 text-center text-ink-4">
                     No purchase orders.
                   </td>
                 </tr>
               ) : (
                 orders.map((po) => (
-                  <tr key={po.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
-                    <td className="px-4 py-3 font-semibold text-indigo-600">{po.po_number}</td>
-                    <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">{po.vendor_name}</td>
-                    <td className="px-4 py-3 capitalize text-xs font-semibold text-emerald-600">{po.status}</td>
-                    <td className="px-4 py-3 text-xs text-slate-500">{new Date(po.ordered_at).toLocaleString()}</td>
+                  <tr key={po.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
+                    <td className="px-4 py-3 font-semibold text-brand">{po.po_number}</td>
+                    <td className="px-4 py-3 font-medium text-ink dark:text-slate-100">{po.vendor_name}</td>
+                    <td className="px-4 py-3 capitalize text-xs font-semibold text-success">{po.status}</td>
+                    <td className="px-4 py-3 text-xs text-ink-4">{new Date(po.ordered_at).toLocaleString()}</td>
                     <td className="px-4 py-3 text-right">
                       <button
                         onClick={() => setSelectedPo(po)}
-                        className="px-2.5 py-1 text-xs font-semibold bg-indigo-100 text-indigo-800 rounded hover:bg-indigo-200"
+                        className="px-2.5 py-1 text-xs font-semibold bg-brand-tint text-brand-dark rounded hover:bg-brand-border"
                       >
                         + Add PO Item
                       </button>
@@ -380,15 +380,15 @@ export function InventoryPage() {
           <div className="flex justify-end">
             <button
               onClick={() => setShowTxModal(true)}
-              className="px-3 py-1.5 text-xs font-semibold text-white bg-indigo-600 rounded hover:bg-indigo-700"
+              className="px-3 py-1.5 text-xs font-semibold text-white bg-brand rounded hover:bg-brand-dark"
             >
               + Record Movement
             </button>
           </div>
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-hidden">
             <table className="w-full text-left border-collapse text-sm">
               <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-xs font-semibold text-slate-500 uppercase">
+                <tr className="border-b border-border dark:border-slate-700 bg-page dark:bg-slate-900/50 text-xs font-semibold text-ink-4 uppercase">
                   <th className="px-4 py-3">Item</th>
                   <th className="px-4 py-3">Type</th>
                   <th className="px-4 py-3">Quantity</th>
@@ -396,21 +396,21 @@ export function InventoryPage() {
                   <th className="px-4 py-3">Date</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+              <tbody className="divide-y divide-border dark:divide-slate-700">
                 {transactions.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
+                    <td colSpan={5} className="px-4 py-8 text-center text-ink-4">
                       No stock movement logs.
                     </td>
                   </tr>
                 ) : (
                   transactions.map((tx) => (
-                    <tr key={tx.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
+                    <tr key={tx.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
                       <td className="px-4 py-3 font-medium">{tx.item_name || `Item #${tx.item}`}</td>
                       <td className="px-4 py-3 capitalize text-xs font-semibold">{tx.transaction_type}</td>
                       <td className="px-4 py-3 font-bold">{tx.quantity}</td>
-                      <td className="px-4 py-3 text-xs text-slate-500">{tx.reference || "-"}</td>
-                      <td className="px-4 py-3 text-xs text-slate-500">{new Date(tx.transaction_date).toLocaleString()}</td>
+                      <td className="px-4 py-3 text-xs text-ink-4">{tx.reference || "-"}</td>
+                      <td className="px-4 py-3 text-xs text-ink-4">{new Date(tx.transaction_date).toLocaleString()}</td>
                     </tr>
                   ))
                 )}
@@ -424,10 +424,10 @@ export function InventoryPage() {
       {showCatModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-800 max-w-md w-full rounded-xl p-6 space-y-4">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Create Item Category</h2>
+            <h2 className="text-lg font-bold text-ink dark:text-slate-100">Create Item Category</h2>
             <form onSubmit={handleCreateCategory} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Category Name</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Category Name</label>
                 <input
                   type="text"
                   required
@@ -438,7 +438,7 @@ export function InventoryPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Code</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Code</label>
                 <input
                   type="text"
                   required
@@ -449,10 +449,10 @@ export function InventoryPage() {
                 />
               </div>
               <div className="flex justify-end gap-2">
-                <button type="button" onClick={() => setShowCatModal(false)} className="px-4 py-2 text-sm text-slate-500">
+                <button type="button" onClick={() => setShowCatModal(false)} className="px-4 py-2 text-sm text-ink-4">
                   Cancel
                 </button>
-                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg">
+                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-brand rounded-lg">
                   Save Category
                 </button>
               </div>
@@ -465,10 +465,10 @@ export function InventoryPage() {
       {showItemModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-800 max-w-md w-full rounded-xl p-6 space-y-4">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Add Item to Catalog</h2>
+            <h2 className="text-lg font-bold text-ink dark:text-slate-100">Add Item to Catalog</h2>
             <form onSubmit={handleCreateItem} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Category</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Category</label>
                 <select
                   required
                   value={selectedCatId}
@@ -484,7 +484,7 @@ export function InventoryPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Item Name</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Item Name</label>
                 <input
                   type="text"
                   required
@@ -494,7 +494,7 @@ export function InventoryPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Item Code</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Item Code</label>
                 <input
                   type="text"
                   required
@@ -505,7 +505,7 @@ export function InventoryPage() {
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Unit of Measure</label>
+                  <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Unit of Measure</label>
                   <input
                     type="text"
                     value={uom}
@@ -514,7 +514,7 @@ export function InventoryPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Min Stock Level</label>
+                  <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Min Stock Level</label>
                   <input
                     type="number"
                     value={minStock}
@@ -524,10 +524,10 @@ export function InventoryPage() {
                 </div>
               </div>
               <div className="flex justify-end gap-2">
-                <button type="button" onClick={() => setShowItemModal(false)} className="px-4 py-2 text-sm text-slate-500">
+                <button type="button" onClick={() => setShowItemModal(false)} className="px-4 py-2 text-sm text-ink-4">
                   Cancel
                 </button>
-                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg">
+                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-brand rounded-lg">
                   Save Item
                 </button>
               </div>
@@ -540,10 +540,10 @@ export function InventoryPage() {
       {showStockModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-800 max-w-md w-full rounded-xl p-6 space-y-4">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Log Batch Stock</h2>
+            <h2 className="text-lg font-bold text-ink dark:text-slate-100">Log Batch Stock</h2>
             <form onSubmit={handleCreateStock} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Item</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Item</label>
                 <select
                   required
                   value={selectedItemId}
@@ -559,7 +559,7 @@ export function InventoryPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Batch Number</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Batch Number</label>
                 <input
                   type="text"
                   required
@@ -570,7 +570,7 @@ export function InventoryPage() {
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Quantity</label>
+                  <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Quantity</label>
                   <input
                     type="number"
                     required
@@ -580,7 +580,7 @@ export function InventoryPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Unit Cost (₹)</label>
+                  <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Unit Cost (₹)</label>
                   <input
                     type="number"
                     required
@@ -591,7 +591,7 @@ export function InventoryPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Expiry Date</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Expiry Date</label>
                 <input
                   type="date"
                   value={expDate}
@@ -600,10 +600,10 @@ export function InventoryPage() {
                 />
               </div>
               <div className="flex justify-end gap-2">
-                <button type="button" onClick={() => setShowStockModal(false)} className="px-4 py-2 text-sm text-slate-500">
+                <button type="button" onClick={() => setShowStockModal(false)} className="px-4 py-2 text-sm text-ink-4">
                   Cancel
                 </button>
-                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg">
+                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-brand rounded-lg">
                   Save Stock Batch
                 </button>
               </div>
@@ -616,10 +616,10 @@ export function InventoryPage() {
       {showPoModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-800 max-w-md w-full rounded-xl p-6 space-y-4">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Create Purchase Order</h2>
+            <h2 className="text-lg font-bold text-ink dark:text-slate-100">Create Purchase Order</h2>
             <form onSubmit={handleCreatePO} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">PO Number</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">PO Number</label>
                 <input
                   type="text"
                   required
@@ -630,7 +630,7 @@ export function InventoryPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Vendor Name</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Vendor Name</label>
                 <input
                   type="text"
                   required
@@ -641,10 +641,10 @@ export function InventoryPage() {
                 />
               </div>
               <div className="flex justify-end gap-2">
-                <button type="button" onClick={() => setShowPoModal(false)} className="px-4 py-2 text-sm text-slate-500">
+                <button type="button" onClick={() => setShowPoModal(false)} className="px-4 py-2 text-sm text-ink-4">
                   Cancel
                 </button>
-                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg">
+                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-success rounded-lg">
                   Create PO
                 </button>
               </div>
@@ -657,10 +657,10 @@ export function InventoryPage() {
       {selectedPo && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-800 max-w-md w-full rounded-xl p-6 space-y-4">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Add Item to {selectedPo.po_number}</h2>
+            <h2 className="text-lg font-bold text-ink dark:text-slate-100">Add Item to {selectedPo.po_number}</h2>
             <form onSubmit={handleAddPoItem} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Item</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Item</label>
                 <select
                   required
                   value={poItemId}
@@ -677,7 +677,7 @@ export function InventoryPage() {
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Ordered Quantity</label>
+                  <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Ordered Quantity</label>
                   <input
                     type="number"
                     required
@@ -687,7 +687,7 @@ export function InventoryPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Unit Cost (₹)</label>
+                  <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Unit Cost (₹)</label>
                   <input
                     type="number"
                     required
@@ -698,10 +698,10 @@ export function InventoryPage() {
                 </div>
               </div>
               <div className="flex justify-end gap-2">
-                <button type="button" onClick={() => setSelectedPo(null)} className="px-4 py-2 text-sm text-slate-500">
+                <button type="button" onClick={() => setSelectedPo(null)} className="px-4 py-2 text-sm text-ink-4">
                   Cancel
                 </button>
-                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg">
+                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-brand rounded-lg">
                   Add Item
                 </button>
               </div>
@@ -714,10 +714,10 @@ export function InventoryPage() {
       {showTxModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-800 max-w-md w-full rounded-xl p-6 space-y-4">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Record Stock Movement</h2>
+            <h2 className="text-lg font-bold text-ink dark:text-slate-100">Record Stock Movement</h2>
             <form onSubmit={handleRecordTx} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Item</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Item</label>
                 <select
                   required
                   value={txItemId}
@@ -733,7 +733,7 @@ export function InventoryPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Transaction Type</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Transaction Type</label>
                 <select
                   value={txType}
                   onChange={(e) => setTxType(e.target.value)}
@@ -746,7 +746,7 @@ export function InventoryPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Quantity</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Quantity</label>
                 <input
                   type="number"
                   required
@@ -756,7 +756,7 @@ export function InventoryPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Reference / Note</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Reference / Note</label>
                 <input
                   type="text"
                   placeholder="e.g. Issued to OT-2"
@@ -766,10 +766,10 @@ export function InventoryPage() {
                 />
               </div>
               <div className="flex justify-end gap-2">
-                <button type="button" onClick={() => setShowTxModal(false)} className="px-4 py-2 text-sm text-slate-500">
+                <button type="button" onClick={() => setShowTxModal(false)} className="px-4 py-2 text-sm text-ink-4">
                   Cancel
                 </button>
-                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg">
+                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-brand rounded-lg">
                   Submit Movement
                 </button>
               </div>

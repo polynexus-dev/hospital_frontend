@@ -256,7 +256,7 @@ export function PermissionMatrixModal({ title, subtitle, queryKey, load, save, m
             </div>
 
             <div className="px-6 pb-5 flex items-center justify-between gap-3">
-              <span className="text-xs text-rose-600">{saveMutation.isError ? errorText(saveMutation.error) : ""}</span>
+              <span className="text-xs text-danger-text">{saveMutation.isError ? errorText(saveMutation.error) : ""}</span>
               <div className="flex gap-2">
                 <Button variant="secondary" onClick={onClose} disabled={saveMutation.isPending}>Cancel</Button>
                 <Button variant="primary" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending || (readOnly && mode !== "ceiling")}>

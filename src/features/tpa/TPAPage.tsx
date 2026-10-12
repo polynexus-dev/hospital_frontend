@@ -14,11 +14,11 @@ function ClaimStatusBadge({ status }: { status: Claim["status"] }) {
     case "settled":
       return <SuccessTag>SETTLED</SuccessTag>
     case "partially_settled":
-      return <span className="px-2 py-0.5 text-xs font-bold rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-200">PARTIALLY SETTLED</span>
+      return <span className="px-2 py-0.5 text-xs font-bold rounded bg-warning-bg dark:bg-amber-950 text-warning-text dark:text-amber-200">PARTIALLY SETTLED</span>
     case "under_review":
-      return <span className="px-2 py-0.5 text-xs font-bold rounded bg-sky-100 dark:bg-sky-950 text-sky-800 dark:text-sky-200">UNDER REVIEW</span>
+      return <span className="px-2 py-0.5 text-xs font-bold rounded bg-brand-tint dark:bg-sky-950 text-brand-dark dark:text-sky-200">UNDER REVIEW</span>
     case "rejected":
-      return <span className="px-2 py-0.5 text-xs font-bold rounded bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-200">REJECTED</span>
+      return <span className="px-2 py-0.5 text-xs font-bold rounded bg-danger-bg dark:bg-rose-950 text-danger-text dark:text-rose-200">REJECTED</span>
     default:
       return <NeutralTag>SUBMITTED</NeutralTag>
   }
@@ -96,9 +96,9 @@ export function TPAPage() {
       case "approved":
         return <SuccessTag>APPROVED</SuccessTag>
       case "query_raised":
-        return <span className="px-2 py-0.5 text-xs font-bold rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-200">QUERY RAISED</span>
+        return <span className="px-2 py-0.5 text-xs font-bold rounded bg-warning-bg dark:bg-amber-950 text-warning-text dark:text-amber-200">QUERY RAISED</span>
       case "rejected":
-        return <span className="px-2 py-0.5 text-xs font-bold rounded bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-200">REJECTED</span>
+        return <span className="px-2 py-0.5 text-xs font-bold rounded bg-danger-bg dark:bg-rose-950 text-danger-text dark:text-rose-200">REJECTED</span>
       default:
         return <NeutralTag>SUBMITTED</NeutralTag>
     }
@@ -107,14 +107,14 @@ export function TPAPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">TPA & Pre-Authorization Desk</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
+        <h1 className="text-2xl font-bold text-ink dark:text-slate-100">TPA & Pre-Authorization Desk</h1>
+        <p className="text-sm text-ink-4 dark:text-slate-400">
           Insurance directory, pre-authorization claim tracking, TAT turnaround timers, & document checklist
         </p>
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-slate-200 dark:border-slate-800 gap-6">
+      <div className="flex border-b border-border dark:border-slate-800 gap-6">
         {[
           { key: "desk", label: "Pre-Auth Claims Desk" },
           { key: "claims", label: "Settlement Tracker" },
@@ -125,8 +125,8 @@ export function TPAPage() {
             onClick={() => setActiveTab(tab.key as any)}
             className={`pb-3 text-sm font-semibold border-b-2 transition-colors ${
               activeTab === tab.key
-                ? "border-emerald-500 text-emerald-600 dark:text-emerald-400"
-                : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                ? "border-success text-success dark:text-emerald-400"
+                : "border-transparent text-ink-4 hover:text-ink dark:hover:text-slate-200"
             }`}
           >
             {tab.label}
@@ -140,8 +140,8 @@ export function TPAPage() {
           {isClaimsLoading ? (
             <LoadingState />
           ) : (
-            <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
-              <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-700 dark:text-slate-200 border-b border-slate-200 dark:border-slate-800">
+            <table className="w-full text-left text-sm text-ink-3 dark:text-slate-300">
+              <thead className="bg-page dark:bg-slate-900/50 text-ink-2 dark:text-slate-200 border-b border-border dark:border-slate-800">
                 <tr>
                   <th className="px-6 py-3 font-semibold">Claim ID & Patient</th>
                   <th className="px-6 py-3 font-semibold">TPA Insurer</th>
@@ -151,24 +151,24 @@ export function TPAPage() {
                   <th className="px-6 py-3 font-semibold">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+              <tbody className="divide-y divide-border dark:divide-slate-800">
                 {claims.map((c) => (
-                  <tr key={c.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/40">
-                    <td className="px-6 py-4 font-bold text-slate-900 dark:text-slate-100">
+                  <tr key={c.id} className="hover:bg-page dark:hover:bg-slate-900/40">
+                    <td className="px-6 py-4 font-bold text-ink dark:text-slate-100">
                       PreAuth #{c.id}
-                      <span className="block text-xs font-normal text-slate-500">{c.patient_name}</span>
+                      <span className="block text-xs font-normal text-ink-4">{c.patient_name}</span>
                     </td>
                     <td className="px-6 py-4 font-semibold">{c.tpa_name}</td>
                     <td className="px-6 py-4 text-xs font-mono">{c.policy_number}</td>
                     <td className="px-6 py-4 text-xs font-mono">
-                      <span className="block text-slate-400">Claimed: ₹{Number(c.claim_amount).toLocaleString("en-IN")}</span>
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400">Approved: ₹{Number(c.approved_amount).toLocaleString("en-IN")}</span>
+                      <span className="block text-ink-5">Claimed: ₹{Number(c.claim_amount).toLocaleString("en-IN")}</span>
+                      <span className="font-bold text-success dark:text-emerald-400">Approved: ₹{Number(c.approved_amount).toLocaleString("en-IN")}</span>
                     </td>
                     <td className="px-6 py-4 text-xs">
                       {Object.keys(c.checklist || {}).length > 0 ? (
-                        <span className="text-emerald-600 dark:text-emerald-400 font-semibold">✓ Verified Docs</span>
+                        <span className="text-success dark:text-emerald-400 font-semibold">✓ Verified Docs</span>
                       ) : (
-                        <span className="text-slate-400">Pending</span>
+                        <span className="text-ink-5">Pending</span>
                       )}
                     </td>
                     <td className="px-6 py-4">{getStatusBadge(c.status)}</td>
@@ -186,8 +186,8 @@ export function TPAPage() {
           {isTpaClaimsLoading ? (
             <LoadingState />
           ) : (
-            <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
-              <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-700 dark:text-slate-200 border-b border-slate-200 dark:border-slate-800">
+            <table className="w-full text-left text-sm text-ink-3 dark:text-slate-300">
+              <thead className="bg-page dark:bg-slate-900/50 text-ink-2 dark:text-slate-200 border-b border-border dark:border-slate-800">
                 <tr>
                   <th className="px-6 py-3 font-semibold">Claim # & Patient</th>
                   <th className="px-6 py-3 font-semibold">TPA Insurer</th>
@@ -197,19 +197,19 @@ export function TPAPage() {
                   <th className="px-6 py-3 font-semibold">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+              <tbody className="divide-y divide-border dark:divide-slate-800">
                 {tpaClaims.map((c) => (
-                  <tr key={c.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/40">
-                    <td className="px-6 py-4 font-bold text-slate-900 dark:text-slate-100">
+                  <tr key={c.id} className="hover:bg-page dark:hover:bg-slate-900/40">
+                    <td className="px-6 py-4 font-bold text-ink dark:text-slate-100">
                       {c.claim_number || `Claim #${c.id}`}
-                      <span className="block text-xs font-normal text-slate-500">{c.patient_name}</span>
+                      <span className="block text-xs font-normal text-ink-4">{c.patient_name}</span>
                     </td>
                     <td className="px-6 py-4 font-semibold">{c.tpa_name}</td>
                     <td className="px-6 py-4 text-xs font-mono">
-                      <span className="block text-slate-400">Billed: {INR.format(Number(c.billed_amount))}</span>
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400">Settled: {INR.format(Number(c.settled_amount))}</span>
+                      <span className="block text-ink-5">Billed: {INR.format(Number(c.billed_amount))}</span>
+                      <span className="font-bold text-success dark:text-emerald-400">Settled: {INR.format(Number(c.settled_amount))}</span>
                     </td>
-                    <td className="px-6 py-4 text-xs font-mono font-bold text-rose-600 dark:text-rose-400">
+                    <td className="px-6 py-4 text-xs font-mono font-bold text-danger-text dark:text-rose-400">
                       {INR.format(Number(c.outstanding_amount))}
                     </td>
                     <td className="px-6 py-4"><ClaimStatusBadge status={c.status} /></td>
@@ -220,7 +220,7 @@ export function TPAPage() {
                 ))}
                 {tpaClaims.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-6 py-8 text-center text-slate-400">No claims submitted yet.</td>
+                    <td colSpan={6} className="px-6 py-8 text-center text-ink-5">No claims submitted yet.</td>
                   </tr>
                 )}
               </tbody>
@@ -236,19 +236,19 @@ export function TPAPage() {
             <LoadingState />
           ) : (
             tpas.map((tpa) => (
-              <Card key={tpa.id} className="p-6 border border-slate-200 dark:border-slate-800 space-y-3">
+              <Card key={tpa.id} className="p-6 border border-border dark:border-slate-800 space-y-3">
                 <div className="flex justify-between items-start">
                   <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{tpa.code}</span>
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">{tpa.name}</h3>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-ink-5">{tpa.code}</span>
+                    <h3 className="text-lg font-bold text-ink dark:text-slate-100">{tpa.name}</h3>
                   </div>
                   <SuccessTag>{tpa.avg_tat_days} DAYS AVG TAT</SuccessTag>
                 </div>
 
-                <div className="text-xs space-y-1 text-slate-500 dark:text-slate-400">
-                  <p>Contact Officer: <span className="font-semibold text-slate-700 dark:text-slate-200">{tpa.contact_person || "desk"}</span></p>
-                  <p>Desk Phone: <span className="font-mono text-slate-700 dark:text-slate-200">{tpa.phone}</span></p>
-                  <p>Pre-Auth Email: <span className="font-mono text-emerald-600 dark:text-emerald-400">{tpa.claim_submission_email || tpa.email}</span></p>
+                <div className="text-xs space-y-1 text-ink-4 dark:text-slate-400">
+                  <p>Contact Officer: <span className="font-semibold text-ink-2 dark:text-slate-200">{tpa.contact_person || "desk"}</span></p>
+                  <p>Desk Phone: <span className="font-mono text-ink-2 dark:text-slate-200">{tpa.phone}</span></p>
+                  <p>Pre-Auth Email: <span className="font-mono text-success dark:text-emerald-400">{tpa.claim_submission_email || tpa.email}</span></p>
                 </div>
               </Card>
             ))

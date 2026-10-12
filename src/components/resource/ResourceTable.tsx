@@ -63,7 +63,7 @@ export interface ResourceConfig {
 }
 
 const inputCls =
-  "w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+  "w-full px-3 py-2 text-sm border border-border-strong dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-success"
 
 export function fmt(v: unknown): string {
   if (v === null || v === undefined || v === "") return "—"
@@ -77,12 +77,12 @@ export function fmt(v: unknown): string {
 export function StatusPill({ value }: { value: unknown }) {
   const v = String(value ?? "")
   const tone = /critical|reject|fail|overdue|mismatch|breakdown|expired|recalled|cancel|death|severe|high|block|sentinel|wrong/i.test(v)
-    ? "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300"
+    ? "bg-danger-bg text-danger-text dark:bg-rose-950 dark:text-rose-300"
     : /pending|wait|draft|open|warning|moderate|partial|progress|scheduled|requested|suspected|medium/i.test(v)
-      ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
+      ? "bg-warning-bg text-warning-text dark:bg-amber-950 dark:text-amber-300"
       : /done|pass|paid|approved|complete|verified|active|granted|given|delivered|cleared|matched|eligible|success|normal|low|closed|available|in_use/i.test(v)
-        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
-        : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+        ? "bg-success-bg text-success-text dark:bg-emerald-950 dark:text-emerald-300"
+        : "bg-chip-bg text-ink-2 dark:bg-slate-800 dark:text-slate-300"
   return <span className={`inline-block px-2 py-0.5 text-xs font-semibold rounded ${tone}`}>{v.replace(/_/g, " ") || "—"}</span>
 }
 
@@ -106,7 +106,7 @@ function FkSelect({ field, value, onChange, multi }: { field: FieldDef; value: u
   if (multi) {
     const selected = new Set(((value as unknown[]) ?? []).map(String))
     return (
-      <div className="border border-slate-300 dark:border-slate-600 rounded-lg p-2 max-h-40 overflow-auto space-y-1">
+      <div className="border border-border-strong dark:border-slate-600 rounded-lg p-2 max-h-40 overflow-auto space-y-1">
         {rows.map((r) => (
           <label key={r.id} className="flex items-center gap-2 text-sm">
             <input
@@ -233,27 +233,27 @@ export function FormModal({
       <form
         onSubmit={submit}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 p-6 space-y-4"
+        className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-border dark:border-slate-700 p-6 space-y-4"
       >
-        <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">{title}</h2>
+        <h2 className="text-lg font-bold text-ink dark:text-slate-100">{title}</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {fields.map((f) => (
             <div key={f.key} className={f.type === "textarea" || f.type === "json" || f.type === "multifk" ? "sm:col-span-2" : ""}>
-              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">
+              <label className="block text-xs font-semibold text-ink-3 dark:text-slate-300 mb-1">
                 {f.label}
-                {f.required && <span className="text-rose-600"> *</span>}
+                {f.required && <span className="text-danger-text"> *</span>}
               </label>
               <FieldInput field={f} value={values[f.key]} onChange={(v) => setValues((s) => ({ ...s, [f.key]: v }))} />
-              {f.help && <p className="text-[11px] text-slate-500 mt-1">{f.help}</p>}
+              {f.help && <p className="text-[11px] text-ink-4 mt-1">{f.help}</p>}
             </div>
           ))}
         </div>
-        {error && <div className="text-sm text-rose-700 bg-rose-50 dark:bg-rose-950 dark:text-rose-300 rounded-lg p-3 whitespace-pre-wrap">{error}</div>}
+        {error && <div className="text-sm text-danger-text bg-danger-bg dark:bg-rose-950 dark:text-rose-300 rounded-lg p-3 whitespace-pre-wrap">{error}</div>}
         <div className="flex justify-end gap-2 pt-2">
-          <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
+          <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium rounded-lg bg-chip-bg dark:bg-slate-700 text-ink-2 dark:text-slate-200">
             Cancel
           </button>
-          <button disabled={busy} className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-60">
+          <button disabled={busy} className="px-4 py-2 text-sm font-medium rounded-lg bg-success hover:bg-success-text text-white disabled:opacity-60">
             {busy ? "Saving…" : submitLabel}
           </button>
         </div>
@@ -347,8 +347,8 @@ export function ResourceTable({ config }: { config: ResourceConfig }) {
     <div className="space-y-4">
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-3">
         <div>
-          <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">{config.title}</h2>
-          {config.description && <p className="text-sm text-slate-500 dark:text-slate-400 max-w-3xl">{config.description}</p>}
+          <h2 className="text-lg font-bold text-ink dark:text-slate-100">{config.title}</h2>
+          {config.description && <p className="text-sm text-ink-4 dark:text-slate-400 max-w-3xl">{config.description}</p>}
         </div>
         <div className="flex flex-wrap gap-2 items-center">
           {config.searchable !== false && (
@@ -363,47 +363,47 @@ export function ResourceTable({ config }: { config: ResourceConfig }) {
             <button
               key={tb.label}
               onClick={() => trigger({ label: tb.label, path: tb.path, method: tb.method, prompt: tb.prompt, download: tb.download }, undefined, true)}
-              className="px-3 py-2 text-sm font-medium rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200"
+              className="px-3 py-2 text-sm font-medium rounded-lg bg-chip-bg dark:bg-slate-700 text-ink-2 dark:text-slate-200 hover:bg-border-soft"
             >
               {tb.label}
             </button>
           ))}
           {config.fields && (
-            <button onClick={() => setCreating(true)} className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm">
+            <button onClick={() => setCreating(true)} className="px-4 py-2 text-sm font-medium text-white bg-success hover:bg-success-text rounded-lg shadow-sm">
               + {config.createLabel ?? "New"}
             </button>
           )}
         </div>
       </div>
 
-      {notice && <div className="text-sm text-emerald-800 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300 rounded-lg px-3 py-2">{notice}</div>}
+      {notice && <div className="text-sm text-success-text bg-success-bg dark:bg-emerald-950 dark:text-emerald-300 rounded-lg px-3 py-2">{notice}</div>}
       {error && (
-        <div className="text-sm text-rose-700 bg-rose-50 dark:bg-rose-950 dark:text-rose-300 rounded-lg px-3 py-2 flex justify-between">
+        <div className="text-sm text-danger-text bg-danger-bg dark:bg-rose-950 dark:text-rose-300 rounded-lg px-3 py-2 flex justify-between">
           <span className="whitespace-pre-wrap">{error}</span>
           <button onClick={() => setError(null)} className="font-bold">×</button>
         </div>
       )}
 
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-x-auto">
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-x-auto">
         <table className="w-full text-left border-collapse text-sm">
           <thead>
-            <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-xs font-semibold text-slate-500 uppercase">
+            <tr className="border-b border-border dark:border-slate-700 bg-page dark:bg-slate-900/50 text-xs font-semibold text-ink-4 uppercase">
               {config.columns.map((c) => (
                 <th key={c.key} className="px-4 py-3 whitespace-nowrap">{c.label}</th>
               ))}
               {config.actions?.length ? <th className="px-4 py-3 text-right">Actions</th> : null}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+          <tbody className="divide-y divide-border dark:divide-slate-700">
             {loading ? (
-              <tr><td colSpan={99} className="px-4 py-8 text-center text-slate-500">Loading…</td></tr>
+              <tr><td colSpan={99} className="px-4 py-8 text-center text-ink-4">Loading…</td></tr>
             ) : rows.length === 0 ? (
-              <tr><td colSpan={99} className="px-4 py-8 text-center text-slate-500">{config.emptyText ?? "No records yet."}</td></tr>
+              <tr><td colSpan={99} className="px-4 py-8 text-center text-ink-4">{config.emptyText ?? "No records yet."}</td></tr>
             ) : (
               rows.map((row) => (
-                <tr key={row.id ?? JSON.stringify(row)} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/50 align-top">
+                <tr key={row.id ?? JSON.stringify(row)} className="hover:bg-page/50 dark:hover:bg-slate-700/50 align-top">
                   {config.columns.map((c) => (
-                    <td key={c.key} className="px-4 py-3 text-slate-700 dark:text-slate-200 max-w-xs break-words">
+                    <td key={c.key} className="px-4 py-3 text-ink-2 dark:text-slate-200 max-w-xs break-words">
                       {c.render ? c.render(row) : /status|severity|risk|result|stage|flag|match|harm/.test(c.key) ? <StatusPill value={row[c.key]} /> : fmt(row[c.key])}
                     </td>
                   ))}
@@ -415,10 +415,10 @@ export function ResourceTable({ config }: { config: ResourceConfig }) {
                           onClick={() => trigger(a, row)}
                           className={`px-2.5 py-1 text-xs font-semibold rounded-md ${
                             a.tone === "danger"
-                              ? "bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-950 dark:text-rose-300"
+                              ? "bg-danger-bg text-danger-text hover:bg-danger-bg dark:bg-rose-950 dark:text-rose-300"
                               : a.tone === "primary"
-                                ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-300"
-                                : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200"
+                                ? "bg-success-bg text-success-text hover:bg-success-bg dark:bg-emerald-950 dark:text-emerald-300"
+                                : "bg-chip-bg text-ink-2 hover:bg-border-soft dark:bg-slate-700 dark:text-slate-200"
                           }`}
                         >
                           {a.label}
@@ -434,9 +434,9 @@ export function ResourceTable({ config }: { config: ResourceConfig }) {
       </div>
       {pages > 1 && (
         <div className="flex items-center justify-end gap-2 text-sm">
-          <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="px-3 py-1 rounded bg-slate-100 dark:bg-slate-700 disabled:opacity-40">‹</button>
-          <span className="text-slate-500">Page {page} / {pages} · {count} records</span>
-          <button disabled={page >= pages} onClick={() => setPage((p) => p + 1)} className="px-3 py-1 rounded bg-slate-100 dark:bg-slate-700 disabled:opacity-40">›</button>
+          <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="px-3 py-1 rounded bg-chip-bg dark:bg-slate-700 disabled:opacity-40">‹</button>
+          <span className="text-ink-4">Page {page} / {pages} · {count} records</span>
+          <button disabled={page >= pages} onClick={() => setPage((p) => p + 1)} className="px-3 py-1 rounded bg-chip-bg dark:bg-slate-700 disabled:opacity-40">›</button>
         </div>
       )}
 
@@ -468,7 +468,7 @@ export function ResourceTable({ config }: { config: ResourceConfig }) {
       {detail && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4" onClick={() => setDetail(null)}>
           <div className="w-full max-w-3xl max-h-[85vh] overflow-auto bg-white dark:bg-slate-800 rounded-xl p-6" onClick={(e) => e.stopPropagation()}>
-            <pre className="text-xs whitespace-pre-wrap text-slate-700 dark:text-slate-200">{JSON.stringify(detail, null, 2)}</pre>
+            <pre className="text-xs whitespace-pre-wrap text-ink-2 dark:text-slate-200">{JSON.stringify(detail, null, 2)}</pre>
           </div>
         </div>
       )}

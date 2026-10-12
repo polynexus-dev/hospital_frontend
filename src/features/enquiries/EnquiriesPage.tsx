@@ -113,12 +113,12 @@ type StageAction = {
 }
 
 const STAGE_ACTIONS: Record<string, StageAction | null> = {
-  new: { icon: "📞", label: "Quick Convert", color: "text-blue-600 dark:text-blue-400", title: "Create patient record & optionally schedule OPD" },
-  contacted: { icon: "🗓️", label: "Schedule OPD", color: "text-emerald-600 dark:text-emerald-400", title: "Book an OPD appointment for this lead" },
-  scheduled: { icon: "🏥", label: "Mark Visited", color: "text-violet-600 dark:text-violet-400", title: "Patient has arrived — mark as visited" },
-  visited: { icon: "📋", label: "Create Estimate", color: "text-amber-600 dark:text-amber-400", title: "Create surgical/IPD estimate or convert to billing" },
+  new: { icon: "📞", label: "Quick Convert", color: "text-brand dark:text-blue-400", title: "Create patient record & optionally schedule OPD" },
+  contacted: { icon: "🗓️", label: "Schedule OPD", color: "text-success dark:text-emerald-400", title: "Book an OPD appointment for this lead" },
+  scheduled: { icon: "🏥", label: "Mark Visited", color: "text-accent dark:text-violet-400", title: "Patient has arrived — mark as visited" },
+  visited: { icon: "📋", label: "Create Estimate", color: "text-warning-text dark:text-amber-400", title: "Create surgical/IPD estimate or convert to billing" },
   completed: null, // No action needed
-  follow_up: { icon: "🔄", label: "Re-engage", color: "text-teal-600 dark:text-teal-400", title: "Re-schedule appointment for follow-up" },
+  follow_up: { icon: "🔄", label: "Re-engage", color: "text-accent dark:text-teal-400", title: "Re-schedule appointment for follow-up" },
 }
 
 /* ─── Modal wrapper (shared backdrop) ────────────────────────────────── */
@@ -143,7 +143,7 @@ function SuccessBanner({ message, details, onClose }: { message: string; details
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4" onClick={onClose}>
       <div className="bg-surface border border-border-strong rounded-xl p-6 w-full max-w-md shadow-2xl space-y-4" onClick={(e) => e.stopPropagation()}>
-        <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-2xl mx-auto">✓</div>
+        <div className="w-12 h-12 rounded-full bg-success-bg dark:bg-emerald-950 text-success dark:text-emerald-400 flex items-center justify-center text-2xl mx-auto">✓</div>
         <div className="text-center">
           <h3 className="text-lg font-bold text-ink">{message}</h3>
         </div>
@@ -214,7 +214,7 @@ function NewStageModal({ enquiry, onClose }: { enquiry: Enquiry; onClose: () => 
         message="Patient Created & Lead Contacted!"
         details={[
           { label: "Patient UHID", value: createdUhid },
-          { label: "Pipeline Stage", value: "Contacted", color: "text-blue-600 dark:text-blue-400 font-bold" },
+          { label: "Pipeline Stage", value: "Contacted", color: "text-brand dark:text-blue-400 font-bold" },
           { label: "Next Step", value: "Schedule an OPD appointment", color: "text-ink-3" },
         ]}
         onClose={onClose}
@@ -225,17 +225,17 @@ function NewStageModal({ enquiry, onClose }: { enquiry: Enquiry; onClose: () => 
   return (
     <ModalShell onClose={onClose} title="Quick Convert — Create Patient Record" subtitle={`Lead #${enquiry.id}: ${enquiry.name} (${enquiry.mobile})`}>
       <div className="flex flex-col gap-3.5 mt-4">
-        <div className="p-2.5 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 text-xs text-blue-700 dark:text-blue-300">
+        <div className="p-2.5 rounded-lg bg-brand-tint dark:bg-blue-950/30 border border-brand-border dark:border-blue-800 text-xs text-brand-dark dark:text-blue-300">
           💡 This will create a patient record and move the lead to <strong>Contacted</strong>. You can schedule an OPD appointment in the next step.
         </div>
 
         <div className="space-y-2">
           <label className="text-xs font-semibold text-ink uppercase tracking-wider">Patient Profile</label>
           {existingPatient && useExisting ? (
-            <div className="p-3 rounded-lg border border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-950/40 flex items-center justify-between text-xs">
+            <div className="p-3 rounded-lg border border-accent/25 dark:border-teal-800 bg-accent-tint dark:bg-teal-950/40 flex items-center justify-between text-xs">
               <div>
-                <div className="font-bold text-teal-800 dark:text-teal-200">Existing Patient Matched</div>
-                <div className="text-teal-600 dark:text-teal-400 mt-0.5">
+                <div className="font-bold text-accent-hover dark:text-teal-200">Existing Patient Matched</div>
+                <div className="text-accent dark:text-teal-400 mt-0.5">
                   {existingPatient.full_name} (MRN #{existingPatient.id} • {existingPatient.mobile})
                 </div>
               </div>
@@ -344,7 +344,7 @@ function ContactedStageModal({ enquiry, onClose }: { enquiry: Enquiry; onClose: 
         details={[
           { label: "Enquiry", value: `#${enquiry.id} — ${enquiry.name}` },
           { label: "Appointment", value: successInfo.appointmentTime, color: "text-brand font-semibold" },
-          { label: "Pipeline Stage", value: "Scheduled", color: "text-emerald-600 dark:text-emerald-400 font-bold" },
+          { label: "Pipeline Stage", value: "Scheduled", color: "text-success dark:text-emerald-400 font-bold" },
         ]}
         onClose={onClose}
       />
@@ -355,7 +355,7 @@ function ContactedStageModal({ enquiry, onClose }: { enquiry: Enquiry; onClose: 
     <ModalShell onClose={onClose} title="Schedule OPD Appointment" subtitle={`Lead #${enquiry.id}: ${enquiry.name} (${enquiry.mobile})`}>
       <div className="flex flex-col gap-3.5 mt-4">
         {!enquiry.patient && (
-          <div className="p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs text-amber-700 dark:text-amber-300">
+          <div className="p-2.5 rounded-lg bg-warning-bg dark:bg-amber-950/30 border border-warning/30 dark:border-amber-800 text-xs text-warning-text dark:text-amber-300">
             ⚠️ No patient record linked yet. One will be auto-created when you schedule.
           </div>
         )}
@@ -452,7 +452,7 @@ function ScheduledStageModal({ enquiry, onClose }: { enquiry: Enquiry; onClose: 
         message="Patient Visit Confirmed!"
         details={[
           { label: "Lead", value: `#${enquiry.id} — ${enquiry.name}` },
-          { label: "Stage", value: "Visited ✓", color: "text-violet-600 dark:text-violet-400 font-bold" },
+          { label: "Stage", value: "Visited ✓", color: "text-accent dark:text-violet-400 font-bold" },
           { label: "Next Step", value: "Create Surgical Estimate or complete", color: "text-ink-3" },
         ]}
         onClose={onClose}
@@ -463,7 +463,7 @@ function ScheduledStageModal({ enquiry, onClose }: { enquiry: Enquiry; onClose: 
   return (
     <ModalShell onClose={onClose} title="Confirm Patient Visit" subtitle={`Lead #${enquiry.id}: ${enquiry.name} (${enquiry.mobile})`}>
       <div className="flex flex-col gap-3.5 mt-4">
-        <div className="p-3 rounded-lg bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-800 text-xs text-violet-700 dark:text-violet-300">
+        <div className="p-3 rounded-lg bg-accent-tint dark:bg-violet-950/30 border border-accent/25 dark:border-violet-800 text-xs text-accent-hover dark:text-violet-300">
           🏥 Patient <strong>{enquiry.name}</strong> has arrived at the hospital. Confirming visit moves lead to <strong>Visited</strong> stage.
         </div>
         <div>
@@ -504,7 +504,7 @@ function VisitedStageModal({ enquiry, onClose, onCreateEstimate }: { enquiry: En
         message="Enquiry Completed!"
         details={[
           { label: "Lead", value: `#${enquiry.id} — ${enquiry.name}` },
-          { label: "Stage", value: "Completed ✓", color: "text-emerald-600 dark:text-emerald-400 font-bold" },
+          { label: "Stage", value: "Completed ✓", color: "text-success dark:text-emerald-400 font-bold" },
         ]}
         onClose={onClose}
       />
@@ -516,28 +516,28 @@ function VisitedStageModal({ enquiry, onClose, onCreateEstimate }: { enquiry: En
       <div className="flex flex-col gap-3 mt-4">
         <button
           onClick={() => { onClose(); onCreateEstimate() }}
-          className="w-full p-4 rounded-lg border-2 border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 hover:border-amber-400 dark:hover:border-amber-600 transition-colors text-left group"
+          className="w-full p-4 rounded-lg border-2 border-warning/30 dark:border-amber-800 bg-warning-bg dark:bg-amber-950/30 hover:border-warning dark:hover:border-amber-600 transition-colors text-left group"
         >
           <div className="flex items-center gap-3">
             <span className="text-2xl">🏥</span>
             <div>
-              <div className="text-sm font-bold text-amber-800 dark:text-amber-200 group-hover:text-amber-900 dark:group-hover:text-amber-100">Create Surgical / IPD Estimate</div>
-              <div className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">Doctor advised surgery or admission — create a treatment estimate with cost breakdown & insurance pre-auth</div>
+              <div className="text-sm font-bold text-warning-text dark:text-amber-200 group-hover:text-warning-text dark:group-hover:text-amber-100">Create Surgical / IPD Estimate</div>
+              <div className="text-xs text-warning-text dark:text-amber-400 mt-0.5">Doctor advised surgery or admission — create a treatment estimate with cost breakdown & insurance pre-auth</div>
             </div>
           </div>
         </button>
         <button
           onClick={() => completeMutation.mutate()}
           disabled={completeMutation.isPending}
-          className="w-full p-4 rounded-lg border-2 border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30 hover:border-emerald-400 dark:hover:border-emerald-600 transition-colors text-left group"
+          className="w-full p-4 rounded-lg border-2 border-success/25 dark:border-emerald-800 bg-success-bg dark:bg-emerald-950/30 hover:border-success dark:hover:border-emerald-600 transition-colors text-left group"
         >
           <div className="flex items-center gap-3">
             <span className="text-2xl">✅</span>
             <div>
-              <div className="text-sm font-bold text-emerald-800 dark:text-emerald-200 group-hover:text-emerald-900 dark:group-hover:text-emerald-100">
+              <div className="text-sm font-bold text-success-text dark:text-emerald-200 group-hover:text-success-text dark:group-hover:text-emerald-100">
                 {completeMutation.isPending ? "Completing…" : "Mark OPD Completed"}
               </div>
-              <div className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">Consultation done, no further admission needed — close this lead as successfully completed</div>
+              <div className="text-xs text-success dark:text-emerald-400 mt-0.5">Consultation done, no further admission needed — close this lead as successfully completed</div>
             </div>
           </div>
         </button>
@@ -618,7 +618,7 @@ function FollowUpStageModal({ enquiry, onClose }: { enquiry: Enquiry; onClose: (
         message="Follow-up Appointment Scheduled!"
         details={[
           { label: "Lead", value: `#${enquiry.id} — ${enquiry.name}` },
-          { label: "Stage", value: "Re-scheduled → Scheduled", color: "text-teal-600 dark:text-teal-400 font-bold" },
+          { label: "Stage", value: "Re-scheduled → Scheduled", color: "text-accent dark:text-teal-400 font-bold" },
         ]}
         onClose={onClose}
       />
@@ -629,18 +629,18 @@ function FollowUpStageModal({ enquiry, onClose }: { enquiry: Enquiry; onClose: (
     <ModalShell onClose={onClose} title="Re-engage — Schedule Follow-up" subtitle={`Lead #${enquiry.id}: ${enquiry.name} (${enquiry.mobile})`}>
       <div className="flex flex-col gap-3.5 mt-4">
         {/* Quick Callback Date Picker */}
-        <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs">
+        <div className="p-3 rounded-lg bg-warning-bg dark:bg-amber-950/30 border border-warning/30 dark:border-amber-800 text-xs">
           <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
             <div>
-              <span className="font-bold text-amber-900 dark:text-amber-200 block">⏰ Set Tele-Caller Callback Date</span>
-              <span className="text-[11px] text-amber-700 dark:text-amber-400">If patient isn't booking right now, set when to call them back</span>
+              <span className="font-bold text-warning-text dark:text-amber-200 block">⏰ Set Tele-Caller Callback Date</span>
+              <span className="text-[11px] text-warning-text dark:text-amber-400">If patient isn't booking right now, set when to call them back</span>
             </div>
             <div className="flex items-center gap-1.5">
               <input
                 type="date"
                 value={callbackDate}
                 onChange={(e) => setCallbackDate(e.target.value)}
-                className="h-8 px-2 border border-amber-300 dark:border-amber-700 rounded text-xs bg-surface"
+                className="h-8 px-2 border border-warning/30 dark:border-amber-700 rounded text-xs bg-surface"
               />
               <Button
                 variant="secondary"
@@ -654,12 +654,12 @@ function FollowUpStageModal({ enquiry, onClose }: { enquiry: Enquiry; onClose: (
           </div>
         </div>
 
-        <div className="p-2.5 rounded-lg bg-teal-50 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-800 text-xs text-teal-700 dark:text-teal-300">
+        <div className="p-2.5 rounded-lg bg-accent-tint dark:bg-teal-950/30 border border-accent/25 dark:border-teal-800 text-xs text-accent-hover dark:text-teal-300">
           🔄 Or book a direct follow-up consultation below to move this lead back to <strong>Scheduled</strong>.
         </div>
 
         {!enquiry.patient && (
-          <div className="p-2.5 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-xs text-red-700 dark:text-red-300">
+          <div className="p-2.5 rounded-lg bg-danger-bg dark:bg-red-950/30 border border-danger-border dark:border-red-800 text-xs text-danger-text dark:text-red-300">
             ❌ No patient record linked. Please convert the lead first before re-scheduling.
           </div>
         )}
@@ -808,7 +808,7 @@ function EnquiryCard({
         {enquiry.estimated_value && <NeutralTag>{INR.format(Number(enquiry.estimated_value))}</NeutralTag>}
         {enquiry.patient && <NeutralTag>✓ Patient #{enquiry.patient}</NeutralTag>}
         {enquiry.consulting_doctor_name && (
-          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10.5px] font-semibold bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800">
+          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10.5px] font-semibold bg-accent-tint dark:bg-teal-950/40 text-accent-hover dark:text-teal-300 border border-accent/25 dark:border-teal-800">
             🩺 {enquiry.consulting_doctor_name.startsWith("Dr.") ? enquiry.consulting_doctor_name : `Dr. ${enquiry.consulting_doctor_name}`}
           </span>
         )}
@@ -819,7 +819,7 @@ function EnquiryCard({
             <span
               className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10.5px] font-semibold border ${
                 isDue
-                  ? "bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950/60 dark:text-amber-200 dark:border-amber-700 font-bold animate-pulse"
+                  ? "bg-warning-bg text-warning-text border-warning/30 dark:bg-amber-950/60 dark:text-amber-200 dark:border-amber-700 font-bold animate-pulse"
                   : "bg-surface text-ink-3 border-border"
               }`}
             >
@@ -872,7 +872,7 @@ function EnquiryCard({
         </button>
         <button
           onClick={() => onOpenOpdSlip?.(enquiry)}
-          className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:text-brand flex items-center gap-0.5"
+          className="text-[11px] font-semibold text-ink-2 dark:text-slate-300 hover:text-brand flex items-center gap-0.5"
           title="Print official OPD Consultation Token / Slip"
         >
           <span>🖨️ Slip</span>
@@ -964,14 +964,14 @@ export function EnquiriesPage() {
   return (
     <div className="flex flex-col gap-3.5">
       {/* Top Header & Tab Controls */}
-      <div className="flex items-center justify-between border-b border-slate-200 pb-3 dark:border-slate-800 gap-3 flex-wrap">
+      <div className="flex items-center justify-between border-b border-border pb-3 dark:border-slate-800 gap-3 flex-wrap">
         <div className="flex items-center gap-2">
           <button
             onClick={() => setActiveTab("leads")}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               activeTab === "leads"
-                ? "bg-teal-600 text-white shadow-sm dark:bg-teal-500"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+                ? "bg-accent text-white shadow-sm dark:bg-teal-500"
+                : "bg-chip-bg text-ink-3 hover:bg-border-soft dark:bg-slate-800 dark:text-slate-300"
             }`}
           >
             📋 OPD & Inbound Leads ({open.length})
@@ -980,8 +980,8 @@ export function EnquiriesPage() {
             onClick={() => setActiveTab("surgical")}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
               activeTab === "surgical"
-                ? "bg-teal-600 text-white shadow-sm dark:bg-teal-500"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+                ? "bg-accent text-white shadow-sm dark:bg-teal-500"
+                : "bg-chip-bg text-ink-3 hover:bg-border-soft dark:bg-slate-800 dark:text-slate-300"
             }`}
           >
             <span>🏥</span> Surgical & IPD Pipeline
@@ -990,8 +990,8 @@ export function EnquiriesPage() {
             onClick={() => setActiveTab("chain")}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
               activeTab === "chain"
-                ? "bg-teal-600 text-white shadow-sm dark:bg-teal-500"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+                ? "bg-accent text-white shadow-sm dark:bg-teal-500"
+                : "bg-chip-bg text-ink-3 hover:bg-border-soft dark:bg-slate-800 dark:text-slate-300"
             }`}
           >
             <span>🌐</span> Multi-Branch Chain Network
@@ -1015,7 +1015,7 @@ export function EnquiriesPage() {
                 setIsExporting(false)
               }
             }}
-            className="border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300"
+            className="border border-border dark:border-slate-800 text-ink-2 dark:text-slate-300"
           >
             {isExporting ? "Exporting…" : "📥 Export CSV"}
           </Button>
@@ -1023,7 +1023,7 @@ export function EnquiriesPage() {
             size="sm"
             variant="ghost"
             onClick={() => setShowWebhookModal(true)}
-            className="border border-slate-200 dark:border-slate-800 text-teal-700 dark:text-teal-400"
+            className="border border-border dark:border-slate-800 text-accent-hover dark:text-teal-400"
           >
             ⚡ Inbound Webhooks
           </Button>
@@ -1105,8 +1105,8 @@ export function EnquiriesPage() {
                 onClick={() => setCallbacksOnly((v) => !v)}
                 className={`h-[30px] px-2.5 rounded-control text-[12.5px] font-semibold border transition-colors ${
                   callbacksOnly
-                    ? "bg-amber-100 dark:bg-amber-950/60 border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-200 font-bold"
-                    : "bg-surface border-border-strong text-ink-3 hover:border-amber-400"
+                    ? "bg-warning-bg dark:bg-amber-950/60 border-warning/30 dark:border-amber-700 text-warning-text dark:text-amber-200 font-bold"
+                    : "bg-surface border-border-strong text-ink-3 hover:border-warning"
                 }`}
               >
                 ⏰ Callbacks Due · {callbacksDueCount}

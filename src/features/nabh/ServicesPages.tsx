@@ -179,7 +179,7 @@ export function QueuePage() {
           resource: {
             title: "TV / kiosk displays", endpoint: "/queue/displays/", createLabel: "New display",
             description: "Open the display link on the TV browser — it needs no login and shows token numbers only (no patient names).",
-            columns: [col("name", "Display"), { key: "key", label: "Screen link", render: (r) => <a className="text-emerald-700 underline" href={`/display/${r.key}`} target="_blank" rel="noreferrer">/display/{String(r.key).slice(0, 8)}…</a> }, col("announcement", "Announcement")],
+            columns: [col("name", "Display"), { key: "key", label: "Screen link", render: (r) => <a className="text-success-text underline" href={`/display/${r.key}`} target="_blank" rel="noreferrer">/display/{String(r.key).slice(0, 8)}…</a> }, col("announcement", "Announcement")],
             fields: [{ key: "name", label: "Name", required: true }, { key: "service_points", label: "Counters shown", type: "multifk", source: "/queue/service-points/" }, { key: "announcement", label: "Scrolling announcement" }],
           },
         },

@@ -87,7 +87,7 @@ export function LicenceRequestsPanel() {
         </Button>
       </CardHeader>
       {message && (
-        <div className={`mx-3.5 mt-3 rounded-control px-3 py-2 text-[12px] font-semibold ${message.ok ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300" : "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300"}`}>
+        <div className={`mx-3.5 mt-3 rounded-control px-3 py-2 text-[12px] font-semibold ${message.ok ? "bg-success-bg text-success-text dark:bg-emerald-950/40 dark:text-emerald-300" : "bg-danger-bg text-danger-text dark:bg-rose-950/40 dark:text-rose-300"}`}>
           {message.text}
         </div>
       )}
@@ -185,7 +185,7 @@ export function LicenceTeamPanel() {
         </div>
       </CardHeader>
       {message && (
-        <div className={`mx-3.5 mt-3 rounded-control px-3 py-2 text-[12px] font-semibold ${message.ok ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300" : "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300"}`}>
+        <div className={`mx-3.5 mt-3 rounded-control px-3 py-2 text-[12px] font-semibold ${message.ok ? "bg-success-bg text-success-text dark:bg-emerald-950/40 dark:text-emerald-300" : "bg-danger-bg text-danger-text dark:bg-rose-950/40 dark:text-rose-300"}`}>
           {message.text}
         </div>
       )}

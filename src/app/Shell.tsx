@@ -642,9 +642,9 @@ export function Shell() {
             <button
               onClick={() => navigate("/callbacks")}
 
-              className="flex items-center gap-2 h-8 px-3 rounded-control text-xs font-bold text-amber-700 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 animate-pulse"
+              className="flex items-center gap-2 h-8 px-3 rounded-control text-xs font-bold text-warning-text bg-warning-bg dark:bg-amber-950/40 border border-warning/30 dark:border-amber-800 animate-pulse"
             >
-              <span className="w-2 h-2 rounded-full bg-amber-500" />
+              <span className="w-2 h-2 rounded-full bg-warning" />
               <span>• {pendingCallbacks.count} calls waiting</span>
             </button>
           )}
@@ -664,7 +664,7 @@ export function Shell() {
 
         {/* Warning banner when in Hospital Ops mode but no hospital branch is attached */}
         {!isInSaasMode && !user?.hospital && !isSaasUser && (
-          <div className="bg-amber-50 border-b border-amber-300 text-amber-900 px-5 py-3 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+          <div className="bg-warning-bg border-b border-warning/30 text-warning-text px-5 py-3 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
             <div className="flex items-center gap-2.5">
               <span className="text-base">⚠️</span>
               <div>
@@ -673,9 +673,9 @@ export function Shell() {
             </div>
             {availableBranches.length > 0 && (
               <div className="flex items-center gap-2 shrink-0">
-                <span className="font-bold text-amber-800">Select Branch:</span>
+                <span className="font-bold text-warning-text">Select Branch:</span>
                 <select
-                  className="bg-white border border-amber-400 text-slate-900 font-bold px-2.5 py-1 rounded text-xs focus:ring-2 focus:ring-amber-500 shadow-2xs"
+                  className="bg-white border border-warning text-ink font-bold px-2.5 py-1 rounded text-xs focus:ring-2 focus:ring-warning shadow-2xs"
                   onChange={(e) => handleSwitchBranch(e.target.value)}
                   defaultValue=""
                 >
@@ -814,7 +814,7 @@ export function Shell() {
       {isLocked && (
         <div className="fixed inset-0 z-[100] backdrop-blur-md bg-slate-950/85 flex items-center justify-center p-4 animate-in fade-in duration-300">
           <div className="bg-slate-900 border border-slate-700 text-white rounded-2xl p-8 w-full max-w-md shadow-2xl flex flex-col items-center text-center space-y-5">
-            <div className="w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center text-2xl shadow-inner">
+            <div className="w-16 h-16 rounded-full bg-success/20 border-2 border-success flex items-center justify-center text-2xl shadow-inner">
               🔒
             </div>
 
@@ -861,7 +861,7 @@ export function Shell() {
                 placeholder="Enter password or unlock PIN"
                 value={unlockPasscode}
                 onChange={(e) => setUnlockPasscode(e.target.value)}
-                className="w-full h-11 px-4 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-mono text-center tracking-widest focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full h-11 px-4 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm font-mono text-center tracking-widest focus:outline-none focus:ring-2 focus:ring-success"
               />
               <div className="flex gap-2">
                 <button
@@ -873,7 +873,7 @@ export function Shell() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 h-10 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg transition-colors"
+                  className="flex-1 h-10 rounded-xl bg-success hover:bg-success text-white text-xs font-bold shadow-lg transition-colors"
                 >
                   Unlock Terminal
                 </button>

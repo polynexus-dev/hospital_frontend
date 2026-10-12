@@ -95,26 +95,26 @@ export function SurgicalPipelineTab({ onNewEstimate }: Props) {
     switch (status) {
       case "approved":
         return (
-          <span className="inline-flex items-center gap-1 rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
+          <span className="inline-flex items-center gap-1 rounded bg-success-bg px-2 py-0.5 text-[10px] font-semibold text-success-text dark:bg-emerald-900/40 dark:text-emerald-300">
             ✓ Cashless Approved ({tpa || "TPA"})
           </span>
         )
       case "submitted":
       case "query_raised":
         return (
-          <span className="inline-flex items-center gap-1 rounded bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+          <span className="inline-flex items-center gap-1 rounded bg-warning-bg px-2 py-0.5 text-[10px] font-semibold text-warning-text dark:bg-amber-900/40 dark:text-amber-300">
             ⏳ TPA In Progress ({tpa || "TPA"})
           </span>
         )
       case "denied":
         return (
-          <span className="inline-flex items-center gap-1 rounded bg-rose-100 px-2 py-0.5 text-[10px] font-semibold text-rose-800 dark:bg-rose-900/40 dark:text-rose-300">
+          <span className="inline-flex items-center gap-1 rounded bg-danger-bg px-2 py-0.5 text-[10px] font-semibold text-danger-text dark:bg-rose-900/40 dark:text-rose-300">
             ✕ Pre-Auth Denied
           </span>
         )
       default:
         return (
-          <span className="inline-flex items-center gap-1 rounded bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+          <span className="inline-flex items-center gap-1 rounded bg-chip-bg px-2 py-0.5 text-[10px] font-medium text-ink-3 dark:bg-slate-800 dark:text-slate-300">
             Self Pay / Direct
           </span>
         )
@@ -125,67 +125,67 @@ export function SurgicalPipelineTab({ onNewEstimate }: Props) {
     <div className="space-y-5">
       {/* Funnel Metric Tiles */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="p-4 bg-gradient-to-br from-teal-500/10 to-teal-600/5 border-teal-200/50">
-          <div className="text-xs font-semibold uppercase tracking-wider text-teal-700 dark:text-teal-400">
+        <Card className="p-4 bg-gradient-to-br from-accent/10 to-accent/5 border-accent/50">
+          <div className="text-xs font-semibold uppercase tracking-wider text-accent-hover dark:text-teal-400">
             Total Pipeline Value
           </div>
-          <div className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
+          <div className="mt-1 text-2xl font-bold text-ink dark:text-white">
             ₹{pipelineValue.toLocaleString()}
           </div>
-          <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+          <div className="mt-1 text-xs text-ink-4 dark:text-slate-400">
             {estimates.length} Surgical cases in funnel
           </div>
         </Card>
 
-        <Card className="p-4 bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-200/50">
-          <div className="text-xs font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-400">
+        <Card className="p-4 bg-gradient-to-br from-brand/10 to-brand/5 border-brand-border/50">
+          <div className="text-xs font-semibold uppercase tracking-wider text-brand-dark dark:text-blue-400">
             Pre-Auth In Progress
           </div>
-          <div className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
+          <div className="mt-1 text-2xl font-bold text-ink dark:text-white">
             {preauthPendingCount}
           </div>
-          <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+          <div className="mt-1 text-xs text-ink-4 dark:text-slate-400">
             TPA desk review & queries
           </div>
         </Card>
 
-        <Card className="p-4 bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-purple-200/50">
-          <div className="text-xs font-semibold uppercase tracking-wider text-purple-700 dark:text-purple-400">
+        <Card className="p-4 bg-gradient-to-br from-accent/10 to-accent/5 border-accent/50">
+          <div className="text-xs font-semibold uppercase tracking-wider text-accent-hover dark:text-purple-400">
             Scheduled for Surgery
           </div>
-          <div className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
+          <div className="mt-1 text-2xl font-bold text-ink dark:text-white">
             {scheduledCount}
           </div>
-          <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+          <div className="mt-1 text-xs text-ink-4 dark:text-slate-400">
             OT bookings confirmed
           </div>
         </Card>
 
-        <Card className="p-4 bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border-emerald-200/50">
-          <div className="text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+        <Card className="p-4 bg-gradient-to-br from-success/10 to-success/5 border-success/50">
+          <div className="text-xs font-semibold uppercase tracking-wider text-success-text dark:text-emerald-400">
             Admitted / Converted
           </div>
-          <div className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">
+          <div className="mt-1 text-2xl font-bold text-ink dark:text-white">
             {convertedCount}
           </div>
-          <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+          <div className="mt-1 text-xs text-ink-4 dark:text-slate-400">
             Successfully admitted to IPD
           </div>
         </Card>
       </div>
 
       {/* Filter Bar & Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="flex flex-wrap items-center gap-2 text-xs">
-          <span className="font-semibold text-slate-600 dark:text-slate-400">Stage:</span>
+          <span className="font-semibold text-ink-3 dark:text-slate-400">Stage:</span>
           {["all", "advised", "counseling", "estimate_shared", "preauth_in_progress", "scheduled", "converted"].map((st) => (
             <button
               key={st}
               onClick={() => setSelectedStage(st)}
               className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
                 selectedStage === st
-                  ? "bg-teal-600 text-white dark:bg-teal-500"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+                  ? "bg-accent text-white dark:bg-teal-500"
+                  : "bg-chip-bg text-ink-3 hover:bg-border-soft dark:bg-slate-800 dark:text-slate-300"
               }`}
             >
               {st === "all" ? "All Stages" : st.replace(/_/g, " ").toUpperCase()}
@@ -194,7 +194,7 @@ export function SurgicalPipelineTab({ onNewEstimate }: Props) {
           <select
             value={selectedPreAuth}
             onChange={(e) => setSelectedPreAuth(e.target.value)}
-            className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium focus:border-teal-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+            className="rounded-lg border border-border bg-white px-2.5 py-1 text-xs font-medium focus:border-accent focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
           >
             <option value="all">All Pre-Auth</option>
             <option value="approved">Approved</option>
@@ -213,19 +213,19 @@ export function SurgicalPipelineTab({ onNewEstimate }: Props) {
 
 
       {/* Pipeline Estimates Table */}
-      <Card className="overflow-hidden border-slate-200 dark:border-slate-800">
+      <Card className="overflow-hidden border-border dark:border-slate-800">
         {isLoading ? (
-          <div className="p-12 text-center text-xs text-slate-500">Loading surgical estimates...</div>
+          <div className="p-12 text-center text-xs text-ink-4">Loading surgical estimates...</div>
         ) : estimates.length === 0 ? (
-          <div className="p-12 text-center text-xs text-slate-500">
+          <div className="p-12 text-center text-xs text-ink-4">
             <div className="text-3xl mb-2">🏥</div>
-            <p className="font-semibold text-slate-700 dark:text-slate-300">No surgical cases in this pipeline view.</p>
-            <p className="mt-1 text-slate-400">Click "+ New Surgical Estimate" to counsel a patient for surgery or admission.</p>
+            <p className="font-semibold text-ink-2 dark:text-slate-300">No surgical cases in this pipeline view.</p>
+            <p className="mt-1 text-ink-5">Click "+ New Surgical Estimate" to counsel a patient for surgery or admission.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="border-b border-slate-200 bg-slate-50 font-semibold text-slate-600 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
+              <thead className="border-b border-border bg-page font-semibold text-ink-3 dark:border-slate-800 dark:bg-slate-800/50 dark:text-slate-400">
                 <tr>
                   <th className="py-3 px-4">Ref # & Patient</th>
                   <th className="py-3 px-4">Procedure & Doctor</th>
@@ -236,42 +236,42 @@ export function SurgicalPipelineTab({ onNewEstimate }: Props) {
                   <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              <tbody className="divide-y divide-border-faint dark:divide-slate-800">
                 {estimates.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
+                  <tr key={item.id} className="hover:bg-page/60 dark:hover:bg-slate-800/40">
                     <td className="py-3 px-4">
-                      <div className="font-bold text-slate-900 dark:text-white">
+                      <div className="font-bold text-ink dark:text-white">
                         {item.patient_name || "Prospective Patient"}
                       </div>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                        <span className="font-mono text-teal-600 dark:text-teal-400">EST-{item.id.toString().padStart(5, "0")}</span>
+                      <div className="text-[11px] text-ink-4 dark:text-slate-400 flex items-center gap-1.5">
+                        <span className="font-mono text-accent dark:text-teal-400">EST-{item.id.toString().padStart(5, "0")}</span>
                         {item.patient_mobile && <span>• {item.patient_mobile}</span>}
                       </div>
                     </td>
 
                     <td className="py-3 px-4">
-                      <div className="font-semibold text-slate-900 dark:text-white">
+                      <div className="font-semibold text-ink dark:text-white">
                         {item.procedure_name}
                       </div>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                      <div className="text-[11px] text-ink-4 dark:text-slate-400">
                         {item.doctor_name || "Surgeon"} {item.department_name ? `(${item.department_name})` : ""}
                       </div>
                     </td>
 
                     <td className="py-3 px-4">
-                      <div className="capitalize font-medium text-slate-800 dark:text-slate-200">
+                      <div className="capitalize font-medium text-ink dark:text-slate-200">
                         {item.room_category.replace("_", " ")}
                       </div>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                      <div className="text-[11px] text-ink-4 dark:text-slate-400">
                         {item.stay_days} Days Expected
                       </div>
                     </td>
 
                     <td className="py-3 px-4">
-                      <div className="font-bold text-slate-900 dark:text-white">
+                      <div className="font-bold text-ink dark:text-white">
                         ₹{Number(item.total_estimate || 0).toLocaleString()}
                       </div>
-                      <div className="text-[10px] text-slate-400">
+                      <div className="text-[10px] text-ink-5">
                         Surgeon: ₹{Number(item.surgeon_fee || 0).toLocaleString()}
                       </div>
                     </td>
@@ -279,7 +279,7 @@ export function SurgicalPipelineTab({ onNewEstimate }: Props) {
                     <td className="py-3 px-4">
                       {getPreAuthBadge(item.insurance_preauth_status, item.tpa_name)}
                       {item.approved_preauth_amount && (
-                        <div className="mt-0.5 text-[10px] text-emerald-600 font-semibold">
+                        <div className="mt-0.5 text-[10px] text-success font-semibold">
                           Approved: ₹{Number(item.approved_preauth_amount).toLocaleString()}
                         </div>
                       )}
@@ -293,7 +293,7 @@ export function SurgicalPipelineTab({ onNewEstimate }: Props) {
                         onChange={(e) =>
                           updateMutation.mutate({ id: item.id, stage: e.target.value as any })
                         }
-                        className="rounded border border-slate-200 bg-white px-2 py-1 text-xs font-medium focus:border-teal-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                        className="rounded border border-border bg-white px-2 py-1 text-xs font-medium focus:border-accent focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                       >
                         <option value="advised">Advised</option>
                         <option value="counseling">Counseling</option>

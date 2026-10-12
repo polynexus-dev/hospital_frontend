@@ -79,16 +79,16 @@ export function ModuleSuitePicker({ selected, onChange, compact = false }: { sel
         const active = keys.filter((k) => selected.includes(k)).length
         return (
           <section key={suite.key} aria-labelledby={`suite-${suite.key}`}>
-            <div className="flex flex-wrap items-center justify-between gap-2 pb-2 mb-2 border-b border-slate-200 dark:border-slate-800">
+            <div className="flex flex-wrap items-center justify-between gap-2 pb-2 mb-2 border-b border-border dark:border-slate-800">
               <div className="flex items-center gap-2">
-                <h3 id={`suite-${suite.key}`} className="text-sm font-bold tracking-tight text-slate-900 dark:text-white">{suite.name}</h3>
-                <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">{active} / {keys.length}</span>
-                <span className="text-[11px] text-slate-500 hidden sm:inline">{suite.desc}</span>
+                <h3 id={`suite-${suite.key}`} className="text-sm font-bold tracking-tight text-ink dark:text-white">{suite.name}</h3>
+                <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded bg-chip-bg dark:bg-slate-800 text-ink-3 dark:text-slate-300">{active} / {keys.length}</span>
+                <span className="text-[11px] text-ink-4 hidden sm:inline">{suite.desc}</span>
               </div>
               <div className="flex items-center gap-2 text-xs">
-                <button type="button" onClick={() => setSuite(keys, true)} className="text-teal-600 hover:underline font-semibold">All</button>
+                <button type="button" onClick={() => setSuite(keys, true)} className="text-accent hover:underline font-semibold">All</button>
                 <span className="text-slate-300">·</span>
-                <button type="button" onClick={() => setSuite(keys, false)} className="text-slate-500 hover:underline">None</button>
+                <button type="button" onClick={() => setSuite(keys, false)} className="text-ink-4 hover:underline">None</button>
               </div>
             </div>
             <div className={`grid grid-cols-1 md:grid-cols-2 ${compact ? "gap-2" : "gap-3"}`}>
@@ -99,20 +99,20 @@ export function ModuleSuitePicker({ selected, onChange, compact = false }: { sel
                     key={m.key}
                     className={`flex items-start gap-3 ${compact ? "p-3" : "p-3.5"} rounded-xl border transition-all cursor-pointer ${
                       isChecked
-                        ? "border-teal-500/80 bg-teal-50/50 dark:bg-teal-950/20 shadow-sm"
-                        : "border-slate-200 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/40 opacity-70 hover:opacity-100"
+                        ? "border-accent/80 bg-accent-tint/50 dark:bg-teal-950/20 shadow-sm"
+                        : "border-border dark:border-slate-800 bg-page/30 dark:bg-slate-900/40 opacity-70 hover:opacity-100"
                     }`}
                   >
-                    <input type="checkbox" checked={isChecked} onChange={() => toggle(m.key)} className="mt-1 h-4 w-4 rounded text-teal-600 focus:ring-teal-500 border-slate-300" />
+                    <input type="checkbox" checked={isChecked} onChange={() => toggle(m.key)} className="mt-1 h-4 w-4 rounded text-accent focus:ring-accent border-border-strong" />
                     <span className="flex-1 min-w-0">
                       <span className="flex items-center justify-between gap-2">
-                        <span className="font-semibold text-xs text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                        <span className="font-semibold text-xs text-ink dark:text-slate-100 flex items-center gap-1.5">
                           <span aria-hidden>{m.icon}</span>
                           <span>{m.name}</span>
                         </span>
-                        <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 whitespace-nowrap">{m.category}</span>
+                        <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-chip-bg dark:bg-slate-800 text-ink-3 dark:text-slate-400 whitespace-nowrap">{m.category}</span>
                       </span>
-                      <span className="block text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug line-clamp-2">{m.desc}</span>
+                      <span className="block text-[11px] text-ink-4 dark:text-slate-400 mt-0.5 leading-snug line-clamp-2">{m.desc}</span>
                     </span>
                   </label>
                 )
@@ -148,25 +148,25 @@ export function TenantModulesModal({
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
       <div
-        className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-2xl p-6 w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl border border-slate-200 dark:border-slate-800"
+        className="bg-white dark:bg-slate-900 text-ink dark:text-slate-100 rounded-2xl p-6 w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl border border-border dark:border-slate-800"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex justify-between items-start pb-4 border-b border-slate-200 dark:border-slate-800">
+        <div className="flex justify-between items-start pb-4 border-b border-border dark:border-slate-800">
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+              <h2 className="text-xl font-bold tracking-tight text-ink dark:text-white">
                 Configure SaaS Modules
               </h2>
               <Pill tone="info">{selected.length} / {SYSTEM_MODULES.length} Active</Pill>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Tenant: <span className="font-semibold text-slate-800 dark:text-slate-200">{hospital.name}</span> (<span className="font-mono text-indigo-500">{hospital.slug}.hms.polynexus.in</span>)
+            <p className="text-xs text-ink-4 dark:text-slate-400 mt-1">
+              Tenant: <span className="font-semibold text-ink dark:text-slate-200">{hospital.name}</span> (<span className="font-mono text-brand">{hospital.slug}.hms.polynexus.in</span>)
             </p>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg p-1"
+            className="text-slate-400 hover:text-ink-3 dark:hover:text-slate-200 text-lg p-1"
           >
             ✕
           </button>
@@ -174,7 +174,7 @@ export function TenantModulesModal({
 
         {/* Quick presets toolbar */}
         <div className="flex flex-wrap items-center justify-between gap-2 py-3 px-1 text-xs">
-          <span className="text-slate-500 font-medium">Quick presets:</span>
+          <span className="text-ink-4 font-medium">Quick presets:</span>
           <div className="flex flex-wrap items-center gap-2">
             {MODULE_PRESETS.map((p) => (
               <Button key={p.label} size="sm" variant="secondary" onClick={() => setSelected(p.keys())}>
@@ -190,8 +190,8 @@ export function TenantModulesModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-800 mt-2">
-          <span className="text-xs text-slate-500">
+        <div className="flex items-center justify-between pt-4 border-t border-border dark:border-slate-800 mt-2">
+          <span className="text-xs text-ink-4">
             Changes take effect immediately for all {hospital.name} staff users upon reload.
           </span>
           <div className="flex items-center gap-2">

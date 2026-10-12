@@ -388,14 +388,14 @@ export function AdminPage() {
               </div>
 
               {saveSuccessMsg && (
-                <div className="p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300 text-xs font-semibold flex items-center gap-2">
+                <div className="p-2.5 rounded-lg bg-success-bg dark:bg-emerald-950/40 text-success-text dark:text-emerald-300 border border-success/25 text-xs font-semibold flex items-center gap-2">
                   <span>✓</span>
                   <span>{saveSuccessMsg}</span>
                 </div>
               )}
 
               {updateUserMutation.isError && (
-                <div className="p-2.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-300 text-xs font-semibold">
+                <div className="p-2.5 rounded-lg bg-danger-bg dark:bg-rose-950/40 text-danger-text dark:text-rose-300 border border-danger-border text-xs font-semibold">
                   {(updateUserMutation.error instanceof ApiError && (updateUserMutation.error.body as { detail?: string } | null)?.detail) || "Failed to update user. Please check permissions and try again."}
                 </div>
               )}
@@ -479,7 +479,7 @@ export function AdminPage() {
                 <Button size="sm" variant="primary" type="submit" disabled={createRoleMutation.isPending}>
                   {createRoleMutation.isPending ? "Creating…" : "Create & set permissions"}
                 </Button>
-                {createRoleMutation.isError && <div className="w-full text-xs text-rose-600">Couldn't create the role — the name may already be in use.</div>}
+                {createRoleMutation.isError && <div className="w-full text-xs text-danger-text">Couldn't create the role — the name may already be in use.</div>}
               </form>
             )}
             {isRolesLoading ? (

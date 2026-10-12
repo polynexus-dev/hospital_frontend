@@ -89,10 +89,10 @@ const COLUMNS: ColumnConfig[] = [
     id: "available",
     title: "Available",
     subtitle: "Ready for admission",
-    color: "text-emerald-700 dark:text-emerald-400",
-    bgLight: "bg-emerald-500/5",
-    borderLight: "border-emerald-500/20",
-    dropBorder: "border-emerald-500 bg-emerald-500/10",
+    color: "text-success-text dark:text-emerald-400",
+    bgLight: "bg-success/5",
+    borderLight: "border-success/20",
+    dropBorder: "border-success bg-success/10",
     icon: FiCheckCircle,
     tone: "ok",
   },
@@ -100,10 +100,10 @@ const COLUMNS: ColumnConfig[] = [
     id: "occupied",
     title: "Occupied",
     subtitle: "Currently admitted",
-    color: "text-blue-700 dark:text-blue-400",
-    bgLight: "bg-blue-500/5",
-    borderLight: "border-blue-500/20",
-    dropBorder: "border-blue-500 bg-blue-500/10",
+    color: "text-brand-dark dark:text-blue-400",
+    bgLight: "bg-brand/5",
+    borderLight: "border-brand/20",
+    dropBorder: "border-brand bg-brand/10",
     icon: FiUserCheck,
     tone: "info",
   },
@@ -111,10 +111,10 @@ const COLUMNS: ColumnConfig[] = [
     id: "reserved",
     title: "Reserved",
     subtitle: "Booked / Pre-admit",
-    color: "text-amber-700 dark:text-amber-400",
-    bgLight: "bg-amber-500/5",
-    borderLight: "border-amber-500/20",
-    dropBorder: "border-amber-500 bg-amber-500/10",
+    color: "text-warning-text dark:text-amber-400",
+    bgLight: "bg-warning/5",
+    borderLight: "border-warning/20",
+    dropBorder: "border-warning bg-warning/10",
     icon: FiClock,
     tone: "warn",
   },
@@ -122,10 +122,10 @@ const COLUMNS: ColumnConfig[] = [
     id: "maintenance",
     title: "Maintenance",
     subtitle: "Sanitizing / Repair",
-    color: "text-rose-700 dark:text-rose-400",
-    bgLight: "bg-rose-500/5",
-    borderLight: "border-rose-500/20",
-    dropBorder: "border-rose-500 bg-rose-500/10",
+    color: "text-danger-text dark:text-rose-400",
+    bgLight: "bg-danger/5",
+    borderLight: "border-danger/20",
+    dropBorder: "border-danger bg-danger/10",
     icon: FiTool,
     tone: "bad",
   },
@@ -602,8 +602,8 @@ export function BedManagementPage() {
         <div
           className={`fixed top-6 right-6 z-[9999] flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl border transition-all animate-bounce-short ${
             toastMessage.type === "ok"
-              ? "bg-emerald-900/95 text-emerald-100 border-emerald-700 shadow-emerald-950/20"
-              : "bg-rose-900/95 text-rose-100 border-rose-700 shadow-rose-950/20"
+              ? "bg-emerald-900/95 text-emerald-100 border-emerald-700 shadow-success/20"
+              : "bg-rose-900/95 text-rose-100 border-rose-700 shadow-danger/20"
           }`}
         >
           {toastMessage.type === "ok" ? (
@@ -686,72 +686,72 @@ export function BedManagementPage() {
         </div>
 
         {/* Available Beds */}
-        <div className="group p-2.5 bg-emerald-500/5 border border-emerald-500/20 rounded-xl shadow-2xs hover:border-emerald-500/50 transition-all flex flex-col justify-between">
+        <div className="group p-2.5 bg-success/5 border border-success/20 rounded-xl shadow-2xs hover:border-success/50 transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between text-xs">
-            <span className="flex items-center gap-1.5 font-semibold text-emerald-700 dark:text-emerald-400 text-[11px]">
-              <FiCheckCircle className="text-emerald-600 text-xs" /> Available Beds
+            <span className="flex items-center gap-1.5 font-semibold text-success-text dark:text-emerald-400 text-[11px]">
+              <FiCheckCircle className="text-success text-xs" /> Available Beds
             </span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-bold">
+            <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-success/10 text-success-text dark:text-emerald-300 font-bold">
               Ready
             </span>
           </div>
           <div className="flex items-baseline justify-between mt-1">
-            <span className="text-lg font-black text-emerald-800 dark:text-emerald-300 group-hover:scale-105 transition-transform origin-left">
+            <span className="text-lg font-black text-success-text dark:text-emerald-300 group-hover:scale-105 transition-transform origin-left">
               {availableBedsCount}
             </span>
-            <span className="text-[10px] text-emerald-700/80 dark:text-emerald-400 font-medium">Ready for admit</span>
+            <span className="text-[10px] text-success-text/80 dark:text-emerald-400 font-medium">Ready for admit</span>
           </div>
-          <div className="w-full bg-emerald-200/50 dark:bg-emerald-950 h-1 rounded-full mt-1.5 overflow-hidden">
+          <div className="w-full bg-success/50 dark:bg-emerald-950 h-1 rounded-full mt-1.5 overflow-hidden">
             <div
-              className="bg-emerald-500 h-full rounded-full transition-all duration-500"
+              className="bg-success h-full rounded-full transition-all duration-500"
               style={{ width: `${totalBeds > 0 ? (availableBedsCount / totalBeds) * 100 : 0}%` }}
             />
           </div>
         </div>
 
         {/* Occupied Beds */}
-        <div className="group p-2.5 bg-blue-500/5 border border-blue-500/20 rounded-xl shadow-2xs hover:border-blue-500/50 transition-all flex flex-col justify-between">
+        <div className="group p-2.5 bg-brand/5 border border-brand/20 rounded-xl shadow-2xs hover:border-brand/50 transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between text-xs">
-            <span className="flex items-center gap-1.5 font-semibold text-blue-700 dark:text-blue-400 text-[11px]">
-              <FiUserCheck className="text-blue-600 text-xs" /> Occupied Beds
+            <span className="flex items-center gap-1.5 font-semibold text-brand-dark dark:text-blue-400 text-[11px]">
+              <FiUserCheck className="text-brand text-xs" /> Occupied Beds
             </span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-blue-500/10 text-blue-700 dark:text-blue-300 font-bold">
+            <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-brand/10 text-brand-dark dark:text-blue-300 font-bold">
               {occupancyPercentage}% Occupancy
             </span>
           </div>
           <div className="flex items-baseline justify-between mt-1">
-            <span className="text-lg font-black text-blue-800 dark:text-blue-300 group-hover:scale-105 transition-transform origin-left">
+            <span className="text-lg font-black text-brand-dark dark:text-blue-300 group-hover:scale-105 transition-transform origin-left">
               {occupiedBedsCount}
             </span>
-            <span className="text-[10px] text-blue-700/80 dark:text-blue-400 font-medium">Inpatients</span>
+            <span className="text-[10px] text-brand-dark/80 dark:text-blue-400 font-medium">Inpatients</span>
           </div>
-          <div className="w-full bg-blue-200/50 dark:bg-blue-950 h-1 rounded-full mt-1.5 overflow-hidden">
+          <div className="w-full bg-brand-border/50 dark:bg-blue-950 h-1 rounded-full mt-1.5 overflow-hidden">
             <div
-              className="bg-blue-500 h-full rounded-full transition-all duration-500"
+              className="bg-brand h-full rounded-full transition-all duration-500"
               style={{ width: `${occupancyPercentage}%` }}
             />
           </div>
         </div>
 
         {/* Maintenance & Reserved */}
-        <div className="group p-2.5 bg-rose-500/5 border border-rose-500/20 rounded-xl shadow-2xs hover:border-rose-500/50 transition-all flex flex-col justify-between">
+        <div className="group p-2.5 bg-danger/5 border border-danger/20 rounded-xl shadow-2xs hover:border-danger/50 transition-all flex flex-col justify-between">
           <div className="flex items-center justify-between text-xs">
-            <span className="flex items-center gap-1.5 font-semibold text-rose-700 dark:text-rose-400 text-[11px]">
-              <FiTool className="text-rose-600 text-xs" /> Blocked / Mnt
+            <span className="flex items-center gap-1.5 font-semibold text-danger-text dark:text-rose-400 text-[11px]">
+              <FiTool className="text-danger-text text-xs" /> Blocked / Mnt
             </span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-300 font-bold">
+            <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-danger/10 text-danger-text dark:text-rose-300 font-bold">
               {reservedBedsCount} Rsv · {maintenanceBedsCount} Mnt
             </span>
           </div>
           <div className="flex items-baseline justify-between mt-1">
-            <span className="text-lg font-black text-rose-800 dark:text-rose-300 group-hover:scale-105 transition-transform origin-left">
+            <span className="text-lg font-black text-danger-text dark:text-rose-300 group-hover:scale-105 transition-transform origin-left">
               {maintenanceBedsCount + reservedBedsCount}
             </span>
-            <span className="text-[10px] text-rose-700/80 dark:text-rose-400 font-medium">Unavailable</span>
+            <span className="text-[10px] text-danger-text/80 dark:text-rose-400 font-medium">Unavailable</span>
           </div>
-          <div className="w-full bg-rose-200/50 dark:bg-rose-950 h-1 rounded-full mt-1.5 overflow-hidden">
+          <div className="w-full bg-danger-border/50 dark:bg-rose-950 h-1 rounded-full mt-1.5 overflow-hidden">
             <div
-              className="bg-rose-500 h-full rounded-full transition-all duration-500"
+              className="bg-danger h-full rounded-full transition-all duration-500"
               style={{ width: `${totalBeds > 0 ? ((maintenanceBedsCount + reservedBedsCount) / totalBeds) * 100 : 0}%` }}
             />
           </div>
@@ -961,12 +961,12 @@ export function BedManagementPage() {
                           onDragEnd={handleDragEnd}
                           className={`group bg-surface rounded-xl border border-border/80 shadow-xs hover:shadow-md transition-all duration-200 cursor-grab active:cursor-grabbing select-none p-3.5 flex flex-col justify-between gap-2.5 border-l-4 ${
                             bed.status === "available"
-                              ? "border-l-emerald-500 hover:border-l-emerald-600"
+                              ? "border-l-success hover:border-l-success"
                               : bed.status === "occupied"
-                              ? "border-l-blue-500 hover:border-l-blue-600"
+                              ? "border-l-brand hover:border-l-brand"
                               : bed.status === "reserved"
-                              ? "border-l-amber-500 hover:border-l-amber-600"
-                              : "border-l-rose-500 hover:border-l-rose-600"
+                              ? "border-l-warning hover:border-l-warning"
+                              : "border-l-danger hover:border-l-danger"
                           } ${
                             isBeingDragged
                               ? "ring-2 ring-brand border-brand shadow-lg"
@@ -979,12 +979,12 @@ export function BedManagementPage() {
                               <div
                                 className={`w-7 h-7 rounded-lg flex items-center justify-center text-sm ${
                                   bed.status === "available"
-                                    ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"
+                                    ? "bg-success-bg text-success-text dark:bg-emerald-950/60 dark:text-emerald-300"
                                     : bed.status === "occupied"
-                                    ? "bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300"
+                                    ? "bg-brand-tint text-brand-dark dark:bg-blue-950/60 dark:text-blue-300"
                                     : bed.status === "reserved"
-                                    ? "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300"
-                                    : "bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300"
+                                    ? "bg-warning-bg text-warning-text dark:bg-amber-950/60 dark:text-amber-300"
+                                    : "bg-danger-bg text-danger-text dark:bg-rose-950/60 dark:text-rose-300"
                                 }`}
                               >
                                 <RiHotelBedLine />
@@ -1000,12 +1000,12 @@ export function BedManagementPage() {
                             <span
                               className={`text-[10.5px] font-semibold px-2 py-0.5 rounded-full capitalize border ${
                                 bed.status === "available"
-                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800"
+                                  ? "bg-success-bg text-success-text border-success/25 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800"
                                   : bed.status === "occupied"
-                                  ? "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800"
+                                  ? "bg-brand-tint text-brand-dark border-brand-border dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800"
                                   : bed.status === "reserved"
-                                  ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800"
-                                  : "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800"
+                                  ? "bg-warning-bg text-warning-text border-warning/30 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800"
+                                  : "bg-danger-bg text-danger-text border-danger-border dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800"
                               }`}
                             >
                               {bed.status}
@@ -1042,16 +1042,16 @@ export function BedManagementPage() {
                             <div
                               className={`p-2.5 rounded-lg border flex items-center justify-between gap-2 ${
                                 bed.status === "reserved"
-                                  ? "bg-amber-50/80 dark:bg-amber-950/40 border-amber-200/80 dark:border-amber-800/60"
-                                  : "bg-blue-50/70 dark:bg-blue-950/40 border-blue-200/70 dark:border-blue-800/60"
+                                  ? "bg-warning-bg/80 dark:bg-amber-950/40 border-warning/80 dark:border-amber-800/60"
+                                  : "bg-brand-tint/70 dark:bg-blue-950/40 border-brand-border/70 dark:border-blue-800/60"
                               }`}
                             >
                               <div className="flex items-center gap-2 min-w-0">
                                 <div
                                   className={`w-7 h-7 rounded-full flex items-center justify-center text-xs shrink-0 font-bold ${
                                     bed.status === "reserved"
-                                      ? "bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300"
-                                      : "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300"
+                                      ? "bg-warning-bg dark:bg-amber-900 text-warning-text dark:text-amber-300"
+                                      : "bg-brand-tint dark:bg-blue-900 text-brand-dark dark:text-blue-300"
                                   }`}
                                 >
                                   <FiUserCheck />
@@ -1068,15 +1068,15 @@ export function BedManagementPage() {
                               <span
                                 className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
                                   bed.status === "reserved"
-                                    ? "bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200 border-amber-200/80 dark:border-amber-800"
-                                    : "bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-200 border-blue-200/80 dark:border-blue-800"
+                                    ? "bg-warning-bg dark:bg-amber-900/60 text-warning-text dark:text-amber-200 border-warning/80 dark:border-amber-800"
+                                    : "bg-brand-tint dark:bg-blue-900/60 text-brand-dark dark:text-blue-200 border-brand-border/80 dark:border-blue-800"
                                 }`}
                               >
                                 {bed.status === "reserved" ? "Reserved" : "Admitted"}
                               </span>
                             </div>
                           ) : bed.status === "reserved" ? (
-                            <div className="p-2 rounded-lg bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40 text-[11px] text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                            <div className="p-2 rounded-lg bg-warning-bg/60 dark:bg-amber-950/30 border border-warning/60 dark:border-amber-800/40 text-[11px] text-warning-text dark:text-amber-300 flex items-center gap-1.5">
                               <FiClock className="text-xs shrink-0" />
                               <span className="font-medium">Reserved for incoming patient</span>
                             </div>
@@ -1090,7 +1090,7 @@ export function BedManagementPage() {
                                   e.stopPropagation()
                                   openAssignModal(bed)
                                 }}
-                                className="flex-1 py-1.5 px-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 text-xs font-semibold flex items-center justify-center gap-1 transition-all shadow-2xs hover:shadow-xs cursor-pointer"
+                                className="flex-1 py-1.5 px-2 rounded-lg bg-brand-tint hover:bg-brand-tint text-brand-dark dark:bg-blue-950/60 dark:text-blue-300 dark:hover:bg-blue-900/60 border border-brand-border dark:border-blue-800 text-xs font-semibold flex items-center justify-center gap-1 transition-all shadow-2xs hover:shadow-xs cursor-pointer"
                               >
                                 <FiUserPlus className="text-xs" />
                                 <span>Assign</span>
@@ -1100,7 +1100,7 @@ export function BedManagementPage() {
                                   e.stopPropagation()
                                   openReserveModal(bed)
                                 }}
-                                className="py-1.5 px-2.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 dark:hover:bg-amber-900/60 border border-amber-200 dark:border-amber-800 text-xs font-semibold flex items-center justify-center gap-1 transition-all shadow-2xs hover:shadow-xs cursor-pointer"
+                                className="py-1.5 px-2.5 rounded-lg bg-warning-bg hover:bg-warning-bg text-warning-text dark:bg-amber-950/60 dark:text-amber-300 dark:hover:bg-amber-900/60 border border-warning/30 dark:border-amber-800 text-xs font-semibold flex items-center justify-center gap-1 transition-all shadow-2xs hover:shadow-xs cursor-pointer"
                                 title="Reserve bed for a patient"
                               >
                                 <FiClock className="text-xs" />
@@ -1114,7 +1114,7 @@ export function BedManagementPage() {
                                   e.stopPropagation()
                                   openAssignModal(bed)
                                 }}
-                                className="flex-1 py-1.5 px-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center justify-center gap-1 transition-all shadow-2xs hover:shadow-xs cursor-pointer"
+                                className="flex-1 py-1.5 px-2 rounded-lg bg-brand hover:bg-brand-dark text-white text-xs font-semibold flex items-center justify-center gap-1 transition-all shadow-2xs hover:shadow-xs cursor-pointer"
                                 title="Admit patient to turn Reserved into Occupied"
                               >
                                 <FiUserCheck className="text-xs" />
@@ -1126,7 +1126,7 @@ export function BedManagementPage() {
                                   updateStatusMutation.mutate({ id: bed.id, status: "available" })
                                 }}
                                 disabled={updateStatusMutation.isPending}
-                                className="py-1.5 px-2.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800 text-xs font-semibold flex items-center justify-center gap-1 transition-all shadow-2xs hover:shadow-xs cursor-pointer"
+                                className="py-1.5 px-2.5 rounded-lg bg-success-bg hover:bg-success-bg text-success-text dark:bg-emerald-950/60 dark:text-emerald-300 dark:hover:bg-emerald-900/60 border border-success/25 dark:border-emerald-800 text-xs font-semibold flex items-center justify-center gap-1 transition-all shadow-2xs hover:shadow-xs cursor-pointer"
                                 title="Cancel reservation and free bed (set to Available)"
                               >
                                 <FiCheckCircle className="text-xs" />
@@ -1140,7 +1140,7 @@ export function BedManagementPage() {
                                   e.stopPropagation()
                                   openAssignModal(bed)
                                 }}
-                                className="flex-1 py-1.5 px-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 text-xs font-semibold flex items-center justify-center gap-1 transition-all shadow-2xs hover:shadow-xs cursor-pointer"
+                                className="flex-1 py-1.5 px-2 rounded-lg bg-brand-tint hover:bg-brand-tint text-brand-dark dark:bg-blue-950/60 dark:text-blue-300 dark:hover:bg-blue-900/60 border border-brand-border dark:border-blue-800 text-xs font-semibold flex items-center justify-center gap-1 transition-all shadow-2xs hover:shadow-xs cursor-pointer"
                                 title="Free bed from maintenance and admit a patient directly in one process"
                               >
                                 <FiUserPlus className="text-xs" />
@@ -1152,7 +1152,7 @@ export function BedManagementPage() {
                                   updateStatusMutation.mutate({ id: bed.id, status: "available" })
                                 }}
                                 disabled={updateStatusMutation.isPending}
-                                className="py-1.5 px-2.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800 text-xs font-semibold flex items-center justify-center gap-1 transition-all shadow-2xs hover:shadow-xs cursor-pointer"
+                                className="py-1.5 px-2.5 rounded-lg bg-success-bg hover:bg-success-bg text-success-text dark:bg-emerald-950/60 dark:text-emerald-300 dark:hover:bg-emerald-900/60 border border-success/25 dark:border-emerald-800 text-xs font-semibold flex items-center justify-center gap-1 transition-all shadow-2xs hover:shadow-xs cursor-pointer"
                                 title="End maintenance and mark bed as Available"
                               >
                                 <FiCheckCircle className="text-xs" />
@@ -1166,7 +1166,7 @@ export function BedManagementPage() {
                                 updateStatusMutation.mutate({ id: bed.id, status: "available" })
                               }}
                               disabled={updateStatusMutation.isPending}
-                              className="w-full py-1.5 px-3 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-2xs hover:shadow-xs cursor-pointer"
+                              className="w-full py-1.5 px-3 rounded-lg bg-success-bg hover:bg-success-bg text-success-text dark:bg-emerald-950/60 dark:text-emerald-300 dark:hover:bg-emerald-900/60 border border-success/25 dark:border-emerald-800 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-2xs hover:shadow-xs cursor-pointer"
                               title="Free this bed and change status to Available (POST /facilities/beds/<id>/update_status/)"
                             >
                               <FiCheckCircle className="text-xs" />
@@ -1188,7 +1188,7 @@ export function BedManagementPage() {
                                   setIsRetrieveModalOpen(true)
                                 }}
                                 title="View details"
-                                className="w-6.5 h-6.5 rounded-md flex items-center justify-center text-ink-3 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 transition-colors cursor-pointer"
+                                className="w-6.5 h-6.5 rounded-md flex items-center justify-center text-ink-3 hover:text-success-text hover:bg-success-bg dark:hover:bg-emerald-950/50 transition-colors cursor-pointer"
                               >
                                 <FiEye className="text-xs" />
                               </button>
@@ -1208,7 +1208,7 @@ export function BedManagementPage() {
                                   setIsUpdateModalOpen(true)
                                 }}
                                 title="Edit bed"
-                                className="w-6.5 h-6.5 rounded-md flex items-center justify-center text-ink-3 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/50 transition-colors cursor-pointer"
+                                className="w-6.5 h-6.5 rounded-md flex items-center justify-center text-ink-3 hover:text-brand-dark hover:bg-brand-tint dark:hover:bg-blue-950/50 transition-colors cursor-pointer"
                               >
                                 <FiEdit3 className="text-xs" />
                               </button>
@@ -1220,7 +1220,7 @@ export function BedManagementPage() {
                                   setIsDeleteModalOpen(true)
                                 }}
                                 title="Delete bed"
-                                className="w-6.5 h-6.5 rounded-md flex items-center justify-center text-ink-3 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
+                                className="w-6.5 h-6.5 rounded-md flex items-center justify-center text-ink-3 hover:text-danger-text hover:bg-danger-bg dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
                               >
                                 <FiTrash2 className="text-xs" />
                               </button>
@@ -1290,8 +1290,8 @@ export function BedManagementPage() {
                           <div
                             className={`w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0 font-bold ${
                               bed.status === "reserved"
-                                ? "bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300"
-                                : "bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300"
+                                ? "bg-warning-bg dark:bg-amber-900/60 text-warning-text dark:text-amber-300"
+                                : "bg-brand-tint dark:bg-blue-900/60 text-brand-dark dark:text-blue-300"
                             }`}
                           >
                             <FiUserCheck />
@@ -1304,13 +1304,13 @@ export function BedManagementPage() {
                           </div>
                         </div>
                       ) : bed.status === "reserved" ? (
-                        <span className="text-amber-700 dark:text-amber-400 font-medium text-[11px] flex items-center gap-1">
+                        <span className="text-warning-text dark:text-amber-400 font-medium text-[11px] flex items-center gap-1">
                           <FiClock className="text-xs" /> Reserved
                         </span>
                       ) : bed.status === "available" ? (
                         <button
                           onClick={() => openAssignModal(bed)}
-                          className="px-2.5 py-1 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:text-blue-300 rounded-lg border border-blue-200 dark:border-blue-800 transition-colors cursor-pointer inline-flex items-center gap-1"
+                          className="px-2.5 py-1 text-xs font-semibold text-brand-dark bg-brand-tint hover:bg-brand-tint dark:bg-blue-950/60 dark:text-blue-300 rounded-lg border border-brand-border dark:border-blue-800 transition-colors cursor-pointer inline-flex items-center gap-1"
                         >
                           <FiUserPlus className="text-xs" />
                           <span>Assign Patient</span>
@@ -1325,7 +1325,7 @@ export function BedManagementPage() {
                           <button
                             onClick={() => openAssignModal(bed)}
                             title={bed.status === "maintenance" ? "Free bed and assign patient in one step" : "Assign bed to patient"}
-                            className="px-2 py-1 text-[11px] font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:text-blue-300 rounded transition-colors cursor-pointer flex items-center gap-1"
+                            className="px-2 py-1 text-[11px] font-semibold text-brand-dark bg-brand-tint hover:bg-brand-tint dark:bg-blue-950/60 dark:text-blue-300 rounded transition-colors cursor-pointer flex items-center gap-1"
                           >
                             <FiUserPlus className="text-xs" />
                             <span>Assign</span>
@@ -1334,7 +1334,7 @@ export function BedManagementPage() {
                           <button
                             onClick={() => updateStatusMutation.mutate({ id: bed.id, status: "available" })}
                             title="Free bed (set to available)"
-                            className="px-2 py-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300 rounded border border-emerald-200 dark:border-emerald-800 transition-colors cursor-pointer flex items-center gap-1"
+                            className="px-2 py-1 text-[11px] font-semibold text-success-text bg-success-bg hover:bg-success-bg dark:bg-emerald-950/60 dark:text-emerald-300 rounded border border-success/25 dark:border-emerald-800 transition-colors cursor-pointer flex items-center gap-1"
                           >
                             <FiCheckCircle className="text-xs" />
                             <span>Free</span>
@@ -1345,7 +1345,7 @@ export function BedManagementPage() {
                             setRetrievedBed(bed)
                             setIsRetrieveModalOpen(true)
                           }}
-                          className="p-1.5 text-ink-3 hover:text-emerald-700 hover:bg-emerald-50 rounded transition-colors cursor-pointer"
+                          className="p-1.5 text-ink-3 hover:text-success-text hover:bg-success-bg rounded transition-colors cursor-pointer"
                         >
                           <FiEye className="text-xs" />
                         </button>
@@ -1362,7 +1362,7 @@ export function BedManagementPage() {
                             })
                             setIsUpdateModalOpen(true)
                           }}
-                          className="p-1.5 text-ink-3 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors cursor-pointer"
+                          className="p-1.5 text-ink-3 hover:text-brand-dark hover:bg-brand-tint rounded transition-colors cursor-pointer"
                         >
                           <FiEdit3 className="text-xs" />
                         </button>
@@ -1371,7 +1371,7 @@ export function BedManagementPage() {
                             setDeleteTarget(bed)
                             setIsDeleteModalOpen(true)
                           }}
-                          className="p-1.5 text-ink-3 hover:text-rose-700 hover:bg-rose-50 rounded transition-colors cursor-pointer"
+                          className="p-1.5 text-ink-3 hover:text-danger-text hover:bg-danger-bg rounded transition-colors cursor-pointer"
                         >
                           <FiTrash2 className="text-xs" />
                         </button>
@@ -1411,7 +1411,7 @@ export function BedManagementPage() {
 
             <div className="flex flex-col gap-3 text-xs">
               {rooms.length === 0 && (
-                <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-800 dark:text-amber-300 flex items-center justify-between">
+                <div className="p-3 bg-warning/10 border border-warning/30 rounded-xl text-warning-text dark:text-amber-300 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
                     <FiAlertTriangle /> No rooms exist yet. Create a room first!
                   </span>
@@ -1521,7 +1521,7 @@ export function BedManagementPage() {
           <div className="bg-surface rounded-2xl shadow-2xl border border-border w-full max-w-md p-6 flex flex-col gap-4 animate-scale-up">
             <div className="flex items-center justify-between border-b border-border pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center text-base">
+                <div className="w-8 h-8 rounded-lg bg-success/10 text-success flex items-center justify-center text-base">
                   <FiEye />
                 </div>
                 <div>
@@ -1574,10 +1574,10 @@ export function BedManagementPage() {
               {/* Patient Details Section */}
               {retrievedBed.patient ? (
                 <div className="mt-2 pt-2.5 border-t border-border/80 flex flex-col gap-1.5">
-                  <div className="text-[11px] font-bold text-blue-700 dark:text-blue-300 flex items-center gap-1.5">
+                  <div className="text-[11px] font-bold text-brand-dark dark:text-blue-300 flex items-center gap-1.5">
                     <FiUserCheck className="text-sm" /> Admitted Patient
                   </div>
-                  <div className="p-2.5 bg-blue-50/70 dark:bg-blue-950/40 rounded-lg border border-blue-200/80 dark:border-blue-800 space-y-1 text-xs">
+                  <div className="p-2.5 bg-brand-tint/70 dark:bg-blue-950/40 rounded-lg border border-brand-border/80 dark:border-blue-800 space-y-1 text-xs">
                     <div className="flex items-center justify-between">
                       <span className="text-ink-4">Patient Name:</span>
                       <span className="font-semibold text-ink-1">{retrievedBed.patient.name}</span>
@@ -1604,7 +1604,7 @@ export function BedManagementPage() {
                       setIsRetrieveModalOpen(false)
                       openAssignModal(retrievedBed)
                     }}
-                    className="px-2.5 py-1 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:text-blue-300 rounded-lg border border-blue-200 dark:border-blue-800 transition-colors cursor-pointer inline-flex items-center gap-1"
+                    className="px-2.5 py-1 text-xs font-semibold text-brand-dark bg-brand-tint hover:bg-brand-tint dark:bg-blue-950/60 dark:text-blue-300 rounded-lg border border-brand-border dark:border-blue-800 transition-colors cursor-pointer inline-flex items-center gap-1"
                   >
                     <FiUserPlus className="text-xs" />
                     <span>Assign Patient</span>
@@ -1631,7 +1631,7 @@ export function BedManagementPage() {
           <div className="bg-surface rounded-2xl shadow-2xl border border-border w-full max-w-md p-6 flex flex-col gap-4 animate-scale-up">
             <div className="flex items-center justify-between border-b border-border pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center text-base">
+                <div className="w-8 h-8 rounded-lg bg-brand/10 text-brand flex items-center justify-center text-base">
                   <FiEdit3 />
                 </div>
                 <div>
@@ -1751,7 +1751,7 @@ export function BedManagementPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
           <div className="bg-surface rounded-2xl shadow-2xl border border-border w-full max-w-sm p-6 flex flex-col gap-4 animate-scale-up">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-rose-500/10 text-rose-600 flex items-center justify-center text-lg shrink-0">
+              <div className="w-10 h-10 rounded-full bg-danger/10 text-danger-text flex items-center justify-center text-lg shrink-0">
                 <FiTrash2 />
               </div>
               <div>
@@ -1776,7 +1776,7 @@ export function BedManagementPage() {
               <button
                 disabled={deleteMutation.isPending}
                 onClick={() => deleteMutation.mutate(deleteTarget.id)}
-                className="h-8.5 px-4 text-xs font-semibold rounded-lg bg-rose-600 text-white hover:bg-rose-700 transition-all cursor-pointer shadow-sm"
+                className="h-8.5 px-4 text-xs font-semibold rounded-lg bg-danger text-white hover:bg-danger transition-all cursor-pointer shadow-sm"
               >
                 {deleteMutation.isPending ? "Deleting..." : "Delete Bed"}
               </button>
@@ -1864,7 +1864,7 @@ export function BedManagementPage() {
                 <div>
                   <label className="block font-semibold text-ink-3 mb-1">Assign to Ward</label>
                   {wards.length === 0 ? (
-                    <div className="text-[11px] text-amber-700 dark:text-amber-300 bg-amber-500/10 border border-amber-500/20 p-2 rounded-lg">
+                    <div className="text-[11px] text-warning-text dark:text-amber-300 bg-warning/10 border border-warning/20 p-2 rounded-lg">
                       No wards exist yet. Please create a ward first on the left.
                     </div>
                   ) : (
@@ -1951,8 +1951,8 @@ export function BedManagementPage() {
                 <div
                   className={`w-8 h-8 rounded-lg flex items-center justify-center text-base ${
                     assignTargetBed.status === "reserved"
-                      ? "bg-amber-500/10 text-amber-600"
-                      : "bg-blue-500/10 text-blue-600"
+                      ? "bg-warning/10 text-warning-text"
+                      : "bg-brand/10 text-brand"
                   }`}
                 >
                   <FiUserPlus />
@@ -1998,10 +1998,10 @@ export function BedManagementPage() {
               <span
                 className={`text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize border ${
                   assignTargetBed.status === "reserved"
-                    ? "bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200 border-amber-200/80 dark:border-amber-800"
+                    ? "bg-warning-bg dark:bg-amber-900/60 text-warning-text dark:text-amber-200 border-warning/80 dark:border-amber-800"
                     : assignTargetBed.status === "maintenance"
-                    ? "bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-200 border-rose-200/80 dark:border-rose-800"
-                    : "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300"
+                    ? "bg-danger-bg dark:bg-rose-950/60 text-danger-text dark:text-rose-200 border-danger-border/80 dark:border-rose-800"
+                    : "bg-success-bg text-success-text border-success/25 dark:bg-emerald-950/50 dark:text-emerald-300"
                 }`}
               >
                 {assignTargetBed.status}
@@ -2010,11 +2010,11 @@ export function BedManagementPage() {
 
             {/* Maintenance Auto-Release Notice */}
             {assignTargetBed.status === "maintenance" && (
-              <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-xs text-blue-800 dark:text-blue-200">
-                <FiCheckCircle className="text-blue-600 dark:text-blue-400 text-sm shrink-0" />
+              <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-brand-tint/80 dark:bg-blue-950/40 border border-brand-border dark:border-blue-800 text-xs text-brand-dark dark:text-blue-200">
+                <FiCheckCircle className="text-brand dark:text-blue-400 text-sm shrink-0" />
                 <div className="flex-1 leading-snug">
                   <span className="font-semibold">Auto-Release:</span>{" "}
-                  <span className="text-blue-700 dark:text-blue-300">
+                  <span className="text-brand-dark dark:text-blue-300">
                     Bed will be automatically freed from maintenance upon admission.
                   </span>
                 </div>
@@ -2023,13 +2023,13 @@ export function BedManagementPage() {
 
             {/* Reserved Patient Details Card (When bed is already reserved) */}
             {assignTargetBed.patient ? (
-              <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-900 dark:text-amber-200 text-xs flex items-center justify-between">
+              <div className="p-3 bg-warning/10 border border-warning/30 rounded-xl text-warning-text dark:text-amber-200 text-xs flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-700 dark:text-amber-300 flex items-center justify-center text-sm shrink-0 font-bold">
+                  <div className="w-8 h-8 rounded-lg bg-warning/20 text-warning-text dark:text-amber-300 flex items-center justify-center text-sm shrink-0 font-bold">
                     <FiUserCheck />
                   </div>
                   <div>
-                    <div className="text-[10px] uppercase font-bold tracking-wider text-amber-700 dark:text-amber-400">
+                    <div className="text-[10px] uppercase font-bold tracking-wider text-warning-text dark:text-amber-400">
                       Reserved Patient
                     </div>
                     <div className="text-xs font-bold text-ink-1">
@@ -2040,7 +2040,7 @@ export function BedManagementPage() {
                     </div>
                   </div>
                 </div>
-                <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-800 dark:text-amber-200 border border-amber-500/30">
+                <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-warning/20 text-warning-text dark:text-amber-200 border border-warning/30">
                   Locked to Patient
                 </span>
               </div>
@@ -2067,7 +2067,7 @@ export function BedManagementPage() {
                       ))}
                     </select>
                   ) : (
-                    <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-800 dark:text-amber-300 text-xs">
+                    <div className="p-3 bg-warning/10 border border-warning/30 rounded-lg text-warning-text dark:text-amber-300 text-xs">
                       All registered patients already have active or reserved beds. No unassigned patients available.
                     </div>
                   )}
@@ -2115,7 +2115,7 @@ export function BedManagementPage() {
                     onClick={() => setAssignForm({ ...assignForm, admission_type: "planned" })}
                     className={`h-9 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                       assignForm.admission_type === "planned"
-                        ? "bg-blue-50 border-blue-500 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300"
+                        ? "bg-brand-tint border-brand text-brand-dark dark:bg-blue-950/60 dark:text-blue-300"
                         : "bg-surface border-border text-ink-3 hover:bg-page"
                     }`}
                   >
@@ -2126,7 +2126,7 @@ export function BedManagementPage() {
                     onClick={() => setAssignForm({ ...assignForm, admission_type: "emergency" })}
                     className={`h-9 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                       assignForm.admission_type === "emergency"
-                        ? "bg-rose-50 border-rose-500 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300"
+                        ? "bg-danger-bg border-danger text-danger-text dark:bg-rose-950/60 dark:text-rose-300"
                         : "bg-surface border-border text-ink-3 hover:bg-page"
                     }`}
                   >
@@ -2196,7 +2196,7 @@ export function BedManagementPage() {
                       },
                     })
                   }
-                  className="h-8.5 px-4 text-xs font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition-all cursor-pointer shadow-sm flex items-center gap-1.5"
+                  className="h-8.5 px-4 text-xs font-semibold rounded-lg bg-brand text-white hover:bg-brand-dark disabled:opacity-50 transition-all cursor-pointer shadow-sm flex items-center gap-1.5"
                 >
                   <FiUserCheck className="text-xs" />
                   <span>
@@ -2221,7 +2221,7 @@ export function BedManagementPage() {
           <div className="bg-surface rounded-2xl shadow-2xl border border-border w-full max-w-md p-6 flex flex-col gap-4 animate-scale-up">
             <div className="flex items-center justify-between border-b border-border pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center text-base">
+                <div className="w-8 h-8 rounded-lg bg-warning/10 text-warning-text flex items-center justify-center text-base">
                   <FiClock />
                 </div>
                 <div>
@@ -2254,7 +2254,7 @@ export function BedManagementPage() {
                   </div>
                 </div>
               </div>
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300">
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize bg-success-bg text-success-text border border-success/25 dark:bg-emerald-950/50 dark:text-emerald-300">
                 {reserveTargetBed.status}
               </span>
             </div>
@@ -2278,7 +2278,7 @@ export function BedManagementPage() {
                     ))}
                   </select>
                 ) : (
-                  <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-800 dark:text-amber-300 text-xs">
+                  <div className="p-3 bg-warning/10 border border-warning/30 rounded-lg text-warning-text dark:text-amber-300 text-xs">
                     All registered patients already have active or reserved beds. No unassigned patients available to reserve.
                   </div>
                 )}
@@ -2310,7 +2310,7 @@ export function BedManagementPage() {
                     patient: reservePatientId,
                   })
                 }}
-                className="h-8.5 px-4 text-xs font-semibold rounded-lg bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-50 transition-all cursor-pointer shadow-sm flex items-center gap-1.5"
+                className="h-8.5 px-4 text-xs font-semibold rounded-lg bg-warning text-white hover:bg-warning-text disabled:opacity-50 transition-all cursor-pointer shadow-sm flex items-center gap-1.5"
               >
                 <FiClock className="text-xs" />
                 <span>{updateStatusMutation.isPending ? "Reserving..." : "Confirm & Reserve Bed"}</span>

@@ -55,7 +55,7 @@ export function SubscriptionCard() {
             <div className="flex justify-between"><span className="text-ink-4">Staff users</span><span className="font-semibold">{used} / {limit || "unlimited"}</span></div>
             {limit > 0 && (
               <div className="mt-1.5 h-1.5 rounded-full bg-page overflow-hidden" role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}>
-                <div className={`h-full ${percent >= 90 ? "bg-rose-500" : percent >= 75 ? "bg-amber-500" : "bg-brand"}`} style={{ width: `${percent}%` }} />
+                <div className={`h-full ${percent >= 90 ? "bg-danger" : percent >= 75 ? "bg-warning" : "bg-brand"}`} style={{ width: `${percent}%` }} />
               </div>
             )}
           </div>
@@ -67,7 +67,7 @@ export function SubscriptionCard() {
         <div className="mt-3.5">
           <div className="flex justify-between items-baseline mb-1.5">
             <span className="text-[12px] font-bold uppercase tracking-wider text-ink-3">Invoices</span>
-            {Number(data.outstanding) > 0 && <span className="text-[12px] font-semibold text-rose-600">Outstanding {INR.format(Number(data.outstanding))}</span>}
+            {Number(data.outstanding) > 0 && <span className="text-[12px] font-semibold text-danger-text">Outstanding {INR.format(Number(data.outstanding))}</span>}
           </div>
           <div className="divide-y divide-border-soft border border-border-soft rounded-control">
             {data.invoices.map((inv) => (

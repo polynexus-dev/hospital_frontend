@@ -283,14 +283,14 @@ export function FeedbackPage() {
             </Card>
             <Card padded>
               <div className="text-[11px] text-ink-4 uppercase tracking-wider font-semibold">WhatsApp Prompts Sent</div>
-              <div className="text-2xl font-extrabold text-sky-600 dark:text-sky-400 mt-1">
+              <div className="text-2xl font-extrabold text-brand dark:text-sky-400 mt-1">
                 {reputationData?.prompts_sent_count ?? 0}
               </div>
               <div className="text-[11px] text-ink-4 mt-1">Direct review requests</div>
             </Card>
             <Card padded>
               <div className="text-[11px] text-ink-4 uppercase tracking-wider font-semibold">Reputation Target</div>
-              <div className="text-2xl font-extrabold text-amber-500 mt-1">4.8 ★</div>
+              <div className="text-2xl font-extrabold text-warning-text mt-1">4.8 ★</div>
               <div className="text-[11px] text-ink-4 mt-1">Google Maps benchmark</div>
             </Card>
           </div>
@@ -384,11 +384,11 @@ export function FeedbackPage() {
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-2">
                           <span className="font-bold text-ink">{(res as any).patient_name || `Patient #${res.patient}`}</span>
-                          <span className="px-1.5 py-0.5 rounded font-bold text-[11px] bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
+                          <span className="px-1.5 py-0.5 rounded font-bold text-[11px] bg-success-bg dark:bg-emerald-950 text-success-text dark:text-emerald-300">
                             {res.score}/10 Promoter
                           </span>
                           {(res as any).doctor_name && (
-                            <span className="text-teal-700 dark:text-teal-300 font-semibold">
+                            <span className="text-accent-hover dark:text-teal-300 font-semibold">
                               🩺 Dr. {(res as any).doctor_name.replace(/^Dr\.?\s*/i, "")}
                             </span>
                           )}
@@ -412,7 +412,7 @@ export function FeedbackPage() {
                             setSendingPromptId(res.id)
                             sendPromptMutation.mutate(res.id)
                           }}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1"
+                          className="bg-success hover:bg-success-text text-white flex items-center gap-1"
                         >
                           <span>⭐</span>
                           {sendPromptMutation.isPending && sendingPromptId === res.id ? "Sending…" : "Send WhatsApp Review Link"}

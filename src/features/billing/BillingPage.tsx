@@ -125,29 +125,29 @@ export function BillingPage() {
     <div className="p-6 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+          <h1 className="text-2xl font-bold tracking-tight text-ink dark:text-slate-100">
             Billing & Insurance Management
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-sm text-ink-4 dark:text-slate-400">
             Patient invoices, itemized billing, payments, and TPA insurance claim processing.
           </p>
         </div>
         <button
           onClick={() => setShowBillModal(true)}
-          className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm"
+          className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-brand hover:bg-brand-dark rounded-lg shadow-sm"
         >
           + Generate Bill
         </button>
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-slate-200 dark:border-slate-700 flex gap-4">
+      <div className="border-b border-border dark:border-slate-700 flex gap-4">
         <button
           onClick={() => setActiveTab("bills")}
           className={`pb-2 text-sm font-semibold border-b-2 transition-colors ${
             activeTab === "bills"
-              ? "border-indigo-600 text-indigo-600 dark:text-indigo-400"
-              : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              ? "border-brand text-brand dark:text-indigo-400"
+              : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
           Bills & Invoices ({bills.length})
@@ -156,8 +156,8 @@ export function BillingPage() {
           onClick={() => setActiveTab("payments")}
           className={`pb-2 text-sm font-semibold border-b-2 transition-colors ${
             activeTab === "payments"
-              ? "border-indigo-600 text-indigo-600 dark:text-indigo-400"
-              : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              ? "border-brand text-brand dark:text-indigo-400"
+              : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
           Payment Transactions ({payments.length})
@@ -166,8 +166,8 @@ export function BillingPage() {
           onClick={() => setActiveTab("claims")}
           className={`pb-2 text-sm font-semibold border-b-2 transition-colors ${
             activeTab === "claims"
-              ? "border-indigo-600 text-indigo-600 dark:text-indigo-400"
-              : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              ? "border-brand text-brand dark:text-indigo-400"
+              : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
           TPA Insurance Claims ({claims.length})
@@ -175,12 +175,12 @@ export function BillingPage() {
       </div>
 
       {loading ? (
-        <div className="py-12 text-center text-slate-500">Loading billing data...</div>
+        <div className="py-12 text-center text-ink-4">Loading billing data...</div>
       ) : activeTab === "bills" ? (
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-hidden">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-xs font-semibold text-slate-500 uppercase">
+              <tr className="border-b border-border dark:border-slate-700 bg-page dark:bg-slate-900/50 text-xs font-semibold text-ink-4 uppercase">
                 <th className="px-4 py-3">Bill ID</th>
                 <th className="px-4 py-3">Patient</th>
                 <th className="px-4 py-3">Net Amount</th>
@@ -188,29 +188,29 @@ export function BillingPage() {
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+            <tbody className="divide-y divide-border dark:divide-slate-700">
               {bills.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan={5} className="px-4 py-8 text-center text-ink-4">
                     No bills generated.
                   </td>
                 </tr>
               ) : (
                 bills.map((b) => (
-                  <tr key={b.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
-                    <td className="px-4 py-3 font-semibold text-slate-900 dark:text-slate-100">Bill #{b.id}</td>
-                    <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
+                  <tr key={b.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
+                    <td className="px-4 py-3 font-semibold text-ink dark:text-slate-100">Bill #{b.id}</td>
+                    <td className="px-4 py-3 text-ink-2 dark:text-slate-300">
                       {b.patient_detail ? `${b.patient_detail.first_name} ${b.patient_detail.last_name}` : `Patient #${b.patient}`}
                     </td>
-                    <td className="px-4 py-3 font-bold text-slate-900 dark:text-slate-100">₹{b.net_amount}</td>
+                    <td className="px-4 py-3 font-bold text-ink dark:text-slate-100">₹{b.net_amount}</td>
                     <td className="px-4 py-3">
                       <span
                         className={`px-2 py-0.5 text-xs font-semibold rounded-full capitalize ${
                           b.status === "paid"
-                            ? "bg-green-100 text-green-800"
+                            ? "bg-success-bg text-success-text"
                             : b.status === "partially_paid"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-amber-100 text-amber-800"
+                            ? "bg-brand-tint text-brand-dark"
+                            : "bg-warning-bg text-warning-text"
                         }`}
                       >
                         {b.status}
@@ -226,14 +226,14 @@ export function BillingPage() {
                             alert("Failed to download bill PDF.")
                           }
                         }}
-                        className="px-2 py-1 text-xs font-semibold bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 rounded hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+                        className="px-2 py-1 text-xs font-semibold bg-chip-bg dark:bg-slate-700 text-ink dark:text-slate-200 rounded hover:bg-border-soft dark:hover:bg-slate-600 transition-colors"
                         title="Download itemized PDF invoice"
                       >
                         📄 PDF
                       </button>
                       <button
                         onClick={() => setSelectedBillForAddItem(b)}
-                        className="px-2 py-1 text-xs font-semibold bg-indigo-100 text-indigo-800 rounded hover:bg-indigo-200"
+                        className="px-2 py-1 text-xs font-semibold bg-brand-tint text-brand-dark rounded hover:bg-brand-border"
                       >
                         + Add Item
                       </button>
@@ -242,7 +242,7 @@ export function BillingPage() {
                           setSelectedBillForPay(b)
                           setPayAmount(b.net_amount)
                         }}
-                        className="px-2 py-1 text-xs font-semibold bg-emerald-100 text-emerald-800 rounded hover:bg-emerald-200"
+                        className="px-2 py-1 text-xs font-semibold bg-success-bg text-success-text rounded hover:bg-success/25"
                       >
                         + Pay
                       </button>
@@ -251,7 +251,7 @@ export function BillingPage() {
                           setSelectedBillForClaim(b)
                           setClaimAmt(b.net_amount)
                         }}
-                        className="px-2 py-1 text-xs font-semibold bg-purple-100 text-purple-800 rounded hover:bg-purple-200"
+                        className="px-2 py-1 text-xs font-semibold bg-accent-tint text-accent-hover rounded hover:bg-accent/25"
                       >
                         + Claim
                       </button>
@@ -264,10 +264,10 @@ export function BillingPage() {
           </table>
         </div>
       ) : activeTab === "payments" ? (
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-hidden">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-xs font-semibold text-slate-500 uppercase">
+              <tr className="border-b border-border dark:border-slate-700 bg-page dark:bg-slate-900/50 text-xs font-semibold text-ink-4 uppercase">
                 <th className="px-4 py-3">Bill ID</th>
                 <th className="px-4 py-3">Amount</th>
                 <th className="px-4 py-3">Method</th>
@@ -275,21 +275,21 @@ export function BillingPage() {
                 <th className="px-4 py-3">Paid At</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+            <tbody className="divide-y divide-border dark:divide-slate-700">
               {payments.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan={5} className="px-4 py-8 text-center text-ink-4">
                     No payment transactions recorded.
                   </td>
                 </tr>
               ) : (
                 payments.map((p) => (
-                  <tr key={p.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
+                  <tr key={p.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
                     <td className="px-4 py-3 font-semibold">Bill #{p.bill}</td>
-                    <td className="px-4 py-3 font-bold text-emerald-600">₹{p.amount}</td>
+                    <td className="px-4 py-3 font-bold text-success">₹{p.amount}</td>
                     <td className="px-4 py-3 uppercase text-xs font-medium">{p.payment_method}</td>
-                    <td className="px-4 py-3 text-slate-500 text-xs">{p.transaction_id || "-"}</td>
-                    <td className="px-4 py-3 text-slate-500 text-xs">{new Date(p.paid_at).toLocaleString()}</td>
+                    <td className="px-4 py-3 text-ink-4 text-xs">{p.transaction_id || "-"}</td>
+                    <td className="px-4 py-3 text-ink-4 text-xs">{new Date(p.paid_at).toLocaleString()}</td>
                   </tr>
                 ))
               )}
@@ -297,10 +297,10 @@ export function BillingPage() {
           </table>
         </div>
       ) : (
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-hidden">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-xs font-semibold text-slate-500 uppercase">
+              <tr className="border-b border-border dark:border-slate-700 bg-page dark:bg-slate-900/50 text-xs font-semibold text-ink-4 uppercase">
                 <th className="px-4 py-3">Bill ID</th>
                 <th className="px-4 py-3">Insurance Company</th>
                 <th className="px-4 py-3">Policy No</th>
@@ -309,22 +309,22 @@ export function BillingPage() {
                 <th className="px-4 py-3">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+            <tbody className="divide-y divide-border dark:divide-slate-700">
               {claims.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan={6} className="px-4 py-8 text-center text-ink-4">
                     No insurance claims submitted.
                   </td>
                 </tr>
               ) : (
                 claims.map((c) => (
-                  <tr key={c.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
+                  <tr key={c.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
                     <td className="px-4 py-3 font-semibold">Bill #{c.bill}</td>
                     <td className="px-4 py-3 font-medium">{c.insurance_company}</td>
-                    <td className="px-4 py-3 text-xs text-slate-500">{c.policy_number}</td>
+                    <td className="px-4 py-3 text-xs text-ink-4">{c.policy_number}</td>
                     <td className="px-4 py-3 font-bold">₹{c.claimed_amount}</td>
-                    <td className="px-4 py-3 font-bold text-emerald-600">₹{c.approved_amount}</td>
-                    <td className="px-4 py-3 capitalize text-xs font-semibold text-purple-600">{c.status}</td>
+                    <td className="px-4 py-3 font-bold text-success">₹{c.approved_amount}</td>
+                    <td className="px-4 py-3 capitalize text-xs font-semibold text-accent">{c.status}</td>
                   </tr>
                 ))
               )}
@@ -337,10 +337,10 @@ export function BillingPage() {
       {showBillModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-800 max-w-md w-full rounded-xl p-6 space-y-4">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Generate New Bill</h2>
+            <h2 className="text-lg font-bold text-ink dark:text-slate-100">Generate New Bill</h2>
             <form onSubmit={handleCreateBill} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Patient ID</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Patient ID</label>
                 <input
                   type="number"
                   required
@@ -350,7 +350,7 @@ export function BillingPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Discount Amount (₹)</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Discount Amount (₹)</label>
                 <input
                   type="number"
                   value={discountAmt}
@@ -359,10 +359,10 @@ export function BillingPage() {
                 />
               </div>
               <div className="flex justify-end gap-2">
-                <button type="button" onClick={() => setShowBillModal(false)} className="px-4 py-2 text-sm text-slate-500">
+                <button type="button" onClick={() => setShowBillModal(false)} className="px-4 py-2 text-sm text-ink-4">
                   Cancel
                 </button>
-                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg">
+                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-brand rounded-lg">
                   Create Draft Bill
                 </button>
               </div>
@@ -375,10 +375,10 @@ export function BillingPage() {
       {selectedBillForAddItem && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-800 max-w-md w-full rounded-xl p-6 space-y-4">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Add Line Item to Bill #{selectedBillForAddItem.id}</h2>
+            <h2 className="text-lg font-bold text-ink dark:text-slate-100">Add Line Item to Bill #{selectedBillForAddItem.id}</h2>
             <form onSubmit={handleAddItem} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Description</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Description</label>
                 <input
                   type="text"
                   required
@@ -389,7 +389,7 @@ export function BillingPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Quantity</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Quantity</label>
                 <input
                   type="number"
                   required
@@ -399,7 +399,7 @@ export function BillingPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Unit Price (₹)</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Unit Price (₹)</label>
                 <input
                   type="number"
                   required
@@ -409,10 +409,10 @@ export function BillingPage() {
                 />
               </div>
               <div className="flex justify-end gap-2">
-                <button type="button" onClick={() => setSelectedBillForAddItem(null)} className="px-4 py-2 text-sm text-slate-500">
+                <button type="button" onClick={() => setSelectedBillForAddItem(null)} className="px-4 py-2 text-sm text-ink-4">
                   Cancel
                 </button>
-                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg">
+                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-brand rounded-lg">
                   Add Item
                 </button>
               </div>
@@ -425,10 +425,10 @@ export function BillingPage() {
       {selectedBillForPay && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-800 max-w-md w-full rounded-xl p-6 space-y-4">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Record Payment for Bill #{selectedBillForPay.id}</h2>
+            <h2 className="text-lg font-bold text-ink dark:text-slate-100">Record Payment for Bill #{selectedBillForPay.id}</h2>
             <form onSubmit={handleRecordPayment} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Amount (₹)</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Amount (₹)</label>
                 <input
                   type="number"
                   required
@@ -438,7 +438,7 @@ export function BillingPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Payment Method</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Payment Method</label>
                 <select
                   value={payMethod}
                   onChange={(e) => setPayMethod(e.target.value)}
@@ -451,7 +451,7 @@ export function BillingPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Transaction ID / Ref</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Transaction ID / Ref</label>
                 <input
                   type="text"
                   value={txnId}
@@ -460,10 +460,10 @@ export function BillingPage() {
                 />
               </div>
               <div className="flex justify-end gap-2">
-                <button type="button" onClick={() => setSelectedBillForPay(null)} className="px-4 py-2 text-sm text-slate-500">
+                <button type="button" onClick={() => setSelectedBillForPay(null)} className="px-4 py-2 text-sm text-ink-4">
                   Cancel
                 </button>
-                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg">
+                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-success rounded-lg">
                   Submit Payment
                 </button>
               </div>
@@ -476,10 +476,10 @@ export function BillingPage() {
       {selectedBillForClaim && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-800 max-w-md w-full rounded-xl p-6 space-y-4">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Submit TPA Claim for Bill #{selectedBillForClaim.id}</h2>
+            <h2 className="text-lg font-bold text-ink dark:text-slate-100">Submit TPA Claim for Bill #{selectedBillForClaim.id}</h2>
             <form onSubmit={handleCreateClaim} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Insurance Company</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Insurance Company</label>
                 <input
                   type="text"
                   required
@@ -490,7 +490,7 @@ export function BillingPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Policy Number</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Policy Number</label>
                 <input
                   type="text"
                   required
@@ -500,7 +500,7 @@ export function BillingPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Claimed Amount (₹)</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Claimed Amount (₹)</label>
                 <input
                   type="number"
                   required
@@ -510,10 +510,10 @@ export function BillingPage() {
                 />
               </div>
               <div className="flex justify-end gap-2">
-                <button type="button" onClick={() => setSelectedBillForClaim(null)} className="px-4 py-2 text-sm text-slate-500">
+                <button type="button" onClick={() => setSelectedBillForClaim(null)} className="px-4 py-2 text-sm text-ink-4">
                   Cancel
                 </button>
-                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg">
+                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-accent rounded-lg">
                   Submit Claim
                 </button>
               </div>

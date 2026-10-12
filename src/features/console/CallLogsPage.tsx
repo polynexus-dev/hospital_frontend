@@ -41,18 +41,18 @@ function fmtTime(iso: string) {
 }
 
 const STATUS_COLORS: Record<CallStatus, { bg: string; text: string; dot: string }> = {
-  answered:  { bg: "bg-emerald-50",  text: "text-emerald-700",  dot: "bg-emerald-500" },
-  missed:    { bg: "bg-red-50",      text: "text-red-600",      dot: "bg-red-500" },
-  rnr:       { bg: "bg-amber-50",    text: "text-amber-700",    dot: "bg-amber-400" },
-  busy:      { bg: "bg-orange-50",   text: "text-orange-700",   dot: "bg-orange-400" },
-  failed:    { bg: "bg-rose-50",     text: "text-rose-700",     dot: "bg-rose-500" },
-  voicemail: { bg: "bg-indigo-50",   text: "text-indigo-700",   dot: "bg-indigo-400" },
+  answered:  { bg: "bg-success-bg",  text: "text-success-text",  dot: "bg-success" },
+  missed:    { bg: "bg-danger-bg",      text: "text-danger-text",      dot: "bg-danger" },
+  rnr:       { bg: "bg-warning-bg",    text: "text-warning-text",    dot: "bg-warning" },
+  busy:      { bg: "bg-warning-bg",   text: "text-warning-text",   dot: "bg-warning" },
+  failed:    { bg: "bg-danger-bg",     text: "text-danger-text",     dot: "bg-danger" },
+  voicemail: { bg: "bg-brand-tint",   text: "text-brand-dark",   dot: "bg-brand" },
 }
 
 // ─── sub-components ───────────────────────────────────────────────────────────
 
 function StatusPill({ status }: { status: CallStatus }) {
-  const c = STATUS_COLORS[status] ?? { bg: "bg-gray-50", text: "text-gray-600", dot: "bg-gray-400" }
+  const c = STATUS_COLORS[status] ?? { bg: "bg-page", text: "text-ink-3", dot: "bg-gray-400" }
   const labels: Record<CallStatus, string> = {
     answered: "Answered", missed: "Missed", rnr: "RNR", busy: "Busy", failed: "Failed", voicemail: "Voicemail",
   }
@@ -70,8 +70,8 @@ function DirectionBadge({ dir }: { dir: CallDirection }) {
     <span
       className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide border shadow-2xs ${
         isInbound
-          ? "bg-blue-50 text-blue-700 border-blue-200"
-          : "bg-violet-50 text-violet-700 border-violet-200"
+          ? "bg-brand-tint text-brand-dark border-brand-border"
+          : "bg-accent-tint text-accent-hover border-accent/25"
       }`}
     >
       <span className="text-[12px]">{isInbound ? "📲" : "📞"}</span>
@@ -97,7 +97,7 @@ function AudioPlayer({ url }: { url: string }) {
       ) : (
         <button
           onClick={() => setOpen(true)}
-          className="flex items-center gap-1.5 text-[11.5px] font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
+          className="flex items-center gap-1.5 text-[11.5px] font-semibold text-brand hover:text-brand-dark transition-colors"
         >
           <span className="text-[14px]">▶</span> Play recording
         </button>
@@ -145,13 +145,13 @@ function ClickToCallButton({ toNumber, size = "sm" }: { toNumber: string; size?:
 
   if (feedback === "ok")
     return (
-      <span className={`${base} bg-emerald-50 border-emerald-300 text-emerald-700`}>
+      <span className={`${base} bg-success-bg border-success/25 text-success-text`}>
         ✓ Connecting…
       </span>
     )
   if (feedback === "err")
     return (
-      <span className={`${base} bg-red-50 border-red-300 text-red-600`}>
+      <span className={`${base} bg-danger-bg border-danger-border text-danger-text`}>
         ✗ Failed
       </span>
     )
@@ -171,7 +171,7 @@ function ClickToCallButton({ toNumber, size = "sm" }: { toNumber: string; size?:
       }
       className={`${base} ${
         isOnCall
-          ? "bg-slate-100 border-slate-200 text-slate-400 opacity-60 cursor-not-allowed"
+          ? "bg-chip-bg border-border text-ink-5 opacity-60 cursor-not-allowed"
           : "bg-white border-border-strong text-ink-2 hover:bg-brand hover:border-brand hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
       }`}
     >
@@ -197,7 +197,7 @@ function CallRow({ call, expanded, onToggle }: {
   const callbackNumber = call.direction === "outbound" ? call.to_number : call.from_number
   return (
     <div
-      className={`border-b border-border-faint last:border-0 transition-colors ${expanded ? "bg-indigo-50/30" : "hover:bg-page/60"}`}
+      className={`border-b border-border-faint last:border-0 transition-colors ${expanded ? "bg-brand-tint/30" : "hover:bg-page/60"}`}
     >
       {/* ── main row ── */}
       <button
@@ -212,7 +212,7 @@ function CallRow({ call, expanded, onToggle }: {
         {/* From -> To and Metadata */}
         <div className="flex-1 min-w-0 pr-2">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[13px] font-semibold font-mono text-ink-1">
+            <span className="text-[13px] font-semibold font-mono text-ink">
               {call.from_number}
             </span>
             <span className="text-ink-4 text-[11px] font-bold">→</span>
@@ -220,7 +220,7 @@ function CallRow({ call, expanded, onToggle }: {
               {call.to_number}
             </span>
             {call.patient_name && (
-              <span className="text-[11px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+              <span className="text-[11px] font-semibold text-success-text bg-success-bg px-2 py-0.5 rounded border border-success/25">
                 👤 {call.patient_name}
               </span>
             )}
@@ -279,7 +279,7 @@ function CallRow({ call, expanded, onToggle }: {
           <Detail
             label="Call Type"
             value={
-              <span className={`font-semibold ${call.direction === "inbound" ? "text-blue-600" : "text-violet-600"}`}>
+              <span className={`font-semibold ${call.direction === "inbound" ? "text-brand" : "text-accent"}`}>
                 {call.direction === "inbound" ? "📲 Inbound Call (Patient called hospital)" : "📞 Outgoing Call (Staff dialed patient)"}
               </span>
             }
@@ -328,12 +328,12 @@ function CallRow({ call, expanded, onToggle }: {
           </div>
 
           <div className="col-span-2 flex items-center gap-3 pt-2 border-t border-border-faint mt-1">
-            <span className={`flex items-center gap-1 text-[11.5px] ${call.consent_recorded ? "text-emerald-600" : "text-ink-4"}`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${call.consent_recorded ? "bg-emerald-500" : "bg-border-strong"}`} />
+            <span className={`flex items-center gap-1 text-[11.5px] ${call.consent_recorded ? "text-success" : "text-ink-4"}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${call.consent_recorded ? "bg-success" : "bg-border-strong"}`} />
               {call.consent_recorded ? "Consent recorded" : "No consent on file"}
             </span>
-            <span className={`flex items-center gap-1 text-[11.5px] ${call.recording_url ? "text-emerald-600" : "text-ink-4"}`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${call.recording_url ? "bg-emerald-500" : "bg-border-strong"}`} />
+            <span className={`flex items-center gap-1 text-[11.5px] ${call.recording_url ? "text-success" : "text-ink-4"}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${call.recording_url ? "bg-success" : "bg-border-strong"}`} />
               {call.recording_url ? "Recording available" : "No recording"}
             </span>
           </div>
@@ -484,7 +484,7 @@ export function CallLogsPage() {
       {/* ── page header ── */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[22px] font-bold tracking-tight text-ink-1">
+          <h1 className="text-[22px] font-bold tracking-tight text-ink">
             {direction === "inbound"
               ? "Incoming Call History"
               : direction === "outbound"
@@ -507,11 +507,11 @@ export function CallLogsPage() {
 
       {/* ── live active calls banner ── */}
       {activeCalls.length > 0 && (
-        <div className="rounded-control border border-emerald-200 bg-emerald-50 px-4 py-3">
-          <div className="text-[12px] font-semibold text-emerald-700 mb-2 flex items-center gap-2">
-            <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+        <div className="rounded-control border border-success/25 bg-success-bg px-4 py-3">
+          <div className="text-[12px] font-semibold text-success-text mb-2 flex items-center gap-2">
+            <span className="inline-block w-2 h-2 rounded-full bg-success animate-ping" />
             {activeCalls.length} Live Call{activeCalls.length > 1 ? "s" : ""} in Progress
-            <span className="text-[10.5px] font-normal text-emerald-500 ml-1">· auto-refreshes every 10s</span>
+            <span className="text-[10.5px] font-normal text-success ml-1">· auto-refreshes every 10s</span>
           </div>
           <div className="flex flex-wrap gap-2">
             {activeCalls.map((c, i) => {
@@ -519,12 +519,12 @@ export function CallLogsPage() {
               return (
                 <div
                   key={i}
-                  className="bg-white border border-emerald-200 rounded-control px-3 py-1.5 flex items-center gap-2 text-[12.5px] shadow-sm"
+                  className="bg-white border border-success/25 rounded-control px-3 py-1.5 flex items-center gap-2 text-[12.5px] shadow-sm"
                 >
-                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${isOutbound ? "bg-violet-100 text-violet-700 border border-violet-200" : "bg-blue-100 text-blue-700 border border-blue-200"}`}>
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${isOutbound ? "bg-accent-tint text-accent-hover border border-accent/25" : "bg-brand-tint text-brand-dark border border-brand-border"}`}>
                     {isOutbound ? "📞 Outgoing" : "📲 Inbound"}
                   </span>
-                  <span className="text-emerald-600 font-semibold font-mono">{c.caller}</span>
+                  <span className="text-success font-semibold font-mono">{c.caller}</span>
                   <span className="text-ink-4 text-[11px]">→</span>
                   <span className="font-mono text-ink-2">{c.callee}</span>
                   <span className="text-[11px] text-ink-4 ml-1">⏱ {c.duration}</span>
@@ -538,7 +538,7 @@ export function CallLogsPage() {
       {/* ── summary / today stats ── */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         <Card padded>
-          <div className="text-[26px] font-bold tracking-tight text-ink-1">
+          <div className="text-[26px] font-bold tracking-tight text-ink">
             {summary ? summary.total_calls : totals.calls_handled}
           </div>
           <div className="text-[11.5px] text-ink-4 mt-0.5">
@@ -550,19 +550,19 @@ export function CallLogsPage() {
           </div>
         </Card>
         <Card padded>
-          <div className="text-[26px] font-bold tracking-tight text-emerald-600">
+          <div className="text-[26px] font-bold tracking-tight text-success">
             {summary ? summary.answered : totals.answered}
           </div>
           <div className="text-[11.5px] text-ink-4 mt-0.5">Answered</div>
         </Card>
         <Card padded>
-          <div className="text-[26px] font-bold tracking-tight text-red-500">
+          <div className="text-[26px] font-bold tracking-tight text-danger-text">
             {summary ? summary.missed : totals.missed}
           </div>
           <div className="text-[11.5px] text-ink-4 mt-0.5">Missed Calls</div>
         </Card>
         <Card padded>
-          <div className="text-[26px] font-bold tracking-tight text-amber-600">
+          <div className="text-[26px] font-bold tracking-tight text-warning-text">
             {summary ? summary.rnr : (direction === "inbound" ? inboundToday : direction === "outbound" ? outboundToday : totals.missed)}
           </div>
           <div className="text-[11.5px] text-ink-4 mt-0.5">
@@ -570,7 +570,7 @@ export function CallLogsPage() {
           </div>
         </Card>
         <Card padded>
-          <div className="text-[26px] font-bold tracking-tight text-indigo-600">
+          <div className="text-[26px] font-bold tracking-tight text-brand">
             {summary
               ? fmtDuration(Math.round(summary.avg_duration_seconds))
               : fmtDuration(totals.calls_handled > 0 ? Math.round((totals.answered * 120) / totals.calls_handled) : 0)}
@@ -598,7 +598,7 @@ export function CallLogsPage() {
                   type="button"
                   onClick={() => reconnect()}
                   title="Refresh / Reconnect WebRTC Phone"
-                  className="w-6 h-6 rounded flex items-center justify-center text-ink-4 hover:text-ink-1 hover:bg-page transition-colors cursor-pointer border border-border-soft text-[11px]"
+                  className="w-6 h-6 rounded flex items-center justify-center text-ink-4 hover:text-ink hover:bg-page transition-colors cursor-pointer border border-border-soft text-[11px]"
                 >
                   <span className={sipStatus === "registering" ? "animate-spin inline-block" : ""}>🔄</span>
                 </button>
@@ -607,7 +607,7 @@ export function CallLogsPage() {
 
             {/* Offline notification banner with quick Reconnect action */}
             {sipStatus === "offline" && (
-              <div className="px-3.5 py-2 bg-slate-50 border-b border-border-soft flex flex-col gap-2">
+              <div className="px-3.5 py-2 bg-page border-b border-border-soft flex flex-col gap-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] text-ink-4">Phone disconnected</span>
                   <div className="flex items-center gap-1">
@@ -623,7 +623,7 @@ export function CallLogsPage() {
                       type="button"
                       onClick={() => autoDetect()}
                       title="Test all PBX domain/auth combinations"
-                      className="px-2 py-0.5 rounded bg-violet-600 text-white text-[11px] font-semibold hover:bg-violet-700 transition-colors cursor-pointer flex items-center gap-1"
+                      className="px-2 py-0.5 rounded bg-accent text-white text-[11px] font-semibold hover:bg-accent-hover transition-colors cursor-pointer flex items-center gap-1"
                     >
                       <span>🔍</span>
                       <span>Auto-Detect</span>
@@ -631,7 +631,7 @@ export function CallLogsPage() {
                   </div>
                 </div>
                 {autoTryStatus && (
-                  <div className="text-[10px] text-violet-700 font-mono bg-violet-50 p-1.5 rounded border border-violet-200">
+                  <div className="text-[10px] text-accent-hover font-mono bg-accent-tint p-1.5 rounded border border-accent/25">
                     {autoTryStatus}
                   </div>
                 )}
@@ -647,7 +647,7 @@ export function CallLogsPage() {
                     href="/webrtc-sip-phone.html"
                     target="_blank"
                     rel="noreferrer"
-                    className="text-indigo-600 hover:underline font-semibold"
+                    className="text-brand hover:underline font-semibold"
                   >
                     ↗️ Open Softphone HTML
                   </a>
@@ -657,14 +657,14 @@ export function CallLogsPage() {
 
             {/* In-Call WebRTC Banner */}
             {sipStatus === "busy" && (
-              <div className="px-3.5 py-2 bg-amber-50 border-b border-amber-200 flex items-center justify-between">
-                <span className="text-xs text-amber-800 font-semibold flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+              <div className="px-3.5 py-2 bg-warning-bg border-b border-warning/30 flex items-center justify-between">
+                <span className="text-xs text-warning-text font-semibold flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-warning animate-ping" />
                   Call Active
                 </span>
                 <button
                   onClick={hangup}
-                  className="px-2 py-0.5 rounded text-[11px] font-bold text-white bg-red-600 hover:bg-red-700 transition-colors"
+                  className="px-2 py-0.5 rounded text-[11px] font-bold text-white bg-danger hover:bg-danger transition-colors"
                 >
                   Hang Up
                 </button>
@@ -692,11 +692,11 @@ export function CallLogsPage() {
                 title={isOnCall ? "You are on an active call. Hang up first before calling another number." : undefined}
                 className={`w-full py-2 rounded-control text-[13px] font-semibold transition-all ${
                   isOnCall
-                    ? "bg-slate-200 text-slate-500 cursor-not-allowed border border-slate-300"
+                    ? "bg-border-soft text-ink-4 cursor-not-allowed border border-border-strong"
                     : qdFeedback === "ok"
-                    ? "bg-emerald-500 text-white border border-emerald-500"
+                    ? "bg-success text-white border border-success"
                     : qdFeedback === "err"
-                    ? "bg-red-500 text-white border border-red-500"
+                    ? "bg-danger text-white border border-danger"
                     : "bg-brand text-white hover:bg-brand/90 disabled:opacity-40 disabled:cursor-not-allowed"
                 }`}
               >
@@ -731,7 +731,7 @@ export function CallLogsPage() {
                         <span className="text-[12px] opacity-75 shrink-0" title={item.direction === "inbound" ? "Inbound caller" : "Outgoing callee"}>
                           {item.direction === "inbound" ? "📲" : "📞"}
                         </span>
-                        <span className="text-[13px] font-mono font-semibold text-ink-1 truncate">
+                        <span className="text-[13px] font-mono font-semibold text-ink truncate">
                           {item.number}
                         </span>
                       </div>

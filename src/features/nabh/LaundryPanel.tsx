@@ -5,7 +5,7 @@ import { col, opts } from "./fields"
 // Laundry: soiled / infected linen from a ward → wash → returned clean.
 // Infected linen can't be marked washed without a validated wash (≥71 °C × 3 min or a chemical disinfection).
 
-const inputCls = "w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900"
+const inputCls = "w-full px-3 py-2 text-sm border border-border-strong dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900"
 const inr = (n: unknown) => `₹${Number(n ?? 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`
 
 function BatchRow({ b, onChange }: { b: any; onChange: () => void }) {
@@ -25,31 +25,31 @@ function BatchRow({ b, onChange }: { b: any; onChange: () => void }) {
     }
   }
   return (
-    <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-4 bg-white dark:bg-slate-800 space-y-2">
+    <div className="border border-border dark:border-slate-700 rounded-xl p-4 bg-white dark:bg-slate-800 space-y-2">
       <div className="flex flex-wrap justify-between gap-2 text-sm">
         <div>
           <span className="font-semibold">{b.batch_number}</span> · {b.ward_name || "—"} ·{" "}
-          <span className={b.kind === "infected" ? "text-rose-700 font-semibold" : ""}>{b.kind === "infected" ? "Infected (red bag)" : "Soiled"}</span>
-          {b.vendor && <span className="text-slate-500"> · {b.vendor}</span>}
+          <span className={b.kind === "infected" ? "text-danger-text font-semibold" : ""}>{b.kind === "infected" ? "Infected (red bag)" : "Soiled"}</span>
+          {b.vendor && <span className="text-ink-4"> · {b.vendor}</span>}
         </div>
-        <div className="text-xs uppercase font-semibold text-emerald-700">{b.status}</div>
+        <div className="text-xs uppercase font-semibold text-success-text">{b.status}</div>
       </div>
-      <div className="text-sm text-slate-600">
+      <div className="text-sm text-ink-3">
         {b.lines.map((l: any) => `${l.linen_name} ${l.sent_qty}${b.status === "returned" ? ` → ${l.returned_qty} back${l.rejected_qty ? `, ${l.rejected_qty} condemned` : ""}${l.lost_qty ? `, ${l.lost_qty} lost` : ""}` : ""}`).join(" · ")}
       </div>
-      {b.status === "processed" && <div className="text-xs text-slate-500">Washed {b.wash_temp_c ? `${b.wash_temp_c} °C × ${b.wash_minutes} min` : ""}{b.disinfectant ? ` · ${b.disinfectant}` : ""}</div>}
-      {b.status === "returned" && Number(b.cost) > 0 && <div className="text-xs text-slate-500">Laundry cost {inr(b.cost)}</div>}
+      {b.status === "processed" && <div className="text-xs text-ink-4">Washed {b.wash_temp_c ? `${b.wash_temp_c} °C × ${b.wash_minutes} min` : ""}{b.disinfectant ? ` · ${b.disinfectant}` : ""}</div>}
+      {b.status === "returned" && Number(b.cost) > 0 && <div className="text-xs text-ink-4">Laundry cost {inr(b.cost)}</div>}
       <div className="flex gap-2">
-        {b.status === "collected" && <button onClick={() => setMode("process")} className="px-3 py-1.5 text-sm font-semibold rounded-lg bg-emerald-600 text-white">Record wash</button>}
-        {b.status === "processed" && <button onClick={() => setMode("return")} className="px-3 py-1.5 text-sm font-semibold rounded-lg bg-emerald-600 text-white">Return to ward</button>}
+        {b.status === "collected" && <button onClick={() => setMode("process")} className="px-3 py-1.5 text-sm font-semibold rounded-lg bg-success text-white">Record wash</button>}
+        {b.status === "processed" && <button onClick={() => setMode("return")} className="px-3 py-1.5 text-sm font-semibold rounded-lg bg-success text-white">Return to ward</button>}
       </div>
       {mode === "process" && (
         <div className="grid sm:grid-cols-4 gap-2 items-end pt-2">
-          <label className="text-xs font-semibold text-slate-600">Temperature °C<input type="number" className={`${inputCls} mt-1`} value={wash.wash_temp_c} onChange={(e) => setWash({ ...wash, wash_temp_c: e.target.value })} /></label>
-          <label className="text-xs font-semibold text-slate-600">Minutes<input type="number" className={`${inputCls} mt-1`} value={wash.wash_minutes} onChange={(e) => setWash({ ...wash, wash_minutes: e.target.value })} /></label>
-          <label className="text-xs font-semibold text-slate-600">Chemical disinfection<input className={`${inputCls} mt-1`} placeholder="e.g. 1% hypochlorite, 30 min" value={wash.disinfectant} onChange={(e) => setWash({ ...wash, disinfectant: e.target.value })} /></label>
-          <button onClick={() => submit("process/", wash)} className="px-3 py-2 text-sm font-semibold rounded-lg bg-emerald-600 text-white">Save wash</button>
-          {b.kind === "infected" && <div className="sm:col-span-4 text-xs text-rose-700">Infected linen: at least 71 °C for 3 minutes, or record the chemical disinfection.</div>}
+          <label className="text-xs font-semibold text-ink-3">Temperature °C<input type="number" className={`${inputCls} mt-1`} value={wash.wash_temp_c} onChange={(e) => setWash({ ...wash, wash_temp_c: e.target.value })} /></label>
+          <label className="text-xs font-semibold text-ink-3">Minutes<input type="number" className={`${inputCls} mt-1`} value={wash.wash_minutes} onChange={(e) => setWash({ ...wash, wash_minutes: e.target.value })} /></label>
+          <label className="text-xs font-semibold text-ink-3">Chemical disinfection<input className={`${inputCls} mt-1`} placeholder="e.g. 1% hypochlorite, 30 min" value={wash.disinfectant} onChange={(e) => setWash({ ...wash, disinfectant: e.target.value })} /></label>
+          <button onClick={() => submit("process/", wash)} className="px-3 py-2 text-sm font-semibold rounded-lg bg-success text-white">Save wash</button>
+          {b.kind === "infected" && <div className="sm:col-span-4 text-xs text-danger-text">Infected linen: at least 71 °C for 3 minutes, or record the chemical disinfection.</div>}
         </div>
       )}
       {mode === "return" && (
@@ -66,11 +66,11 @@ function BatchRow({ b, onChange }: { b: any; onChange: () => void }) {
           <div className="flex gap-2 items-center">
             <input type="number" placeholder="Weight kg (for vendor cost)" className={`${inputCls} max-w-xs`} value={weight} onChange={(e) => setWeight(e.target.value)} />
             <button onClick={() => submit("return/", { weight_kg: weight || null, lines: b.lines.map((l: any) => ({ linen_type: l.linen_type, ...counts[l.linen_type] })) })}
-              className="px-3 py-2 text-sm font-semibold rounded-lg bg-emerald-600 text-white">Confirm return</button>
+              className="px-3 py-2 text-sm font-semibold rounded-lg bg-success text-white">Confirm return</button>
           </div>
         </div>
       )}
-      {error && <div className="text-sm text-rose-700">{error}</div>}
+      {error && <div className="text-sm text-danger-text">{error}</div>}
     </div>
   )
 }
@@ -111,14 +111,14 @@ export function LaundryPanel() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[["Wards below par", String(dash.shortfalls.length)], ["Batches out > 24 h", String(dash.overdue_batches.length)],
             ["Avg turnaround", dash.average_turnaround_hours != null ? `${dash.average_turnaround_hours} h` : "—"], ["Laundry cost (30 d)", inr(dash.laundry_cost_30d)]].map(([l, v]) => (
-            <div key={l} className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4"><div className="text-xs text-slate-500">{l}</div><div className="text-2xl font-bold">{v}</div></div>
+            <div key={l} className="rounded-xl border border-border dark:border-slate-700 bg-white dark:bg-slate-800 p-4"><div className="text-xs text-ink-4">{l}</div><div className="text-2xl font-bold">{v}</div></div>
           ))}
         </div>
       )}
       {dash?.shortfalls.length > 0 && (
-        <div className="text-sm bg-amber-50 text-amber-800 rounded-lg px-3 py-2">Below par: {dash.shortfalls.map((s: any) => `${s.location} ${s.linen} (${s.clean}/${s.par})`).join(" · ")}</div>
+        <div className="text-sm bg-warning-bg text-warning-text rounded-lg px-3 py-2">Below par: {dash.shortfalls.map((s: any) => `${s.location} ${s.linen} (${s.clean}/${s.par})`).join(" · ")}</div>
       )}
-      <section className="border border-slate-200 dark:border-slate-700 rounded-xl p-4 bg-white dark:bg-slate-800 space-y-3">
+      <section className="border border-border dark:border-slate-700 rounded-xl p-4 bg-white dark:bg-slate-800 space-y-3">
         <h2 className="font-semibold">Collect soiled linen</h2>
         <div className="grid md:grid-cols-4 gap-3">
           <select className={inputCls} value={draft.ward} onChange={(e) => setDraft({ ...draft, ward: e.target.value })}>
@@ -133,14 +133,14 @@ export function LaundryPanel() {
         {types.length ? (
           <div className="grid sm:grid-cols-3 lg:grid-cols-5 gap-2">
             {types.map((t) => (
-              <label key={t.id} className="text-xs font-semibold text-slate-600">{t.name}
+              <label key={t.id} className="text-xs font-semibold text-ink-3">{t.name}
                 <input type="number" min={0} className={`${inputCls} mt-1`} value={draft.counts[t.id] ?? ""} onChange={(e) => setDraft({ ...draft, counts: { ...draft.counts, [t.id]: e.target.value } })} />
               </label>
             ))}
           </div>
-        ) : <div className="text-sm text-slate-500">Add linen types in the "Linen types" tab first.</div>}
-        <button onClick={collect} className="px-4 py-2 text-sm font-semibold rounded-lg bg-emerald-600 text-white">Record collection</button>
-        {error && <div className="text-sm text-rose-700">{error}</div>}
+        ) : <div className="text-sm text-ink-4">Add linen types in the "Linen types" tab first.</div>}
+        <button onClick={collect} className="px-4 py-2 text-sm font-semibold rounded-lg bg-success text-white">Record collection</button>
+        {error && <div className="text-sm text-danger-text">{error}</div>}
       </section>
       <div className="space-y-3">{batches.map((b) => <BatchRow key={b.id} b={b} onChange={load} />)}</div>
     </div>
@@ -158,7 +158,7 @@ export const linenStockResource = {
   title: "Linen stock & par levels", description: "Clean linen at each ward; leave the ward blank for the central linen store. Issue moves clean stock from the central store to a ward.",
   endpoint: "/support-services/linen-stock/", createLabel: "Add stock location",
   columns: [col("ward_name", "Location"), col("linen_name", "Linen"), col("par_level", "Par"), col("clean_qty", "Clean"),
-    { key: "shortfall", label: "Short by", render: (r: any) => (r.shortfall ? <span className="text-amber-700 font-semibold">{r.shortfall}</span> : "—") }],
+    { key: "shortfall", label: "Short by", render: (r: any) => (r.shortfall ? <span className="text-warning-text font-semibold">{r.shortfall}</span> : "—") }],
   fields: [{ key: "ward", label: "Ward (blank = central store)", type: "fk" as const, source: "/facilities/wards/" }, { key: "linen_type", label: "Linen", type: "fk" as const, source: "/support-services/linen-types/", required: true },
     { key: "par_level", label: "Par level", type: "number" as const }, { key: "clean_qty", label: "Clean on hand", type: "number" as const }],
   toolbar: [{ label: "Issue to ward", path: "issue/", method: "post" as const, prompt: [

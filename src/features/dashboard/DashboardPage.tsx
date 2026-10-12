@@ -175,7 +175,7 @@ export function DashboardPage() {
         value: val,
         displayValue: val >= 1000 ? `₹${Math.round(val / 1000)}k` : `₹${val}`,
         heightPct: pct,
-        color: b.label === "Other" ? "bg-slate-300" : "bg-blue-700",
+        color: b.label === "Other" ? "bg-border-strong" : "bg-brand-dark",
       }
     })
   }, [totalScale])
@@ -204,14 +204,14 @@ export function DashboardPage() {
   const pendingCount = Math.round(45 * totalScale)
 
   return (
-    <div className="flex flex-col gap-3.5 bg-slate-50/50 px-3.5 pb-3.5 pt-1 min-h-screen font-sans text-slate-800">
+    <div className="flex flex-col gap-3.5 bg-page/50 px-3.5 pb-3.5 pt-1 min-h-screen font-sans text-ink">
 
       {/* ── ACTION TOOLBAR: EXPORT BUTTONS ──────────────────────────────────── */}
       <div className="flex items-center justify-end gap-2.5">
         <button
           onClick={() => handleExport("csv")}
           disabled={isExporting}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition-colors shadow-2xs disabled:opacity-50"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-ink-2 bg-white border border-border hover:bg-page transition-colors shadow-2xs disabled:opacity-50"
         >
           <span>📊</span>
           <span>Export CSV</span>
@@ -219,7 +219,7 @@ export function DashboardPage() {
         <button
           onClick={() => handleExport("pdf")}
           disabled={isExporting}
-          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-blue-700 hover:bg-blue-800 transition-colors shadow-2xs disabled:opacity-50"
+          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-brand-dark hover:bg-blue-800 transition-colors shadow-2xs disabled:opacity-50"
         >
           <span>📄</span>
           <span>{isExporting ? "Generating..." : "Export MIS (PDF)"}</span>
@@ -229,11 +229,11 @@ export function DashboardPage() {
       {/* ── ROW 1: 6 TOP METRIC TILES ───────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
         {/* Calls Received */}
-        <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-2xs flex flex-col justify-between">
+        <div className="bg-white border border-border rounded-xl p-3.5 shadow-2xs flex flex-col justify-between">
           <div className="text-[10px] font-bold tracking-wider uppercase text-slate-400">Calls Received</div>
           <div className="flex items-baseline justify-between mt-2">
-            <div className="text-xl font-bold text-slate-800">{callsReceived.toLocaleString()}</div>
-            <div className="text-[11px] font-bold text-emerald-600 flex items-center gap-0.5">
+            <div className="text-xl font-bold text-ink">{callsReceived.toLocaleString()}</div>
+            <div className="text-[11px] font-bold text-success flex items-center gap-0.5">
               <span>↑</span>
               <span>12%</span>
             </div>
@@ -241,11 +241,11 @@ export function DashboardPage() {
         </div>
 
         {/* Calls Answered */}
-        <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-2xs flex flex-col justify-between">
+        <div className="bg-white border border-border rounded-xl p-3.5 shadow-2xs flex flex-col justify-between">
           <div className="text-[10px] font-bold tracking-wider uppercase text-slate-400">Calls Answered</div>
           <div className="flex items-baseline justify-between mt-2">
-            <div className="text-xl font-bold text-slate-800">{callsAnswered.toLocaleString()}</div>
-            <div className="text-[11px] font-bold text-emerald-600 flex items-center gap-0.5">
+            <div className="text-xl font-bold text-ink">{callsAnswered.toLocaleString()}</div>
+            <div className="text-[11px] font-bold text-success flex items-center gap-0.5">
               <span>↑</span>
               <span>8%</span>
             </div>
@@ -253,11 +253,11 @@ export function DashboardPage() {
         </div>
 
         {/* Unanswered */}
-        <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-2xs flex flex-col justify-between">
-          <div className="text-[10px] font-bold tracking-wider uppercase text-rose-500">Unanswered</div>
+        <div className="bg-white border border-border rounded-xl p-3.5 shadow-2xs flex flex-col justify-between">
+          <div className="text-[10px] font-bold tracking-wider uppercase text-danger-text">Unanswered</div>
           <div className="flex items-baseline justify-between mt-2">
-            <div className="text-xl font-bold text-slate-800">{callsMissed.toLocaleString()}</div>
-            <div className="text-[11px] font-bold text-rose-500 flex items-center gap-0.5">
+            <div className="text-xl font-bold text-ink">{callsMissed.toLocaleString()}</div>
+            <div className="text-[11px] font-bold text-danger-text flex items-center gap-0.5">
               <span>↑</span>
               <span>2%</span>
             </div>
@@ -265,23 +265,23 @@ export function DashboardPage() {
         </div>
 
         {/* OPD Completed */}
-        <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-2xs flex flex-col justify-between">
+        <div className="bg-white border border-border rounded-xl p-3.5 shadow-2xs flex flex-col justify-between">
           <div className="text-[10px] font-bold tracking-wider uppercase text-slate-400">OPD Completed</div>
-          <div className="mt-2 text-xl font-bold text-slate-800">{opdCompleted}</div>
+          <div className="mt-2 text-xl font-bold text-ink">{opdCompleted}</div>
         </div>
 
         {/* OPD Encounters */}
-        <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-2xs flex flex-col justify-between">
+        <div className="bg-white border border-border rounded-xl p-3.5 shadow-2xs flex flex-col justify-between">
           <div className="text-[10px] font-bold tracking-wider uppercase text-slate-400">OPD Encounters</div>
-          <div className="mt-2 text-xl font-bold text-slate-800">{opdEncounters}</div>
+          <div className="mt-2 text-xl font-bold text-ink">{opdEncounters}</div>
         </div>
 
         {/* Avg TAT (Mins) */}
-        <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-2xs flex flex-col justify-between">
+        <div className="bg-white border border-border rounded-xl p-3.5 shadow-2xs flex flex-col justify-between">
           <div className="text-[10px] font-bold tracking-wider uppercase text-slate-400">Avg TAT (Mins)</div>
           <div className="flex items-baseline justify-between mt-2">
-            <div className="text-xl font-bold text-slate-800">14</div>
-            <div className="text-[11px] font-bold text-emerald-600 flex items-center gap-0.5">
+            <div className="text-xl font-bold text-ink">14</div>
+            <div className="text-[11px] font-bold text-success flex items-center gap-0.5">
               <span>↓</span>
               <span>3m</span>
             </div>
@@ -292,53 +292,53 @@ export function DashboardPage() {
       {/* ── ROW 2: 4 STATUS SUMMARY CARDS WITH ICON BOXES ────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* In Consultation */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs flex items-center gap-4 relative overflow-hidden">
-          <div className="w-12 h-12 rounded-xl bg-blue-50/90 flex items-center justify-center shrink-0">
-            <svg className="w-6 h-6 text-blue-900" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <div className="bg-white border border-border rounded-xl p-4 shadow-2xs flex items-center gap-4 relative overflow-hidden">
+          <div className="w-12 h-12 rounded-xl bg-brand-tint/90 flex items-center justify-center shrink-0">
+            <svg className="w-6 h-6 text-brand-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M8 7v3.5a4 4 0 008 0V7" />
               <path d="M12 14.5v.5a4.5 4.5 0 009 0v-2.5" />
               <circle cx="21" cy="12.5" r="1.5" fill="currentColor" stroke="none" />
             </svg>
           </div>
           <div>
-            <div className="text-2xl font-extrabold text-slate-900 leading-tight">{inConsultation}</div>
+            <div className="text-2xl font-extrabold text-ink leading-tight">{inConsultation}</div>
             <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">In Consultation</div>
           </div>
         </div>
 
         {/* Consults Done */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs flex items-center gap-4 relative overflow-hidden">
-          <div className="w-12 h-12 rounded-xl bg-blue-50/90 flex items-center justify-center shrink-0">
-            <svg className="w-6 h-6 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+        <div className="bg-white border border-border rounded-xl p-4 shadow-2xs flex items-center gap-4 relative overflow-hidden">
+          <div className="w-12 h-12 rounded-xl bg-brand-tint/90 flex items-center justify-center shrink-0">
+            <svg className="w-6 h-6 text-brand-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="8.5" />
               <path d="M9 12l2 2 4-4" />
             </svg>
           </div>
           <div>
-            <div className="text-2xl font-extrabold text-slate-900 leading-tight">{consultsDone}</div>
+            <div className="text-2xl font-extrabold text-ink leading-tight">{consultsDone}</div>
             <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">Consults Done</div>
           </div>
         </div>
 
         {/* Lab Pending (Amber Accent) */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs flex items-center gap-4 relative overflow-hidden">
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500 rounded-l-xl" />
-          <div className="w-12 h-12 rounded-xl bg-amber-100/80 flex items-center justify-center shrink-0 ml-1">
-            <svg className="w-6 h-6 text-amber-800" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+        <div className="bg-white border border-border rounded-xl p-4 shadow-2xs flex items-center gap-4 relative overflow-hidden">
+          <div className="absolute left-0 top-0 bottom-0 w-1 bg-warning rounded-l-xl" />
+          <div className="w-12 h-12 rounded-xl bg-warning-bg/80 flex items-center justify-center shrink-0 ml-1">
+            <svg className="w-6 h-6 text-warning-text" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 3h6M10 3v6l-5.2 9.4A1.5 1.5 0 006.1 20.8h11.8a1.5 1.5 0 001.3-2.4L14 9V3" />
             </svg>
           </div>
           <div>
-            <div className="text-2xl font-extrabold text-slate-900 leading-tight">{labPending}</div>
-            <div className="text-[10px] font-bold uppercase tracking-wider text-amber-800 mt-0.5">Lab Pending</div>
+            <div className="text-2xl font-extrabold text-ink leading-tight">{labPending}</div>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-warning-text mt-0.5">Lab Pending</div>
           </div>
         </div>
 
         {/* Diag Pending (Rose Accent) */}
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs flex items-center gap-4 relative overflow-hidden">
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-rose-500 rounded-l-xl" />
-          <div className="w-12 h-12 rounded-xl bg-rose-100/80 flex items-center justify-center shrink-0 ml-1">
-            <svg className="w-6 h-6 text-rose-900" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <div className="bg-white border border-border rounded-xl p-4 shadow-2xs flex items-center gap-4 relative overflow-hidden">
+          <div className="absolute left-0 top-0 bottom-0 w-1 bg-danger rounded-l-xl" />
+          <div className="w-12 h-12 rounded-xl bg-danger-bg/80 flex items-center justify-center shrink-0 ml-1">
+            <svg className="w-6 h-6 text-danger-text" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M8 3v2M16 3v2" />
               <rect x="4" y="5" width="16" height="16" rx="3" />
               <path d="M8.5 9.5c1.5 0 2.5 1 2.5 2.5s-1 2.5-2.5 2.5M15.5 9.5c-1.5 0-2.5 1-2.5 2.5s1 2.5 2.5 2.5" />
@@ -346,8 +346,8 @@ export function DashboardPage() {
             </svg>
           </div>
           <div>
-            <div className="text-2xl font-extrabold text-slate-900 leading-tight">{diagPending}</div>
-            <div className="text-[10px] font-bold uppercase tracking-wider text-rose-900 mt-0.5">Diag Pending</div>
+            <div className="text-2xl font-extrabold text-ink leading-tight">{diagPending}</div>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-danger-text mt-0.5">Diag Pending</div>
           </div>
         </div>
       </div>
@@ -356,13 +356,13 @@ export function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
 
         {/* Left Panel: Revenue by Source (8 cols) */}
-        <div className="lg:col-span-8 bg-white border border-slate-200 rounded-xl p-5 shadow-2xs flex flex-col justify-between">
+        <div className="lg:col-span-8 bg-white border border-border rounded-xl p-5 shadow-2xs flex flex-col justify-between">
           <div>
             {/* Header Title & Tooltip */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <h3 className="text-base font-bold text-slate-800">Revenue by Source</h3>
-                <svg className="w-4 h-4 text-slate-400 hover:text-slate-600 cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <h3 className="text-base font-bold text-ink">Revenue by Source</h3>
+                <svg className="w-4 h-4 text-slate-400 hover:text-ink-3 cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
@@ -371,11 +371,11 @@ export function DashboardPage() {
             {/* Filter Dropdowns Row */}
             <div className="grid grid-cols-3 gap-3 mb-6">
               <div>
-                <label className="block text-[11px] font-semibold text-slate-500 mb-1">Department</label>
+                <label className="block text-[11px] font-semibold text-ink-4 mb-1">Department</label>
                 <select
                   value={selectedDept}
                   onChange={(e) => setSelectedDept(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 font-medium focus:outline-none focus:border-blue-600"
+                  className="w-full bg-page border border-border rounded-lg px-2.5 py-1.5 text-xs text-ink-2 font-medium focus:outline-none focus:border-brand"
                 >
                   <option value="all">All Departments</option>
                   <option value="cardiology">Cardiology</option>
@@ -386,11 +386,11 @@ export function DashboardPage() {
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-slate-500 mb-1">Doctor</label>
+                <label className="block text-[11px] font-semibold text-ink-4 mb-1">Doctor</label>
                 <select
                   value={selectedDoctor}
                   onChange={(e) => setSelectedDoctor(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 font-medium focus:outline-none focus:border-blue-600"
+                  className="w-full bg-page border border-border rounded-lg px-2.5 py-1.5 text-xs text-ink-2 font-medium focus:outline-none focus:border-brand"
                 >
                   <option value="all">All Doctors</option>
                   {doctorsList.map((d) => (
@@ -402,7 +402,7 @@ export function DashboardPage() {
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-slate-500 mb-1">Date Range</label>
+                <label className="block text-[11px] font-semibold text-ink-4 mb-1">Date Range</label>
                 <select
                   value={preset}
                   onChange={(e) => {
@@ -410,7 +410,7 @@ export function DashboardPage() {
                     setPreset(k)
                     if (k !== "custom") setDateRange(getPresetRange(k))
                   }}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 font-medium focus:outline-none focus:border-blue-600"
+                  className="w-full bg-page border border-border rounded-lg px-2.5 py-1.5 text-xs text-ink-2 font-medium focus:outline-none focus:border-brand"
                 >
                   <option value="mtd">This Month</option>
                   <option value="7d">Last 7 Days</option>
@@ -427,23 +427,23 @@ export function DashboardPage() {
               <div className="absolute inset-x-0 top-0 bottom-8 flex flex-col justify-between pointer-events-none">
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] text-slate-400 w-8 text-right">₹100k</span>
-                  <div className="flex-1 border-b border-dashed border-slate-200" />
+                  <div className="flex-1 border-b border-dashed border-border" />
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] text-slate-400 w-8 text-right">₹75k</span>
-                  <div className="flex-1 border-b border-dashed border-slate-200" />
+                  <div className="flex-1 border-b border-dashed border-border" />
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] text-slate-400 w-8 text-right">₹50k</span>
-                  <div className="flex-1 border-b border-dashed border-slate-200" />
+                  <div className="flex-1 border-b border-dashed border-border" />
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] text-slate-400 w-8 text-right">₹25k</span>
-                  <div className="flex-1 border-b border-dashed border-slate-200" />
+                  <div className="flex-1 border-b border-dashed border-border" />
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] text-slate-400 w-8 text-right">₹0</span>
-                  <div className="flex-1 border-b border-slate-200" />
+                  <div className="flex-1 border-b border-border" />
                 </div>
               </div>
 
@@ -461,7 +461,7 @@ export function DashboardPage() {
                       className={`w-full max-w-[42px] ${item.color} rounded-t-sm transition-all duration-300 group-hover:brightness-110`}
                     />
                     {/* Label */}
-                    <span className="text-[11px] font-medium text-slate-500 mt-2 truncate w-full text-center capitalize">
+                    <span className="text-[11px] font-medium text-ink-4 mt-2 truncate w-full text-center capitalize">
                       {item.label}
                     </span>
                   </div>
@@ -472,38 +472,38 @@ export function DashboardPage() {
         </div>
 
         {/* Right Panel: Enquiry Status (4 cols) */}
-        <div className="lg:col-span-4 bg-white border border-slate-200 rounded-xl p-5 shadow-2xs flex flex-col justify-between">
+        <div className="lg:col-span-4 bg-white border border-border rounded-xl p-5 shadow-2xs flex flex-col justify-between">
           <div>
-            <h3 className="text-base font-bold text-slate-800 mb-4">Enquiry Status</h3>
+            <h3 className="text-base font-bold text-ink mb-4">Enquiry Status</h3>
 
             {/* Visual Funnel / Bar chart container */}
-            <div className="bg-slate-50/70 border border-slate-200 rounded-xl p-4 h-48 flex items-end justify-center gap-6 mb-6">
+            <div className="bg-page/70 border border-border rounded-xl p-4 h-48 flex items-end justify-center gap-6 mb-6">
               {/* Bar 1: Contacted */}
               <div className="flex flex-col items-center h-full justify-end flex-1 max-w-[60px]">
-                <div className="w-full h-[75%] bg-blue-700 rounded-t-xs" />
+                <div className="w-full h-[75%] bg-brand-dark rounded-t-xs" />
               </div>
               {/* Bar 2: Follow-up */}
               <div className="flex flex-col items-center h-full justify-end flex-1 max-w-[60px]">
-                <div className="w-full h-[52%] bg-sky-300 rounded-t-xs" />
+                <div className="w-full h-[52%] bg-brand-border rounded-t-xs" />
               </div>
               {/* Bar 3: Pending */}
               <div className="flex flex-col items-center h-full justify-end flex-1 max-w-[60px]">
-                <div className="w-full h-[32%] bg-amber-200 rounded-t-xs" />
+                <div className="w-full h-[32%] bg-warning/30 rounded-t-xs" />
               </div>
             </div>
 
             {/* Numeric Stats Grid */}
             <div className="grid grid-cols-3 gap-2 text-center">
               <div>
-                <div className="text-xl font-bold text-blue-900">{contactedCount}</div>
+                <div className="text-xl font-bold text-brand-dark">{contactedCount}</div>
                 <div className="text-[11px] font-semibold text-slate-400 mt-0.5">Contacted</div>
               </div>
               <div>
-                <div className="text-xl font-bold text-sky-600">{followUpCount}</div>
+                <div className="text-xl font-bold text-brand">{followUpCount}</div>
                 <div className="text-[11px] font-semibold text-slate-400 mt-0.5">Follow-up</div>
               </div>
               <div>
-                <div className="text-xl font-bold text-amber-600">{pendingCount}</div>
+                <div className="text-xl font-bold text-warning-text">{pendingCount}</div>
                 <div className="text-[11px] font-semibold text-slate-400 mt-0.5">Pending</div>
               </div>
             </div>
@@ -515,10 +515,10 @@ export function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
 
         {/* Left Bottom Card: Department Volume (6 cols) */}
-        <div className="lg:col-span-6 bg-white border border-slate-200 rounded-xl p-5 shadow-2xs">
+        <div className="lg:col-span-6 bg-white border border-border rounded-xl p-5 shadow-2xs">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-base font-bold text-slate-800">Department Volume</h3>
-            <div className="text-sm font-bold text-slate-900 tracking-tight">
+            <h3 className="text-base font-bold text-ink">Department Volume</h3>
+            <div className="text-sm font-bold text-ink tracking-tight">
               TOTAL <span className="text-lg">{deptTotal}</span>
             </div>
           </div>
@@ -527,13 +527,13 @@ export function DashboardPage() {
             {displayDeptData.map((item) => (
               <div key={item.name}>
                 <div className="flex justify-between items-center text-xs font-semibold mb-1.5">
-                  <span className="text-slate-700">{item.name}</span>
-                  <span className="text-slate-900 font-bold">{item.count}</span>
+                  <span className="text-ink-2">{item.name}</span>
+                  <span className="text-ink font-bold">{item.count}</span>
                 </div>
-                <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                <div className="w-full bg-chip-bg h-2 rounded-full overflow-hidden">
                   <div
                     style={{ width: `${item.pct}%` }}
-                    className="bg-blue-700 h-full rounded-full transition-all duration-500"
+                    className="bg-brand-dark h-full rounded-full transition-all duration-500"
                   />
                 </div>
               </div>
@@ -542,37 +542,37 @@ export function DashboardPage() {
         </div>
 
         {/* Right Bottom Card: MIS Executive Summary (6 cols) */}
-        <div className="lg:col-span-6 bg-white border border-slate-200 rounded-xl p-5 shadow-2xs">
+        <div className="lg:col-span-6 bg-white border border-border rounded-xl p-5 shadow-2xs">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-base font-bold text-slate-800">Executive MIS Summary</h3>
+            <h3 className="text-base font-bold text-ink">Executive MIS Summary</h3>
             <button
               onClick={() => setShowDetailedMIS((prev) => !prev)}
-              className="text-xs font-semibold text-blue-600 hover:underline"
+              className="text-xs font-semibold text-brand hover:underline"
             >
               {showDetailedMIS ? "Hide Details" : "View Full Text"}
             </button>
           </div>
 
           <div className="grid grid-cols-2 gap-3 mb-4">
-            <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
+            <div className="bg-page border border-border rounded-lg p-3">
               <div className="text-[10px] font-bold uppercase text-slate-400">Doctor Revenue Billed</div>
-              <div className="text-base font-bold text-slate-800 mt-1">
+              <div className="text-base font-bold text-ink mt-1">
                 {docRevenue.data?.rows?.length
                   ? INR.format(docRevenue.data.rows.reduce((sum, r) => sum + Number(r.billed_amount), 0))
                   : "₹3,45,000"}
               </div>
             </div>
 
-            <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
+            <div className="bg-page border border-border rounded-lg p-3">
               <div className="text-[10px] font-bold uppercase text-slate-400">No-Show Recall Tasks</div>
-              <div className="text-base font-bold text-emerald-600 mt-1">
+              <div className="text-base font-bold text-success mt-1">
                 {noShow.data ? `${noShow.data.recall_tasks_done} Recalled` : "14 Recalled"}
               </div>
             </div>
           </div>
 
           {showDetailedMIS && (
-            <div className="border border-slate-200 rounded-lg bg-slate-50 p-3 text-xs leading-relaxed text-slate-700 font-mono whitespace-pre-wrap max-h-48 overflow-y-auto">
+            <div className="border border-border rounded-lg bg-page p-3 text-xs leading-relaxed text-ink-2 font-mono whitespace-pre-wrap max-h-48 overflow-y-auto">
               {mis.data?.text ?? "Loading executive summary preview..."}
             </div>
           )}

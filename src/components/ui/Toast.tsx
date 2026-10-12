@@ -13,9 +13,9 @@ export function showToast(message: string, type: "success" | "error" | "info" = 
   const toast = document.createElement("div")
   const bgClass =
     type === "success"
-      ? "bg-emerald-600 text-white shadow-emerald-600/30"
+      ? "bg-success text-white shadow-success/30"
       : type === "error"
-      ? "bg-rose-600 text-white shadow-rose-600/30"
+      ? "bg-danger text-white shadow-danger/30"
       : "bg-slate-900 text-white shadow-slate-900/30 dark:bg-slate-100 dark:text-slate-900"
 
   toast.className = `pointer-events-auto flex items-center gap-2 rounded-lg px-4 py-2.5 text-xs font-semibold shadow-lg transition-all transform duration-300 translate-y-2 opacity-0 ${bgClass}`

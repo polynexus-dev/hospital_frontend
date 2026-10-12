@@ -9,22 +9,22 @@ function MedErrorDashboard() {
   useEffect(() => {
     api.get("/quality/medication-errors/dashboard/").then(setD).catch(() => setD(null))
   }, [])
-  if (!d) return <div className="text-sm text-slate-500">Loading…</div>
+  if (!d) return <div className="text-sm text-ink-4">Loading…</div>
   const tile = (label: string, v: unknown) => (
-    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
-      <div className="text-xs uppercase text-slate-500">{label}</div>
-      <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">{String(v ?? "—")}</div>
+    <div className="bg-white dark:bg-slate-800 rounded-xl border border-border dark:border-slate-700 p-4">
+      <div className="text-xs uppercase text-ink-4">{label}</div>
+      <div className="text-2xl font-bold text-ink dark:text-slate-100">{String(v ?? "—")}</div>
     </div>
   )
   const bars = (title: string, obj: Record<string, number>) => {
     const max = Math.max(1, ...Object.values(obj))
     return (
-      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-border dark:border-slate-700 p-4">
         <div className="text-sm font-semibold mb-3">{title}</div>
         {Object.entries(obj).map(([k, v]) => (
           <div key={k} className="flex items-center gap-2 text-xs mb-1.5">
-            <span className="w-28 text-slate-600 truncate">{k.replace(/_/g, " ")}</span>
-            <div className="flex-1 bg-slate-100 dark:bg-slate-700 rounded h-2"><div className="bg-rose-500 h-2 rounded" style={{ width: `${(v * 100) / max}%` }} /></div>
+            <span className="w-28 text-ink-3 truncate">{k.replace(/_/g, " ")}</span>
+            <div className="flex-1 bg-chip-bg dark:bg-slate-700 rounded h-2"><div className="bg-danger h-2 rounded" style={{ width: `${(v * 100) / max}%` }} /></div>
             <span className="w-6 text-right">{v}</span>
           </div>
         ))}
@@ -44,13 +44,13 @@ function MedErrorDashboard() {
         {bars("By type", d.by_type)}
         {bars("By NCC MERP category", d.by_category)}
       </div>
-      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-border dark:border-slate-700 p-4">
         <div className="text-sm font-semibold mb-2">Monthly trend</div>
         <div className="flex items-end gap-2 h-32">
           {d.by_month.map((m: any) => (
             <div key={m.month} className="flex-1 flex flex-col items-center justify-end">
-              <div className="w-full bg-sky-500 rounded-t" style={{ height: `${(m.count * 100) / Math.max(1, ...d.by_month.map((x: any) => x.count))}%` }} />
-              <span className="text-[10px] text-slate-500 mt-1">{m.month}</span>
+              <div className="w-full bg-brand rounded-t" style={{ height: `${(m.count * 100) / Math.max(1, ...d.by_month.map((x: any) => x.count))}%` }} />
+              <span className="text-[10px] text-ink-4 mt-1">{m.month}</span>
             </div>
           ))}
         </div>

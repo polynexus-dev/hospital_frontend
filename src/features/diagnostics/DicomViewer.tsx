@@ -202,11 +202,11 @@ export function DicomViewer() {
     return { text: sp ? `${Math.hypot(dxmm, dymm).toFixed(1)} mm` : `${Math.hypot(b.x - a.x, b.y - a.y).toFixed(0)} px`, mid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 } }
   }, [points, image])
 
-  if (error) return <div className="p-6 text-rose-700">{error}</div>
-  if (!study) return <div className="p-6 text-slate-500">Loading study…</div>
-  if (!study.series.length) return <div className="p-6 text-slate-500">No images have been uploaded for this study yet.</div>
+  if (error) return <div className="p-6 text-danger-text">{error}</div>
+  if (!study) return <div className="p-6 text-ink-4">Loading study…</div>
+  if (!study.series.length) return <div className="p-6 text-ink-4">No images have been uploaded for this study yet.</div>
 
-  const btn = (active: boolean) => `px-2.5 py-1 rounded text-xs font-semibold ${active ? "bg-emerald-600 text-white" : "bg-slate-700 text-slate-200 hover:bg-slate-600"}`
+  const btn = (active: boolean) => `px-2.5 py-1 rounded text-xs font-semibold ${active ? "bg-success text-white" : "bg-slate-700 text-slate-200 hover:bg-slate-600"}`
   const natural = imgRef.current ? { w: imgRef.current.naturalWidth, h: imgRef.current.naturalHeight } : null
 
   return (
@@ -215,10 +215,10 @@ export function DicomViewer() {
         <button onClick={() => navigate(-1)} className="text-xs text-emerald-400">← Back</button>
         {study.series.map((s, i) => (
           <button key={s.series_instance_uid} onClick={() => { setSeriesIdx(i); setImageIdx(0); setWin(null) }}
-            className={`w-full text-left rounded p-2 text-xs ${i === seriesIdx ? "bg-slate-800 ring-1 ring-emerald-500" : "bg-slate-900 hover:bg-slate-800"}`}>
+            className={`w-full text-left rounded p-2 text-xs ${i === seriesIdx ? "bg-slate-800 ring-1 ring-success" : "bg-slate-900 hover:bg-slate-800"}`}>
             <div className="font-semibold">{s.modality || "—"} {s.number ? `#${s.number}` : ""}</div>
             <div className="text-slate-400 truncate">{s.description || "Series"}</div>
-            <div className="text-slate-500">{s.images.length} image{s.images.length === 1 ? "" : "s"}</div>
+            <div className="text-ink-4">{s.images.length} image{s.images.length === 1 ? "" : "s"}</div>
           </button>
         ))}
         {study.viewer_url && <a href={study.viewer_url} target="_blank" rel="noopener" className="block text-xs text-sky-400 pt-2">Open in PACS viewer ↗</a>}
@@ -241,7 +241,7 @@ export function DicomViewer() {
               {CT_PRESETS.map(([n, c, w]) => <option key={n} value={n}>{n} ({c}/{w})</option>)}
             </select>
           )}
-          <span className="ml-auto text-[11px] text-slate-500">Wheel: next image · Ctrl+wheel: zoom · ↑↓ · I invert · R reset</span>
+          <span className="ml-auto text-[11px] text-ink-4">Wheel: next image · Ctrl+wheel: zoom · ↑↓ · I invert · R reset</span>
         </div>
         <div className="relative flex-1 overflow-hidden" onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={onMouseUp} onWheel={onWheel}
           style={{ cursor: tool === "pan" ? "grab" : tool === "measure" ? "crosshair" : "ns-resize" }}>
@@ -264,7 +264,7 @@ export function DicomViewer() {
               </div>
             </div>
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center text-slate-500 text-sm">Rendering…</div>
+            <div className="absolute inset-0 flex items-center justify-center text-ink-4 text-sm">Rendering…</div>
           )}
           <div className="absolute left-3 top-3 text-[11px] leading-5 text-slate-300 pointer-events-none">
             <div>{series?.modality} {series?.description}</div>

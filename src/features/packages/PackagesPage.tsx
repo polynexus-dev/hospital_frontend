@@ -471,8 +471,8 @@ export function PackagesPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Packages, Camps & Campaigns</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <h1 className="text-2xl font-bold text-ink dark:text-slate-100">Packages, Camps & Campaigns</h1>
+          <p className="text-sm text-ink-4 dark:text-slate-400">
             Health package catalogue, campaign ROI tracking, & camp conversion funnels
           </p>
         </div>
@@ -501,7 +501,7 @@ export function PackagesPage() {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex border-b border-slate-200 dark:border-slate-800 gap-6">
+      <div className="flex border-b border-border dark:border-slate-800 gap-6">
         {[
           { key: "catalog", label: "Package Catalogue" },
           { key: "campaigns", label: "Campaign ROI Tracker" },
@@ -513,8 +513,8 @@ export function PackagesPage() {
             onClick={() => setActiveTab(tab.key as any)}
             className={`pb-3 text-sm font-semibold border-b-2 transition-colors ${
               activeTab === tab.key
-                ? "border-emerald-500 text-emerald-600 dark:text-emerald-400"
-                : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                ? "border-success text-success dark:text-emerald-400"
+                : "border-transparent text-ink-4 hover:text-ink dark:hover:text-slate-200"
             }`}
           >
             {tab.label}
@@ -526,7 +526,7 @@ export function PackagesPage() {
       {activeTab === "catalog" && (
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">Health Check Packages</h2>
+            <h2 className="text-sm font-bold text-ink dark:text-slate-100">Health Check Packages</h2>
             <Button size="sm" variant="primary" onClick={() => setShowNewPackage(true)}>
               + Add Package
             </Button>
@@ -536,24 +536,24 @@ export function PackagesPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {packages.map((pkg) => (
-                <Card key={pkg.id} className="p-6 border border-slate-200 dark:border-slate-800 space-y-4">
+                <Card key={pkg.id} className="p-6 border border-border dark:border-slate-800 space-y-4">
                   <div className="flex justify-between items-start">
                     <div>
                       <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{pkg.code}</span>
-                      <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">{pkg.name}</h3>
+                      <h3 className="text-lg font-bold text-ink dark:text-slate-100">{pkg.name}</h3>
                     </div>
-                    <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+                    <div className="text-xl font-bold text-success dark:text-emerald-400">
                       ₹{Number(pkg.price).toLocaleString("en-IN")}
                     </div>
                   </div>
 
-                  <p className="text-xs text-slate-500 dark:text-slate-400">{pkg.description}</p>
+                  <p className="text-xs text-ink-4 dark:text-slate-400">{pkg.description}</p>
 
                   <div className="space-y-1">
                     <span className="text-xs font-semibold text-slate-400">Included Diagnostic Tests:</span>
                     <div className="flex flex-wrap gap-1.5 pt-1">
                       {(pkg.included_tests || []).map((t, idx) => (
-                        <span key={idx} className="px-2 py-0.5 text-xs bg-slate-100 dark:bg-slate-800 rounded font-medium text-slate-700 dark:text-slate-300">
+                        <span key={idx} className="px-2 py-0.5 text-xs bg-chip-bg dark:bg-slate-800 rounded font-medium text-ink-2 dark:text-slate-300">
                           ✓ {t}
                         </span>
                       ))}
@@ -569,8 +569,8 @@ export function PackagesPage() {
       {/* TAB 2: CAMPAIGN ROI TRACKER */}
       {activeTab === "campaigns" && (
         <Card className="overflow-hidden">
-          <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
-            <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">Campaign ROI & Lead Performance</h2>
+          <div className="p-4 border-b border-border dark:border-slate-800 flex justify-between items-center">
+            <h2 className="text-sm font-bold text-ink dark:text-slate-100">Campaign ROI & Lead Performance</h2>
             <Button size="sm" variant="primary" onClick={() => setShowNewCampaign(true)}>
               + Create Campaign
             </Button>
@@ -578,8 +578,8 @@ export function PackagesPage() {
           {isCampaignsLoading ? (
             <LoadingState />
           ) : (
-            <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
-              <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-700 dark:text-slate-200 border-b border-slate-200 dark:border-slate-800">
+            <table className="w-full text-left text-sm text-ink-3 dark:text-slate-300">
+              <thead className="bg-page dark:bg-slate-900/50 text-ink-2 dark:text-slate-200 border-b border-border dark:border-slate-800">
                 <tr>
                   <th className="px-6 py-3 font-semibold">Campaign Name</th>
                   <th className="px-6 py-3 font-semibold">Type</th>
@@ -590,10 +590,10 @@ export function PackagesPage() {
                   <th className="px-6 py-3 font-semibold">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+              <tbody className="divide-y divide-border dark:divide-slate-800">
                 {campaigns.map((c) => (
-                  <tr key={c.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/40">
-                    <td className="px-6 py-4 font-bold text-slate-900 dark:text-slate-100">{c.name}</td>
+                  <tr key={c.id} className="hover:bg-page dark:hover:bg-slate-900/40">
+                    <td className="px-6 py-4 font-bold text-ink dark:text-slate-100">{c.name}</td>
                     <td className="px-6 py-4 text-xs uppercase font-semibold">{c.campaign_type.replace("_", " ")}</td>
                     <td className="px-6 py-4 text-xs font-mono">
                       ₹{Number(c.actual_spend).toLocaleString("en-IN")} / ₹{Number(c.budget).toLocaleString("en-IN")}
@@ -613,11 +613,11 @@ export function PackagesPage() {
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                      <span className="font-bold text-success dark:text-emerald-400">
                         ₹{Number(c.total_revenue_generated || 0).toLocaleString("en-IN")}
                       </span>
                       {c.roi_percent != null && (
-                        <span className={`block text-xs font-semibold ${Number(c.roi_percent) >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                        <span className={`block text-xs font-semibold ${Number(c.roi_percent) >= 0 ? "text-success dark:text-emerald-400" : "text-danger-text dark:text-rose-400"}`}>
                           {PCT(Number(c.roi_percent))} ROI
                         </span>
                       )}
@@ -644,18 +644,18 @@ export function PackagesPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {corporateClients.map((cc: CorporateClient) => (
-                <Card key={cc.id} className="p-6 border border-slate-200 dark:border-slate-800 space-y-3">
+                <Card key={cc.id} className="p-6 border border-border dark:border-slate-800 space-y-3">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">{cc.name}</h3>
-                      <span className="text-xs text-slate-500">{cc.employee_count} employees · {cc.billing_model.replace("_", " ")}</span>
+                      <h3 className="text-lg font-bold text-ink dark:text-slate-100">{cc.name}</h3>
+                      <span className="text-xs text-ink-4">{cc.employee_count} employees · {cc.billing_model.replace("_", " ")}</span>
                     </div>
                     {cc.is_active ? <SuccessTag>ACTIVE</SuccessTag> : <NeutralTag>INACTIVE</NeutralTag>}
                   </div>
-                  <div className="text-xs space-y-1 text-slate-500 dark:text-slate-400">
-                    <p>Contact: <span className="font-semibold text-slate-700 dark:text-slate-200">{cc.contact_person || "—"}</span> <span className="font-mono">{cc.contact_phone}</span></p>
-                    <p>Contract: <span className="font-mono text-slate-700 dark:text-slate-200">{cc.contract_start}{cc.contract_end ? ` → ${cc.contract_end}` : " (ongoing)"}</span></p>
-                    {Number(cc.discount_percent) > 0 && <p>Discount: <span className="font-semibold text-emerald-600 dark:text-emerald-400">{Number(cc.discount_percent)}%</span></p>}
+                  <div className="text-xs space-y-1 text-ink-4 dark:text-slate-400">
+                    <p>Contact: <span className="font-semibold text-ink-2 dark:text-slate-200">{cc.contact_person || "—"}</span> <span className="font-mono">{cc.contact_phone}</span></p>
+                    <p>Contract: <span className="font-mono text-ink-2 dark:text-slate-200">{cc.contract_start}{cc.contract_end ? ` → ${cc.contract_end}` : " (ongoing)"}</span></p>
+                    {Number(cc.discount_percent) > 0 && <p>Discount: <span className="font-semibold text-success dark:text-emerald-400">{Number(cc.discount_percent)}%</span></p>}
                   </div>
                 </Card>
               ))}
@@ -671,7 +671,7 @@ export function PackagesPage() {
       {activeTab === "funnel" && (
         <Card className="p-6 space-y-4">
           <div className="flex justify-between items-center">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Camp Conversion Funnel (Registered ➔ Attended ➔ OPD ➔ IPD)</h2>
+            <h2 className="text-lg font-bold text-ink dark:text-slate-100">Camp Conversion Funnel (Registered ➔ Attended ➔ OPD ➔ IPD)</h2>
             <Button size="sm" variant="primary" onClick={() => setShowNewRegistration(true)}>
               + Register Camp Lead
             </Button>
@@ -681,17 +681,17 @@ export function PackagesPage() {
           ) : (
             <div className="space-y-3">
               {registrations.map((r) => (
-                <Card key={r.id} className="p-4 border border-slate-200 dark:border-slate-800 flex justify-between items-center">
+                <Card key={r.id} className="p-4 border border-border dark:border-slate-800 flex justify-between items-center">
                   <div>
-                    <h3 className="font-bold text-slate-900 dark:text-slate-100">{r.patient_name}</h3>
-                    <span className="text-xs text-slate-500">Mobile: {r.mobile} • Campaign: {r.campaign_name}</span>
+                    <h3 className="font-bold text-ink dark:text-slate-100">{r.patient_name}</h3>
+                    <span className="text-xs text-ink-4">Mobile: {r.mobile} • Campaign: {r.campaign_name}</span>
                   </div>
 
                   <div className="flex items-center gap-4">
-                    <span className="px-3 py-1 text-xs font-bold rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-200">
+                    <span className="px-3 py-1 text-xs font-bold rounded-full bg-success-bg dark:bg-emerald-950 text-success-text dark:text-emerald-200">
                       {r.stage.toUpperCase().replace("_", " ")}
                     </span>
-                    <span className="font-bold text-emerald-600 dark:text-emerald-400 text-sm">
+                    <span className="font-bold text-success dark:text-emerald-400 text-sm">
                       ₹{Number(r.revenue_generated).toLocaleString("en-IN")}
                     </span>
                   </div>

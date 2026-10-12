@@ -7,7 +7,7 @@ import { col, opts, patientField } from "./fields"
 // pre-auth → claim → settlement workflow, priced onto the admission's bill.
 
 const inr = (n: unknown) => `₹${Number(n ?? 0).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`
-const inputCls = "w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900"
+const inputCls = "w-full px-3 py-2 text-sm border border-border-strong dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900"
 const STATUS_LABEL: Record<string, string> = {
   draft: "Draft", preauth_submitted: "Pre-auth submitted", preauth_query: "Pre-auth query", preauth_approved: "Pre-auth approved",
   preauth_rejected: "Pre-auth rejected", discharged: "Discharged — claim pending", claim_submitted: "Claim submitted", claim_query: "Claim query",
@@ -61,44 +61,44 @@ function CaseCard({ c, onChange }: { c: any; onChange: (next: any) => void }) {
   const post = (path: string, body: object = {}) => api.post<any>(`/schemes/cases/${c.id}/${path}`, body)
 
   return (
-    <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-4 space-y-3 bg-white dark:bg-slate-800">
+    <div className="border border-border dark:border-slate-700 rounded-xl p-4 space-y-3 bg-white dark:bg-slate-800">
       <div className="flex flex-wrap justify-between gap-2">
         <div>
-          <div className="font-semibold">{c.patient_name} <span className="text-slate-400 font-normal">· {c.beneficiary_label}</span></div>
-          <div className="text-sm text-slate-500">{c.diagnosis || "No diagnosis recorded"}{c.admission ? ` · admission #${c.admission}` : ""}</div>
+          <div className="font-semibold">{c.patient_name} <span className="text-ink-5 font-normal">· {c.beneficiary_label}</span></div>
+          <div className="text-sm text-ink-4">{c.diagnosis || "No diagnosis recorded"}{c.admission ? ` · admission #${c.admission}` : ""}</div>
         </div>
         <div className="text-right">
-          <div className="text-xs uppercase font-semibold text-emerald-700">{STATUS_LABEL[c.status] ?? c.status}</div>
+          <div className="text-xs uppercase font-semibold text-success-text">{STATUS_LABEL[c.status] ?? c.status}</div>
           <div className="text-sm">Claim {inr(c.claim_amount)}{c.claim_due_by && c.status === "discharged" ? ` · due ${c.claim_due_by}` : ""}</div>
         </div>
       </div>
 
       <div className="text-sm">
-        <div className="text-xs font-semibold text-slate-500 mb-1">Packages</div>
+        <div className="text-xs font-semibold text-ink-4 mb-1">Packages</div>
         {c.packages.length ? c.packages.map((p: any) => (
           <div key={p.id} className="flex justify-between gap-2">
             <span>{p.code} — {p.name} × {p.quantity}</span>
-            <span>{inr(Number(p.rate) * p.quantity)}{editablePackages && <button className="ml-2 text-rose-600 text-xs" onClick={() => run(() => post("remove-package/", { package: p.package }))}>remove</button>}</span>
+            <span>{inr(Number(p.rate) * p.quantity)}{editablePackages && <button className="ml-2 text-danger-text text-xs" onClick={() => run(() => post("remove-package/", { package: p.package }))}>remove</button>}</span>
           </div>
-        )) : <div className="text-slate-400">None yet.</div>}
+        )) : <div className="text-ink-5">None yet.</div>}
         {editablePackages && (
           <div className="flex gap-2 mt-2">
             <select className={inputCls} value={pkg} onChange={(e) => setPkg(e.target.value)}>
               <option value="">Add a package…</option>
               {packages.map((p) => <option key={p.id} value={p.id}>{p.code} — {p.name} ({inr(p.rate)})</option>)}
             </select>
-            <button disabled={!pkg} onClick={() => run(() => post("add-package/", { package: pkg })).then(() => setPkg(""))} className="px-3 text-sm font-semibold rounded-lg bg-slate-100 dark:bg-slate-700 disabled:opacity-50">Add</button>
+            <button disabled={!pkg} onClick={() => run(() => post("add-package/", { package: pkg })).then(() => setPkg(""))} className="px-3 text-sm font-semibold rounded-lg bg-chip-bg dark:bg-slate-700 disabled:opacity-50">Add</button>
           </div>
         )}
       </div>
 
       <div className="text-sm">
-        <div className="text-xs font-semibold text-slate-500 mb-1">Documents</div>
+        <div className="text-xs font-semibold text-ink-4 mb-1">Documents</div>
         <div className="grid sm:grid-cols-2 gap-x-4 gap-y-0.5">
           {c.document_checklist.map((d: string) => (
             <label key={d} className="flex items-center gap-2">
               <input type="checkbox" checked={!!c.documents?.[d]} onChange={(e) => run(() => post("documents/", { document: d, attached: e.target.checked }))} />
-              <span className={c.documents?.[d] ? "" : "text-slate-500"}>{d}</span>
+              <span className={c.documents?.[d] ? "" : "text-ink-4"}>{d}</span>
             </label>
           ))}
         </div>
@@ -106,34 +106,34 @@ function CaseCard({ c, onChange }: { c: any; onChange: (next: any) => void }) {
 
       <div className="flex flex-wrap gap-2 items-center">
         <button onClick={() => run(() => post("apply-to-bill/")).then((r) => { if (r) { setBillInfo(r); onChange({ ...c, claim_amount: r.claim_amount }) } })}
-          className="px-3 py-1.5 text-sm rounded-lg bg-slate-100 dark:bg-slate-700">Apply to bill</button>
+          className="px-3 py-1.5 text-sm rounded-lg bg-chip-bg dark:bg-slate-700">Apply to bill</button>
         <button onClick={async () => triggerBlobDownload(await api.getBlob(`/schemes/cases/${c.id}/claim-pack/`), `claim-${c.id}.pdf`)}
-          className="px-3 py-1.5 text-sm rounded-lg bg-slate-100 dark:bg-slate-700">Claim pack PDF</button>
+          className="px-3 py-1.5 text-sm rounded-lg bg-chip-bg dark:bg-slate-700">Claim pack PDF</button>
         {(NEXT[c.status] ?? []).map((s) => (
           <button key={s.to} onClick={() => { setStep(s); setForm({}) }}
-            className={`px-3 py-1.5 text-sm font-semibold rounded-lg ${s.tone === "danger" ? "bg-rose-50 text-rose-700" : "bg-emerald-600 text-white"}`}>{s.label}</button>
+            className={`px-3 py-1.5 text-sm font-semibold rounded-lg ${s.tone === "danger" ? "bg-danger-bg text-danger-text" : "bg-success text-white"}`}>{s.label}</button>
         ))}
       </div>
-      {billInfo && <div className="text-sm text-slate-600">Bill {billInfo.bill_number}: net {inr(billInfo.net_amount)} · scheme pays {inr(billInfo.claim_amount)} · patient pays {inr(billInfo.patient_payable)}</div>}
+      {billInfo && <div className="text-sm text-ink-3">Bill {billInfo.bill_number}: net {inr(billInfo.net_amount)} · scheme pays {inr(billInfo.claim_amount)} · patient pays {inr(billInfo.patient_payable)}</div>}
 
       {step && (
-        <div className="border-t border-slate-200 dark:border-slate-700 pt-3 space-y-2">
+        <div className="border-t border-border dark:border-slate-700 pt-3 space-y-2">
           {(step.fields ?? []).map((f) => f.type === "checkbox" ? (
             <label key={f.key} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!form[f.key]} onChange={(e) => setForm({ ...form, [f.key]: e.target.checked })} />{f.label}</label>
           ) : (
-            <label key={f.key} className="block text-xs font-semibold text-slate-600">{f.label}{f.required && " *"}
+            <label key={f.key} className="block text-xs font-semibold text-ink-3">{f.label}{f.required && " *"}
               <input type={f.type === "number" ? "number" : "text"} className={`${inputCls} mt-1`} value={form[f.key] ?? ""} onChange={(e) => setForm({ ...form, [f.key]: e.target.value })} />
             </label>
           ))}
           <div className="flex gap-2">
-            <button onClick={() => run(() => post("transition/", { to: step.to, ...form })).then((r) => r && setStep(null))} className="px-4 py-2 text-sm font-semibold rounded-lg bg-emerald-600 text-white">Confirm: {step.label}</button>
-            <button onClick={() => setStep(null)} className="px-4 py-2 text-sm rounded-lg bg-slate-100 dark:bg-slate-700">Cancel</button>
+            <button onClick={() => run(() => post("transition/", { to: step.to, ...form })).then((r) => r && setStep(null))} className="px-4 py-2 text-sm font-semibold rounded-lg bg-success text-white">Confirm: {step.label}</button>
+            <button onClick={() => setStep(null)} className="px-4 py-2 text-sm rounded-lg bg-chip-bg dark:bg-slate-700">Cancel</button>
           </div>
         </div>
       )}
-      {error && <div className="text-sm text-rose-700">{error}</div>}
+      {error && <div className="text-sm text-danger-text">{error}</div>}
       {c.history?.length > 0 && (
-        <details className="text-xs text-slate-500">
+        <details className="text-xs text-ink-4">
           <summary className="cursor-pointer">History ({c.history.length})</summary>
           {c.history.map((h: any, i: number) => <div key={i}>{new Date(h.at).toLocaleString()} · {h.by} · {STATUS_LABEL[h.from] ?? h.from} → {STATUS_LABEL[h.to] ?? h.to}{h.note ? ` — ${h.note}` : ""}</div>)}
         </details>
@@ -178,14 +178,14 @@ function ClaimsPanel() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[["Outstanding claims", inr(dash.outstanding_amount)], ["Claims overdue", String(dash.claims_overdue.length)],
             ["Avg days to settle", dash.average_days_to_settle ?? "—"], ["Rejection rate", dash.claim_rejection_rate != null ? `${dash.claim_rejection_rate}%` : "—"]].map(([l, v]) => (
-            <div key={l as string} className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
-              <div className="text-xs text-slate-500">{l}</div><div className="text-2xl font-bold">{v}</div>
+            <div key={l as string} className="rounded-xl border border-border dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+              <div className="text-xs text-ink-4">{l}</div><div className="text-2xl font-bold">{v}</div>
             </div>
           ))}
         </div>
       )}
       {dash?.claims_overdue.length > 0 && (
-        <div className="text-sm bg-amber-50 text-amber-800 rounded-lg px-3 py-2">
+        <div className="text-sm bg-warning-bg text-warning-text rounded-lg px-3 py-2">
           Claims past their submission deadline: {dash.claims_overdue.map((o: any) => `${o.beneficiary} (${o.days_late} days late)`).join(", ")}
         </div>
       )}
@@ -194,25 +194,25 @@ function ClaimsPanel() {
           <option value="">All statuses</option>
           {Object.entries(STATUS_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
-        <button onClick={() => setCreating((v) => !v)} className="ml-auto px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg">+ New scheme case</button>
+        <button onClick={() => setCreating((v) => !v)} className="ml-auto px-4 py-2 text-sm font-medium text-white bg-success rounded-lg">+ New scheme case</button>
       </div>
       {creating && (
-        <div className="border border-slate-200 rounded-xl p-4 grid md:grid-cols-3 gap-3 bg-white dark:bg-slate-800">
-          <label className="text-xs font-semibold text-slate-600">Beneficiary (verified eligible)
+        <div className="border border-border rounded-xl p-4 grid md:grid-cols-3 gap-3 bg-white dark:bg-slate-800">
+          <label className="text-xs font-semibold text-ink-3">Beneficiary (verified eligible)
             <select className={`${inputCls} mt-1`} value={draft.beneficiary} onChange={(e) => setDraft({ ...draft, beneficiary: e.target.value })}>
               <option value="">Choose…</option>
               {beneficiaries.map((b) => <option key={b.id} value={b.id}>{b.patient_name} — {b.scheme_code?.toUpperCase()} {b.beneficiary_id}</option>)}
             </select>
           </label>
-          <label className="text-xs font-semibold text-slate-600">Admission ID<input className={`${inputCls} mt-1`} value={draft.admission} onChange={(e) => setDraft({ ...draft, admission: e.target.value })} placeholder="From the IPD admission" /></label>
-          <label className="text-xs font-semibold text-slate-600">Diagnosis<input className={`${inputCls} mt-1`} value={draft.diagnosis} onChange={(e) => setDraft({ ...draft, diagnosis: e.target.value })} /></label>
-          <div className="md:col-span-3"><button onClick={create} disabled={!draft.beneficiary} className="px-4 py-2 text-sm font-semibold rounded-lg bg-emerald-600 text-white disabled:opacity-50">Create case</button></div>
+          <label className="text-xs font-semibold text-ink-3">Admission ID<input className={`${inputCls} mt-1`} value={draft.admission} onChange={(e) => setDraft({ ...draft, admission: e.target.value })} placeholder="From the IPD admission" /></label>
+          <label className="text-xs font-semibold text-ink-3">Diagnosis<input className={`${inputCls} mt-1`} value={draft.diagnosis} onChange={(e) => setDraft({ ...draft, diagnosis: e.target.value })} /></label>
+          <div className="md:col-span-3"><button onClick={create} disabled={!draft.beneficiary} className="px-4 py-2 text-sm font-semibold rounded-lg bg-success text-white disabled:opacity-50">Create case</button></div>
         </div>
       )}
-      {error && <div className="text-sm text-rose-700">{error}</div>}
+      {error && <div className="text-sm text-danger-text">{error}</div>}
       <div className="space-y-3">
         {cases.length ? cases.map((c) => <CaseCard key={c.id} c={c} onChange={(next) => { setCases((cs) => cs.map((x) => (x.id === next.id ? next : x))); api.get<any>("/schemes/cases/dashboard/").then(setDash).catch(() => undefined) }} />)
-          : <div className="text-sm text-slate-500">No scheme cases{status ? " with this status" : ""}.</div>}
+          : <div className="text-sm text-ink-4">No scheme cases{status ? " with this status" : ""}.</div>}
       </div>
     </div>
   )

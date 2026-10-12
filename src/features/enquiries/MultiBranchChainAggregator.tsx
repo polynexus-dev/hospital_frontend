@@ -47,13 +47,13 @@ export function MultiBranchChainAggregator() {
   return (
     <div className="flex flex-col gap-5 pb-10">
       {/* Network Header Banner */}
-      <div className="p-5 rounded-xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white shadow-lg border border-slate-800">
+      <div className="p-5 rounded-xl bg-gradient-to-r from-slate-900 via-brand-dark to-slate-900 text-white shadow-lg border border-slate-800">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="text-2xl">🌐</span>
               <h2 className="text-lg font-bold tracking-tight">{group_name}</h2>
-              <span className="text-xs bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 px-2 py-0.5 rounded font-mono font-semibold">
+              <span className="text-xs bg-brand/30 text-indigo-200 border border-brand/30 px-2 py-0.5 rounded font-mono font-semibold">
                 {total_branches} Branches Connected
               </span>
             </div>
@@ -81,7 +81,7 @@ export function MultiBranchChainAggregator() {
           </div>
           <div className="bg-white/5 p-3 rounded-lg border border-white/10 backdrop-blur-xs">
             <span className="text-[11px] text-slate-300 block uppercase font-medium">Realized Converted Rev</span>
-            <span className="text-xl font-black text-emerald-400">{INR.format(total_group_converted_value)}</span>
+            <span className="text-xl font-black text-success">{INR.format(total_group_converted_value)}</span>
           </div>
           <div className="bg-white/5 p-3 rounded-lg border border-white/10 backdrop-blur-xs">
             <span className="text-[11px] text-slate-300 block uppercase font-medium">Network Conversion</span>
@@ -118,14 +118,14 @@ export function MultiBranchChainAggregator() {
               </div>
 
               {/* Pipeline Value Highlight */}
-              <div className="my-3 p-3 bg-slate-50 dark:bg-slate-900/40 rounded-lg border border-border-faint flex items-center justify-between">
+              <div className="my-3 p-3 bg-page dark:bg-slate-900/40 rounded-lg border border-border-faint flex items-center justify-between">
                 <div>
                   <span className="text-[10px] uppercase text-ink-4 block font-semibold">Active Pipeline</span>
                   <span className="text-sm font-bold text-ink-1">{INR.format(branch.pipeline_value)}</span>
                 </div>
                 <div className="text-right">
                   <span className="text-[10px] uppercase text-ink-4 block font-semibold">Conversion Rate</span>
-                  <span className="text-sm font-bold text-emerald-600">{branch.conversion_rate}%</span>
+                  <span className="text-sm font-bold text-success">{branch.conversion_rate}%</span>
                 </div>
               </div>
 
@@ -133,29 +133,29 @@ export function MultiBranchChainAggregator() {
               <div className="space-y-1.5 text-xs pt-1">
                 <div className="text-[11px] font-semibold text-ink-3">Pipeline Funnel Distribution:</div>
                 <div className="grid grid-cols-3 gap-1.5 text-[11px]">
-                  <div className="bg-blue-50 border border-blue-200 text-blue-800 p-1.5 rounded text-center">
+                  <div className="bg-brand-tint border border-brand-border text-brand-dark p-1.5 rounded text-center">
                     <span className="block font-bold">{branch.stages.new}</span>
                     <span className="text-[9px] uppercase">New</span>
                   </div>
-                  <div className="bg-amber-50 border border-amber-200 text-amber-800 p-1.5 rounded text-center">
+                  <div className="bg-warning-bg border border-warning/30 text-warning-text p-1.5 rounded text-center">
                     <span className="block font-bold">{branch.stages.contacted}</span>
                     <span className="text-[9px] uppercase">Contacted</span>
                   </div>
-                  <div className="bg-indigo-50 border border-indigo-200 text-indigo-800 p-1.5 rounded text-center">
+                  <div className="bg-brand-tint border border-brand-border text-brand-dark p-1.5 rounded text-center">
                     <span className="block font-bold">{branch.stages.scheduled}</span>
                     <span className="text-[9px] uppercase">Scheduled</span>
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-1.5 text-[11px] mt-1">
-                  <div className="bg-purple-50 border border-purple-200 text-purple-800 p-1.5 rounded text-center">
+                  <div className="bg-accent-tint border border-accent/25 text-accent-hover p-1.5 rounded text-center">
                     <span className="block font-bold">{branch.stages.visited}</span>
                     <span className="text-[9px] uppercase">Visited</span>
                   </div>
-                  <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-1.5 rounded text-center">
+                  <div className="bg-success-bg border border-success/25 text-success-text p-1.5 rounded text-center">
                     <span className="block font-bold">{branch.stages.completed}</span>
                     <span className="text-[9px] uppercase">Won</span>
                   </div>
-                  <div className="bg-rose-50 border border-rose-200 text-rose-800 p-1.5 rounded text-center">
+                  <div className="bg-danger-bg border border-danger-border text-danger-text p-1.5 rounded text-center">
                     <span className="block font-bold">{branch.stages.lost}</span>
                     <span className="text-[9px] uppercase">Lost</span>
                   </div>
@@ -166,7 +166,7 @@ export function MultiBranchChainAggregator() {
             {/* Bottom stats footer */}
             <div className="mt-4 pt-3 border-t border-border-faint flex items-center justify-between text-[11px] text-ink-4">
               <span>Total: <strong>{branch.total_enquiries} Leads</strong></span>
-              <span>SLA Breaches: <strong className={branch.sla_breaches > 0 ? "text-rose-600" : "text-emerald-600"}>{branch.sla_breaches}</strong></span>
+              <span>SLA Breaches: <strong className={branch.sla_breaches > 0 ? "text-danger-text" : "text-success"}>{branch.sla_breaches}</strong></span>
               <span>Estimates: <strong>{branch.treatment_estimates_count}</strong></span>
             </div>
           </Card>
@@ -185,7 +185,7 @@ export function MultiBranchChainAggregator() {
         <div className="overflow-x-auto mt-3">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="border-b border-border bg-slate-50 text-[11px] uppercase tracking-wider text-ink-4">
+              <tr className="border-b border-border bg-page text-[11px] uppercase tracking-wider text-ink-4">
                 <th className="py-2.5 px-3">Branch Location</th>
                 <th className="py-2.5 px-3">City</th>
                 <th className="py-2.5 px-3 text-right">Total Leads</th>
@@ -200,7 +200,7 @@ export function MultiBranchChainAggregator() {
               {branches.map((b) => (
                 <tr
                   key={b.hospital_id}
-                  className={`hover:bg-slate-50/70 transition-colors ${
+                  className={`hover:bg-page/70 transition-colors ${
                     b.is_current ? "bg-brand-tint/20 font-semibold" : ""
                   }`}
                 >
@@ -212,16 +212,16 @@ export function MultiBranchChainAggregator() {
                   <td className="py-2.5 px-3 text-right font-mono font-bold">{b.total_enquiries}</td>
                   <td className="py-2.5 px-3 text-right font-mono">{b.active_leads}</td>
                   <td className="py-2.5 px-3 text-right font-mono text-ink-1">{INR.format(b.pipeline_value)}</td>
-                  <td className="py-2.5 px-3 text-right font-mono font-bold text-emerald-600">{INR.format(b.converted_value)}</td>
+                  <td className="py-2.5 px-3 text-right font-mono font-bold text-success">{INR.format(b.converted_value)}</td>
                   <td className="py-2.5 px-3 text-right">
                     <span className={`px-2 py-0.5 rounded font-bold ${
-                      b.conversion_rate >= 20 ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
+                      b.conversion_rate >= 20 ? "bg-success-bg text-success-text" : "bg-warning-bg text-warning-text"
                     }`}>
                       {b.conversion_rate}%
                     </span>
                   </td>
                   <td className="py-2.5 px-3 text-center">
-                    <span className={b.sla_breaches > 0 ? "text-rose-600 font-bold" : "text-emerald-600"}>
+                    <span className={b.sla_breaches > 0 ? "text-danger-text font-bold" : "text-success"}>
                       {b.sla_breaches}
                     </span>
                   </td>

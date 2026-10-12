@@ -100,66 +100,66 @@ export function ICUPage() {
     <div className="p-6 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+          <h1 className="text-2xl font-bold tracking-tight text-ink dark:text-slate-100">
             Intensive Care Unit (ICU) Monitoring
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-sm text-ink-4 dark:text-slate-400">
             Monitor ICU patients, ventilator parameters, and daily intensivist progress notes.
           </p>
         </div>
         <button
           onClick={() => setShowAdmitModal(true)}
-          className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm"
+          className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-brand hover:bg-brand-dark rounded-lg shadow-sm"
         >
           + Transfer Patient to ICU
         </button>
       </div>
 
       {loading ? (
-        <div className="py-12 text-center text-slate-500">Loading ICU records...</div>
+        <div className="py-12 text-center text-ink-4">Loading ICU records...</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {admissions.length === 0 ? (
-            <div className="col-span-full py-12 text-center text-slate-500 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+            <div className="col-span-full py-12 text-center text-ink-4 bg-white dark:bg-slate-800 rounded-xl border border-border dark:border-slate-700">
               No patients currently admitted in ICU.
             </div>
           ) : (
             admissions.map((icu) => (
               <div
                 key={icu.id}
-                className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm space-y-4"
+                className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-border dark:border-slate-700 shadow-sm space-y-4"
               >
                 <div className="flex justify-between items-start">
                   <div>
-                    <span className="text-xs font-semibold uppercase text-blue-600 dark:text-blue-400">ICU Bed #{icu.bed}</span>
-                    <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                    <span className="text-xs font-semibold uppercase text-brand dark:text-blue-400">ICU Bed #{icu.bed}</span>
+                    <h3 className="text-base font-bold text-ink dark:text-slate-100">
                       {icu.admission_detail?.patient ? `Admission #${icu.admission}` : `Admission #${icu.admission}`}
                     </h3>
                   </div>
                   {icu.ventilator_required ? (
-                    <span className="px-2.5 py-1 text-xs font-bold bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 rounded-full animate-pulse">
+                    <span className="px-2.5 py-1 text-xs font-bold bg-accent-tint text-accent-hover dark:bg-purple-900/40 dark:text-purple-300 rounded-full animate-pulse">
                       Ventilator On
                     </span>
                   ) : (
-                    <span className="px-2.5 py-1 text-xs font-medium bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300 rounded-full">
+                    <span className="px-2.5 py-1 text-xs font-medium bg-chip-bg text-ink-2 dark:bg-slate-700 dark:text-slate-300 rounded-full">
                       Stable
                     </span>
                   )}
                 </div>
 
-                <div className="text-xs text-slate-500 space-y-1">
+                <div className="text-xs text-ink-4 space-y-1">
                   <p>Admitted: {new Date(icu.admitted_at).toLocaleString()}</p>
                   <p>Ventilator logs: {icu.ventilator_logs?.length || 0}</p>
                   <p>Progress notes: {icu.progress_notes?.length || 0}</p>
                 </div>
 
-                <div className="pt-2 border-t border-slate-100 dark:border-slate-700 flex gap-2">
+                <div className="pt-2 border-t border-border-faint dark:border-slate-700 flex gap-2">
                   <button
                     onClick={() => {
                       setSelectedICU(icu)
                       setActionType("vent")
                     }}
-                    className="flex-1 px-3 py-1.5 text-xs font-semibold bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 rounded hover:bg-purple-100"
+                    className="flex-1 px-3 py-1.5 text-xs font-semibold bg-accent-tint text-accent-hover dark:bg-purple-900/30 dark:text-purple-300 rounded hover:bg-accent-tint"
                   >
                     + Vent Log
                   </button>
@@ -168,7 +168,7 @@ export function ICUPage() {
                       setSelectedICU(icu)
                       setActionType("note")
                     }}
-                    className="flex-1 px-3 py-1.5 text-xs font-semibold bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 rounded hover:bg-blue-100"
+                    className="flex-1 px-3 py-1.5 text-xs font-semibold bg-brand-tint text-brand-dark dark:bg-blue-900/30 dark:text-blue-300 rounded hover:bg-brand-tint"
                   >
                     + Progress Note
                   </button>
@@ -183,10 +183,10 @@ export function ICUPage() {
       {showAdmitModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-800 max-w-md w-full rounded-xl p-6 space-y-4">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Admit to ICU Bed</h2>
+            <h2 className="text-lg font-bold text-ink dark:text-slate-100">Admit to ICU Bed</h2>
             <form onSubmit={handleCreateICUAdmission} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">IPD Admission ID</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">IPD Admission ID</label>
                 <input
                   type="number"
                   required
@@ -196,7 +196,7 @@ export function ICUPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">ICU Bed ID</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">ICU Bed ID</label>
                 <input
                   type="number"
                   required
@@ -211,17 +211,17 @@ export function ICUPage() {
                   id="ventReq"
                   checked={ventilatorReq}
                   onChange={(e) => setVentilatorReq(e.target.checked)}
-                  className="rounded border-slate-300 text-blue-600"
+                  className="rounded border-border-strong text-brand"
                 />
-                <label htmlFor="ventReq" className="text-sm text-slate-700 dark:text-slate-300">
+                <label htmlFor="ventReq" className="text-sm text-ink-2 dark:text-slate-300">
                   Ventilator Support Required
                 </label>
               </div>
               <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setShowAdmitModal(false)} className="px-4 py-2 text-sm text-slate-500">
+                <button type="button" onClick={() => setShowAdmitModal(false)} className="px-4 py-2 text-sm text-ink-4">
                   Cancel
                 </button>
-                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg">
+                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-brand rounded-lg">
                   Confirm Transfer
                 </button>
               </div>
@@ -234,10 +234,10 @@ export function ICUPage() {
       {selectedICU && actionType === "vent" && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-800 max-w-md w-full rounded-xl p-6 space-y-4">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Log Ventilator Settings</h2>
+            <h2 className="text-lg font-bold text-ink dark:text-slate-100">Log Ventilator Settings</h2>
             <form onSubmit={handleAddVentLog} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Ventilator Mode</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Ventilator Mode</label>
                 <input
                   type="text"
                   required
@@ -248,7 +248,7 @@ export function ICUPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">PEEP (cmH2O)</label>
+                  <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">PEEP (cmH2O)</label>
                   <input
                     type="number"
                     value={peep}
@@ -257,7 +257,7 @@ export function ICUPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">FiO2 (%)</label>
+                  <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">FiO2 (%)</label>
                   <input
                     type="number"
                     value={fio2}
@@ -267,10 +267,10 @@ export function ICUPage() {
                 </div>
               </div>
               <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setSelectedICU(null)} className="px-4 py-2 text-sm text-slate-500">
+                <button type="button" onClick={() => setSelectedICU(null)} className="px-4 py-2 text-sm text-ink-4">
                   Cancel
                 </button>
-                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg">
+                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-accent rounded-lg">
                   Save Vent Log
                 </button>
               </div>
@@ -283,10 +283,10 @@ export function ICUPage() {
       {selectedICU && actionType === "note" && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-800 max-w-md w-full rounded-xl p-6 space-y-4">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">ICU Daily Progress Note</h2>
+            <h2 className="text-lg font-bold text-ink dark:text-slate-100">ICU Daily Progress Note</h2>
             <form onSubmit={handleAddProgressNote} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Intensivist Doctor ID</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Intensivist Doctor ID</label>
                 <input
                   type="number"
                   required
@@ -296,7 +296,7 @@ export function ICUPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Progress & Clinical Notes</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Progress & Clinical Notes</label>
                 <textarea
                   required
                   rows={4}
@@ -307,10 +307,10 @@ export function ICUPage() {
                 />
               </div>
               <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setSelectedICU(null)} className="px-4 py-2 text-sm text-slate-500">
+                <button type="button" onClick={() => setSelectedICU(null)} className="px-4 py-2 text-sm text-ink-4">
                   Cancel
                 </button>
-                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg">
+                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-brand rounded-lg">
                   Save Note
                 </button>
               </div>

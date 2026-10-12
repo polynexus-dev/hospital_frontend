@@ -141,7 +141,7 @@ export function WorkflowsPage() {
       case "urgent":
       case "high":
         return (
-          <span className="px-2 py-0.5 text-xs font-semibold rounded bg-rose-100 dark:bg-rose-900/40 text-rose-800 dark:text-rose-200">
+          <span className="px-2 py-0.5 text-xs font-semibold rounded bg-danger-bg dark:bg-rose-900/40 text-danger-text dark:text-rose-200">
             {priority.toUpperCase()}
           </span>
         )
@@ -155,10 +155,10 @@ export function WorkflowsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Workflows & Rules Engine</h1>
+            <span className="w-2.5 h-2.5 rounded-full bg-success animate-pulse" />
+            <h1 className="text-2xl font-bold text-ink tracking-tight">Workflows & Rules Engine</h1>
           </div>
-          <p className="text-sm text-slate-600 mt-1">
+          <p className="text-sm text-ink-3 mt-1">
             Visual Node-Chain Builder, event-driven automation triggers, & execution history logs
           </p>
         </div>
@@ -170,7 +170,7 @@ export function WorkflowsPage() {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex border-b border-slate-200 gap-6">
+      <div className="flex border-b border-border gap-6">
         {[
           { key: "builder", label: "Visual Workflow Canvas", icon: "⚡" },
           { key: "history", label: "Execution History Logs", icon: "📋" },
@@ -181,8 +181,8 @@ export function WorkflowsPage() {
             onClick={() => setActiveTab(tab.key as any)}
             className={`pb-3 text-sm font-semibold border-b-2 flex items-center gap-2 transition-all cursor-pointer ${
               activeTab === tab.key
-                ? "border-emerald-600 text-emerald-700 font-bold"
-                : "border-transparent text-slate-500 hover:text-slate-800"
+                ? "border-success text-success-text font-bold"
+                : "border-transparent text-ink-4 hover:text-ink"
             }`}
           >
             <span>{tab.icon}</span>
@@ -196,37 +196,37 @@ export function WorkflowsPage() {
         <div className="space-y-6">
           {/* Workflow Editor Card */}
           {editingWorkflow && (
-            <div className="p-6 rounded-xl space-y-6 bg-white border-2 border-emerald-500 shadow-lg ring-1 ring-emerald-500/20">
-              <div className="flex justify-between items-center border-b border-slate-200 pb-4">
+            <div className="p-6 rounded-xl space-y-6 bg-white border-2 border-success shadow-lg ring-1 ring-success/20">
+              <div className="flex justify-between items-center border-b border-border pb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-lg shadow-xs">
+                  <div className="w-10 h-10 rounded-xl bg-success-bg text-success-text flex items-center justify-center font-bold text-lg shadow-xs">
                     ⚡
                   </div>
                   <div>
-                    <h2 className="text-lg font-bold text-slate-900">
+                    <h2 className="text-lg font-bold text-ink">
                       {editingWorkflow.id ? "Edit Workflow Chain" : "Create Visual Node Workflow"}
                     </h2>
-                    <p className="text-xs text-slate-500 font-medium">Configure trigger events, conditions, and automated node actions</p>
+                    <p className="text-xs text-ink-4 font-medium">Configure trigger events, conditions, and automated node actions</p>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => setEditingWorkflow(null)}
-                  className="px-3 py-1.5 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                  className="px-3 py-1.5 rounded-lg border border-border-strong text-ink-2 hover:bg-chip-bg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
                 >
                   ✕ Close Editor
                 </button>
               </div>
 
               {/* Workflow Configuration Row */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5 bg-slate-50 p-4 rounded-xl border border-slate-200">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5 bg-page p-4 rounded-xl border border-border">
                 <div>
-                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wide block mb-1.5">
-                    Workflow Name <span className="text-rose-500">*</span>
+                  <label className="text-xs font-bold text-ink-2 uppercase tracking-wide block mb-1.5">
+                    Workflow Name <span className="text-danger-text">*</span>
                   </label>
                   <input
                     type="text"
-                    className="w-full px-3.5 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-sm font-medium shadow-xs focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none placeholder:text-slate-400"
+                    className="w-full px-3.5 py-2 bg-white text-ink border border-border-strong rounded-lg text-sm font-medium shadow-xs focus:ring-2 focus:ring-success focus:border-success focus:outline-none placeholder:text-slate-400"
                     placeholder="e.g. Missed Call Recovery"
                     value={editingWorkflow.name || ""}
                     onChange={(e) => setEditingWorkflow({ ...editingWorkflow, name: e.target.value })}
@@ -234,11 +234,11 @@ export function WorkflowsPage() {
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wide block mb-1.5">
-                    Trigger Event <span className="text-rose-500">*</span>
+                  <label className="text-xs font-bold text-ink-2 uppercase tracking-wide block mb-1.5">
+                    Trigger Event <span className="text-danger-text">*</span>
                   </label>
                   <select
-                    className="w-full px-3.5 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-sm font-medium shadow-xs focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none"
+                    className="w-full px-3.5 py-2 bg-white text-ink border border-border-strong rounded-lg text-sm font-medium shadow-xs focus:ring-2 focus:ring-success focus:border-success focus:outline-none"
                     value={editingWorkflow.trigger_type || "missed_call"}
                     onChange={(e) => setEditingWorkflow({ ...editingWorkflow, trigger_type: e.target.value as any })}
                   >
@@ -251,7 +251,7 @@ export function WorkflowsPage() {
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wide block mb-1.5">
+                  <label className="text-xs font-bold text-ink-2 uppercase tracking-wide block mb-1.5">
                     Status
                   </label>
                   <button
@@ -259,18 +259,18 @@ export function WorkflowsPage() {
                     onClick={() => setEditingWorkflow({ ...editingWorkflow, is_active: !editingWorkflow.is_active })}
                     className={`w-full py-2 px-3.5 border rounded-lg text-sm font-semibold flex justify-between items-center transition-all shadow-xs cursor-pointer ${
                       editingWorkflow.is_active
-                        ? "bg-emerald-50 border-emerald-300 text-emerald-900 hover:bg-emerald-100"
-                        : "bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200"
+                        ? "bg-success-bg border-success/25 text-success-text hover:bg-success-bg"
+                        : "bg-chip-bg border-border-strong text-ink-2 hover:bg-border-soft"
                     }`}
                   >
                     <span className="flex items-center gap-2">
-                      <span className={`w-2 h-2 rounded-full ${editingWorkflow.is_active ? "bg-emerald-600 animate-pulse" : "bg-slate-400"}`} />
+                      <span className={`w-2 h-2 rounded-full ${editingWorkflow.is_active ? "bg-success animate-pulse" : "bg-slate-400"}`} />
                       <span>{editingWorkflow.is_active ? "Workflow Active State" : "Workflow Paused"}</span>
                     </span>
                     {editingWorkflow.is_active ? (
-                      <span className="px-2 py-0.5 text-xs font-bold rounded bg-emerald-600 text-white shadow-xs">ACTIVE</span>
+                      <span className="px-2 py-0.5 text-xs font-bold rounded bg-success text-white shadow-xs">ACTIVE</span>
                     ) : (
-                      <span className="px-2 py-0.5 text-xs font-bold rounded bg-slate-300 text-slate-800">INACTIVE</span>
+                      <span className="px-2 py-0.5 text-xs font-bold rounded bg-border-strong text-ink">INACTIVE</span>
                     )}
                   </button>
                 </div>
@@ -280,12 +280,12 @@ export function WorkflowsPage() {
               <div className="space-y-4 pt-1">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-bold text-slate-900">Node Chain Canvas</h3>
-                    <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-200">
+                    <h3 className="text-sm font-bold text-ink">Node Chain Canvas</h3>
+                    <span className="text-[11px] font-semibold text-ink-4 bg-chip-bg px-2.5 py-0.5 rounded-full border border-border">
                       Trigger ➔ Condition ➔ Action
                     </span>
                   </div>
-                  <span className="text-xs font-semibold text-slate-500">
+                  <span className="text-xs font-semibold text-ink-4">
                     {editingWorkflow.steps?.length || 0} Step{(editingWorkflow.steps?.length || 0) === 1 ? "" : "s"}
                   </span>
                 </div>
@@ -304,10 +304,10 @@ export function WorkflowsPage() {
                         <div
                           className={`flex-1 p-4 rounded-xl border-l-4 border transition-all shadow-xs ${
                             isTrigger
-                              ? "border-l-blue-600 border-blue-200 bg-blue-50/60"
+                              ? "border-l-brand border-brand-border bg-brand-tint/60"
                               : isCondition
-                              ? "border-l-amber-600 border-amber-200 bg-amber-50/60"
-                              : "border-l-emerald-600 border-emerald-200 bg-emerald-50/60"
+                              ? "border-l-warning border-warning/30 bg-warning-bg/60"
+                              : "border-l-success border-success/25 bg-success-bg/60"
                           }`}
                         >
                           <div className="flex justify-between items-center">
@@ -316,19 +316,19 @@ export function WorkflowsPage() {
                                 <span
                                   className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${
                                     isTrigger
-                                      ? "bg-blue-100 text-blue-800 border-blue-300"
+                                      ? "bg-brand-tint text-brand-dark border-brand-border"
                                       : isCondition
-                                      ? "bg-amber-100 text-amber-800 border-amber-300"
-                                      : "bg-emerald-100 text-emerald-800 border-emerald-300"
+                                      ? "bg-warning-bg text-warning-text border-warning/30"
+                                      : "bg-success-bg text-success-text border-success/25"
                                   }`}
                                 >
                                   {step.step_type}
                                 </span>
-                                <span className="text-xs font-bold text-slate-500">
+                                <span className="text-xs font-bold text-ink-4">
                                   • {step.action_type.replace("_", " ").toUpperCase()}
                                 </span>
                               </div>
-                              <h4 className="font-bold text-sm text-slate-900">{step.title}</h4>
+                              <h4 className="font-bold text-sm text-ink">{step.title}</h4>
                             </div>
 
                             {step.step_type !== "trigger" && (
@@ -338,7 +338,7 @@ export function WorkflowsPage() {
                                   const newSteps = editingWorkflow.steps?.filter((_, i) => i !== idx) || []
                                   setEditingWorkflow({ ...editingWorkflow, steps: newSteps })
                                 }}
-                                className="text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-100 px-2.5 py-1 rounded-md border border-rose-200 transition-colors cursor-pointer"
+                                className="text-xs font-semibold text-danger-text hover:text-danger-text hover:bg-danger-bg px-2.5 py-1 rounded-md border border-danger-border transition-colors cursor-pointer"
                               >
                                 ✕ Remove Step
                               </button>
@@ -351,33 +351,33 @@ export function WorkflowsPage() {
                 </div>
 
                 {/* Step Palette Buttons */}
-                <div className="pt-4 border-t border-slate-200 flex gap-2.5 flex-wrap items-center bg-slate-50 p-3 rounded-xl border border-slate-200">
-                  <span className="text-xs font-bold text-slate-700 uppercase tracking-wide">Add Node:</span>
+                <div className="pt-4 border-t border-border flex gap-2.5 flex-wrap items-center bg-page p-3 rounded-xl border border-border">
+                  <span className="text-xs font-bold text-ink-2 uppercase tracking-wide">Add Node:</span>
                   <button
                     type="button"
                     onClick={() => handleAddStep("condition", "create_task", "Filter: Condition Score <= 6")}
-                    className="px-3 py-1.5 text-xs font-bold rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                    className="px-3 py-1.5 text-xs font-bold rounded-lg bg-warning-bg hover:bg-warning/30 text-warning-text border border-warning/30 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
                   >
                     <span>➕</span> Condition Node
                   </button>
                   <button
                     type="button"
                     onClick={() => handleAddStep("action", "create_task", "Action: Create Priority Task")}
-                    className="px-3 py-1.5 text-xs font-bold rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-900 border border-emerald-300 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                    className="px-3 py-1.5 text-xs font-bold rounded-lg bg-success-bg hover:bg-success/25 text-success-text border border-success/25 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
                   >
                     <span>⚡</span> Create Task Action
                   </button>
                   <button
                     type="button"
                     onClick={() => handleAddStep("action", "send_whatsapp", "Action: Send WhatsApp Notification")}
-                    className="px-3 py-1.5 text-xs font-bold rounded-lg bg-teal-100 hover:bg-teal-200 text-teal-900 border border-teal-300 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                    className="px-3 py-1.5 text-xs font-bold rounded-lg bg-accent-tint hover:bg-accent/25 text-accent-hover border border-accent/25 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
                   >
                     <span>💬</span> Send WhatsApp Action
                   </button>
                   <button
                     type="button"
                     onClick={() => handleAddStep("action", "wait_delay", "Action: Wait 15 Minutes")}
-                    className="px-3 py-1.5 text-xs font-bold rounded-lg bg-indigo-100 hover:bg-indigo-200 text-indigo-900 border border-indigo-300 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                    className="px-3 py-1.5 text-xs font-bold rounded-lg bg-brand-tint hover:bg-brand-border text-brand-dark border border-brand-border transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
                   >
                     <span>⏱️</span> Wait Delay Timer
                   </button>
@@ -385,11 +385,11 @@ export function WorkflowsPage() {
               </div>
 
               {/* Drawer Actions */}
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
+              <div className="flex justify-end gap-3 pt-4 border-t border-border">
                 <button
                   type="button"
                   onClick={() => setEditingWorkflow(null)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg border border-slate-300 transition-colors cursor-pointer"
+                  className="px-4 py-2 text-xs font-semibold text-ink-3 hover:text-ink hover:bg-chip-bg rounded-lg border border-border-strong transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -397,7 +397,7 @@ export function WorkflowsPage() {
                   type="button"
                   disabled={saveWorkflowMutation.isPending}
                   onClick={() => saveWorkflowMutation.mutate(editingWorkflow)}
-                  className="px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 rounded-lg shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+                  className="px-5 py-2 text-xs font-bold text-white bg-success hover:bg-success-text disabled:opacity-50 rounded-lg shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
                 >
                   {saveWorkflowMutation.isPending ? "Saving..." : "✓ Save Workflow Chain"}
                 </button>
@@ -410,7 +410,7 @@ export function WorkflowsPage() {
             <LoadingState />
           ) : workflows.length === 0 ? (
             <Card className="p-8 text-center space-y-3">
-              <p className="text-sm text-slate-500 font-medium">No custom workflows created yet.</p>
+              <p className="text-sm text-ink-4 font-medium">No custom workflows created yet.</p>
               <Button variant="primary" onClick={handleAddDefaultWorkflow}>
                 + Create Demo Workflow Chain
               </Button>
@@ -418,15 +418,15 @@ export function WorkflowsPage() {
           ) : (
             <div className="space-y-4">
               {workflows.map((wf) => (
-                <Card key={wf.id} className="p-6 space-y-4 border border-slate-200 shadow-xs hover:border-slate-300 transition-all">
+                <Card key={wf.id} className="p-6 space-y-4 border border-border shadow-xs hover:border-border-strong transition-all">
                   <div className="flex justify-between items-start">
                     <div>
                       <div className="flex items-center gap-2.5">
-                        <h3 className="text-lg font-bold text-slate-900">{wf.name}</h3>
+                        <h3 className="text-lg font-bold text-ink">{wf.name}</h3>
                         {wf.is_active ? <SuccessTag>ACTIVE</SuccessTag> : <NeutralTag>INACTIVE</NeutralTag>}
                       </div>
-                      <p className="text-xs text-slate-600 mt-1">{wf.description}</p>
-                      <span className="inline-block mt-2 text-xs font-semibold px-2.5 py-1 bg-slate-100 text-slate-700 border border-slate-200 rounded-md">
+                      <p className="text-xs text-ink-3 mt-1">{wf.description}</p>
+                      <span className="inline-block mt-2 text-xs font-semibold px-2.5 py-1 bg-chip-bg text-ink-2 border border-border rounded-md">
                         Trigger: {wf.trigger_type}
                       </span>
                     </div>
@@ -450,8 +450,8 @@ export function WorkflowsPage() {
                   <div className="flex items-center gap-2 overflow-x-auto py-2">
                     {(wf.steps || []).map((step, sIdx) => (
                       <div key={sIdx} className="flex items-center gap-2 shrink-0">
-                        <div className="px-3 py-1.5 rounded-lg border text-xs font-semibold bg-white text-slate-800 border-slate-200 shadow-2xs">
-                          <span className="text-[10px] text-slate-500 uppercase block font-bold">{step.step_type}</span>
+                        <div className="px-3 py-1.5 rounded-lg border text-xs font-semibold bg-white text-ink border-border shadow-2xs">
+                          <span className="text-[10px] text-ink-4 uppercase block font-bold">{step.step_type}</span>
                           {step.title || step.action_type}
                         </div>
                         {sIdx < (wf.steps?.length || 0) - 1 && <span className="text-slate-400 font-bold">➔</span>}
@@ -465,16 +465,16 @@ export function WorkflowsPage() {
 
           {/* Test Run Result Modal Card */}
           {testRunResult && (
-            <Card className="p-4 border-l-4 border-emerald-500 bg-emerald-50/50 space-y-2 shadow-xs">
+            <Card className="p-4 border-l-4 border-success bg-success-bg/50 space-y-2 shadow-xs">
               <div className="flex justify-between items-center">
-                <h4 className="font-bold text-sm text-slate-900">
+                <h4 className="font-bold text-sm text-ink">
                   ✨ Test Run Execution Completed for Workflow #{testRunResult.workflow}
                 </h4>
-                <button onClick={() => setTestRunResult(null)} className="text-xs font-bold text-slate-400 hover:text-slate-700">
+                <button onClick={() => setTestRunResult(null)} className="text-xs font-bold text-slate-400 hover:text-ink-2">
                   ✕
                 </button>
               </div>
-              <p className="text-xs text-slate-600 font-medium">Status: <SuccessTag>{testRunResult.status}</SuccessTag></p>
+              <p className="text-xs text-ink-3 font-medium">Status: <SuccessTag>{testRunResult.status}</SuccessTag></p>
               <div className="bg-slate-900 text-emerald-400 p-3 rounded-lg text-xs font-mono max-h-48 overflow-y-auto">
                 {JSON.stringify(testRunResult.log_output, null, 2)}
               </div>
@@ -485,13 +485,13 @@ export function WorkflowsPage() {
 
       {/* TAB 2: EXECUTION HISTORY LOGS */}
       {activeTab === "history" && (
-        <Card className="overflow-hidden border border-slate-200 shadow-xs">
+        <Card className="overflow-hidden border border-border shadow-xs">
           {isRunsLoading ? (
             <LoadingState />
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-slate-700">
-                <thead className="bg-slate-50 text-slate-700 border-b border-slate-200">
+              <table className="w-full text-left text-sm text-ink-2">
+                <thead className="bg-page text-ink-2 border-b border-border">
                   <tr>
                     <th className="px-6 py-3.5 font-bold">Run ID</th>
                     <th className="px-6 py-3.5 font-bold">Workflow</th>
@@ -500,23 +500,23 @@ export function WorkflowsPage() {
                     <th className="px-6 py-3.5 font-bold">Executed At</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200">
+                <tbody className="divide-y divide-border">
                   {runs.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-6 py-8 text-center text-slate-500 font-medium">
+                      <td colSpan={5} className="px-6 py-8 text-center text-ink-4 font-medium">
                         No workflow execution history logged yet. Run a workflow test above!
                       </td>
                     </tr>
                   ) : (
                     runs.map((r) => (
-                      <tr key={r.id} className="hover:bg-slate-50/80 transition-colors">
-                        <td className="px-6 py-4 font-bold text-slate-900">#{r.id}</td>
-                        <td className="px-6 py-4 font-semibold text-slate-800">{r.workflow_name || `Workflow #${r.workflow}`}</td>
-                        <td className="px-6 py-4 text-slate-600">{r.trigger_event}</td>
+                      <tr key={r.id} className="hover:bg-page/80 transition-colors">
+                        <td className="px-6 py-4 font-bold text-ink">#{r.id}</td>
+                        <td className="px-6 py-4 font-semibold text-ink">{r.workflow_name || `Workflow #${r.workflow}`}</td>
+                        <td className="px-6 py-4 text-ink-3">{r.trigger_event}</td>
                         <td className="px-6 py-4">
                           {r.status === "success" ? <SuccessTag>SUCCESS</SuccessTag> : <NeutralTag>{r.status}</NeutralTag>}
                         </td>
-                        <td className="px-6 py-4 text-xs text-slate-500">{new Date(r.executed_at).toLocaleString()}</td>
+                        <td className="px-6 py-4 text-xs text-ink-4">{new Date(r.executed_at).toLocaleString()}</td>
                       </tr>
                     ))
                   )}
@@ -530,7 +530,7 @@ export function WorkflowsPage() {
       {/* TAB 3: TASKS & SLA ESCALATIONS */}
       {activeTab === "tasks" && (
         <div className="space-y-6">
-          <div className="flex border-b border-slate-200 gap-6">
+          <div className="flex border-b border-border gap-6">
             {[
               { key: "pending", label: "Pending Tasks" },
               { key: "in_progress", label: "In Progress" },
@@ -541,8 +541,8 @@ export function WorkflowsPage() {
                 onClick={() => setSelectedStatus(tab.key)}
                 className={`pb-3 text-sm font-semibold border-b-2 transition-colors cursor-pointer ${
                   selectedStatus === tab.key
-                    ? "border-emerald-600 text-emerald-700 font-bold"
-                    : "border-transparent text-slate-500 hover:text-slate-800"
+                    ? "border-success text-success-text font-bold"
+                    : "border-transparent text-ink-4 hover:text-ink"
                 }`}
               >
                 {tab.label}
@@ -552,10 +552,10 @@ export function WorkflowsPage() {
 
           {isTasksLoading && <LoadingState />}
           {!isTasksLoading && (
-            <Card className="overflow-hidden border border-slate-200 shadow-xs">
+            <Card className="overflow-hidden border border-border shadow-xs">
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm text-slate-700">
-                  <thead className="bg-slate-50 text-slate-700 border-b border-slate-200">
+                <table className="w-full text-left text-sm text-ink-2">
+                  <thead className="bg-page text-ink-2 border-b border-border">
                     <tr>
                       <th className="px-6 py-3.5 font-bold">Priority</th>
                       <th className="px-6 py-3.5 font-bold">Title</th>
@@ -564,25 +564,25 @@ export function WorkflowsPage() {
                       <th className="px-6 py-3.5 font-bold text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-200">
+                  <tbody className="divide-y divide-border">
                     {tasks.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="px-6 py-8 text-center text-slate-500 font-medium">
+                        <td colSpan={5} className="px-6 py-8 text-center text-ink-4 font-medium">
                           No tasks in this queue.
                         </td>
                       </tr>
                     ) : (
                       tasks.map((t) => (
-                        <tr key={t.id} className="hover:bg-slate-50/80 transition-colors">
+                        <tr key={t.id} className="hover:bg-page/80 transition-colors">
                           <td className="px-6 py-4">{getPriorityBadge(t.priority)}</td>
                           <td className="px-6 py-4">
-                            <span className="font-semibold text-slate-900 block">{t.title}</span>
-                            {t.description && <span className="text-xs text-slate-500">{t.description}</span>}
+                            <span className="font-semibold text-ink block">{t.title}</span>
+                            {t.description && <span className="text-xs text-ink-4">{t.description}</span>}
                           </td>
                           <td className="px-6 py-4">
                             <NeutralTag>{t.status.toUpperCase()}</NeutralTag>
                           </td>
-                          <td className="px-6 py-4 text-xs text-slate-500">
+                          <td className="px-6 py-4 text-xs text-ink-4">
                             {t.due_at ? new Date(t.due_at).toLocaleString() : "—"}
                           </td>
                           <td className="px-6 py-4 text-right">
@@ -609,23 +609,23 @@ export function WorkflowsPage() {
             </Card>
           )}
 
-          <Card className="p-6 space-y-4 border border-slate-200 shadow-xs">
-            <h2 className="text-lg font-bold text-slate-900">Configured SLA Escalation Rules</h2>
+          <Card className="p-6 space-y-4 border border-border shadow-xs">
+            <h2 className="text-lg font-bold text-ink">Configured SLA Escalation Rules</h2>
             {rules.length === 0 ? (
-              <p className="text-sm text-slate-500 font-medium">No active escalation rules defined.</p>
+              <p className="text-sm text-ink-4 font-medium">No active escalation rules defined.</p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {rules.map((rule) => (
-                  <Card key={rule.id} className="p-4 border border-slate-200 space-y-2 shadow-2xs">
+                  <Card key={rule.id} className="p-4 border border-border space-y-2 shadow-2xs">
                     <div className="flex justify-between items-center">
-                      <h3 className="font-bold text-slate-900">{rule.name}</h3>
+                      <h3 className="font-bold text-ink">{rule.name}</h3>
                       {rule.is_active ? <SuccessTag>ACTIVE</SuccessTag> : <NeutralTag>INACTIVE</NeutralTag>}
                     </div>
-                    <p className="text-xs text-slate-600">
-                      Target Domain: <span className="font-bold text-slate-800">{rule.applies_to}</span>
+                    <p className="text-xs text-ink-3">
+                      Target Domain: <span className="font-bold text-ink">{rule.applies_to}</span>
                     </p>
-                    <p className="text-xs text-slate-600">
-                      Escalate After: <span className="font-bold text-slate-800">{rule.escalate_after_minutes} mins</span>
+                    <p className="text-xs text-ink-3">
+                      Escalate After: <span className="font-bold text-ink">{rule.escalate_after_minutes} mins</span>
                     </p>
                   </Card>
                 ))}

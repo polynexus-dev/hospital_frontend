@@ -29,7 +29,7 @@ export function NeutralTag({ children }: { children: React.ReactNode }) {
 
 export function SuccessTag({ children }: { children: React.ReactNode }) {
   return (
-    <span className="text-[10.5px] font-semibold px-[6px] py-[2px] rounded-tag bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-200 inline-block">
+    <span className="text-[10.5px] font-semibold px-[6px] py-[2px] rounded-tag bg-success-bg dark:bg-emerald-950 text-success-text dark:text-emerald-200 inline-block">
       {children}
     </span>
   )

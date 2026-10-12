@@ -73,11 +73,11 @@ export function ReferralsPage() {
   const getTierBadge = (tier: string) => {
     switch (tier) {
       case "gold":
-        return <span className="px-2 py-0.5 text-xs font-bold rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-200">🥇 GOLD TIER</span>
+        return <span className="px-2 py-0.5 text-xs font-bold rounded bg-warning-bg dark:bg-amber-950 text-warning-text dark:text-amber-200">🥇 GOLD TIER</span>
       case "silver":
-        return <span className="px-2 py-0.5 text-xs font-bold rounded bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200">🥈 SILVER TIER</span>
+        return <span className="px-2 py-0.5 text-xs font-bold rounded bg-border-soft dark:bg-slate-800 text-ink dark:text-slate-200">🥈 SILVER TIER</span>
       default:
-        return <span className="px-2 py-0.5 text-xs font-bold rounded bg-amber-800/20 text-amber-700">🥉 BRONZE TIER</span>
+        return <span className="px-2 py-0.5 text-xs font-bold rounded bg-amber-800/20 text-warning-text">🥉 BRONZE TIER</span>
     }
   }
 
@@ -85,8 +85,8 @@ export function ReferralsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Referral Doctor CRM</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <h1 className="text-2xl font-bold text-ink dark:text-slate-100">Referral Doctor CRM</h1>
+          <p className="text-sm text-ink-4 dark:text-slate-400">
             Referring doctor directory, revenue attribution league table, & field visit touchpoints
           </p>
         </div>
@@ -101,7 +101,7 @@ export function ReferralsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-slate-200 dark:border-slate-800 gap-6">
+      <div className="flex border-b border-border dark:border-slate-800 gap-6">
         {[
           { key: "league", label: "Referrer League Table" },
           { key: "directory", label: "Doctor Directory" },
@@ -112,8 +112,8 @@ export function ReferralsPage() {
             onClick={() => setActiveTab(tab.key as any)}
             className={`pb-3 text-sm font-semibold border-b-2 transition-colors ${
               activeTab === tab.key
-                ? "border-emerald-500 text-emerald-600 dark:text-emerald-400"
-                : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                ? "border-success text-success dark:text-emerald-400"
+                : "border-transparent text-ink-4 hover:text-ink dark:hover:text-slate-200"
             }`}
           >
             {tab.label}
@@ -126,8 +126,8 @@ export function ReferralsPage() {
         <Card className="p-6 space-y-4">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Top Referring Doctors (Revenue Attributed)</h2>
-              <p className="text-xs text-slate-500">Ranked by total patient referral revenue generated this year</p>
+              <h2 className="text-lg font-bold text-ink dark:text-slate-100">Top Referring Doctors (Revenue Attributed)</h2>
+              <p className="text-xs text-ink-4">Ranked by total patient referral revenue generated this year</p>
             </div>
           </div>
 
@@ -136,23 +136,23 @@ export function ReferralsPage() {
           ) : (
             <div className="grid grid-cols-1 gap-3">
               {topDoctors.map((doc, idx) => (
-                <Card key={doc.id} className="p-4 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <Card key={doc.id} className="p-4 border border-border dark:border-slate-800 flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-emerald-600 text-white font-bold text-base flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-success text-white font-bold text-base flex items-center justify-center">
                       #{idx + 1}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-slate-900 dark:text-slate-100">{doc.name}</h3>
+                        <h3 className="font-bold text-ink dark:text-slate-100">{doc.name}</h3>
                         {getTierBadge(doc.tier)}
                       </div>
-                      <span className="text-xs text-slate-500">{doc.speciality} • {doc.clinic_name} ({doc.city})</span>
+                      <span className="text-xs text-ink-4">{doc.speciality} • {doc.clinic_name} ({doc.city})</span>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3">
                     <div className="text-right">
-                      <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                      <div className="text-lg font-bold text-success dark:text-emerald-400">
                         ₹{Number(doc.total_attributed_revenue || 0).toLocaleString("en-IN")}
                       </div>
                       <span className="text-xs text-slate-400">{doc.total_referrals || 0} Patient Referrals</span>
@@ -162,7 +162,7 @@ export function ReferralsPage() {
                       variant="ghost"
                       onClick={() => handleDownloadStatement(doc)}
                       disabled={downloadingDoctorId === doc.id}
-                      className="text-teal-700 hover:text-teal-800 dark:text-teal-400 border border-teal-200 dark:border-teal-900/60"
+                      className="text-accent-hover hover:text-accent-hover dark:text-teal-400 border border-accent/25 dark:border-teal-900/60"
                       title="Download Monthly Commission Statement PDF"
                     >
                       {downloadingDoctorId === doc.id ? "..." : "📄 Statement"}
@@ -178,8 +178,8 @@ export function ReferralsPage() {
       {/* TAB 2: DOCTOR DIRECTORY */}
       {activeTab === "directory" && (
         <Card className="overflow-hidden">
-          <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
-            <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">All Registered Network Doctors</h2>
+          <div className="p-4 border-b border-border dark:border-slate-800 flex justify-between items-center">
+            <h2 className="text-sm font-bold text-ink dark:text-slate-100">All Registered Network Doctors</h2>
             <Button size="sm" variant="primary" onClick={() => setShowAddDoctor(true)}>
               + Add Doctor
             </Button>
@@ -187,8 +187,8 @@ export function ReferralsPage() {
           {isDoctorsLoading ? (
             <LoadingState />
           ) : (
-            <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
-              <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-700 dark:text-slate-200 border-b border-slate-200 dark:border-slate-800">
+            <table className="w-full text-left text-sm text-ink-3 dark:text-slate-300">
+              <thead className="bg-page dark:bg-slate-900/50 text-ink-2 dark:text-slate-200 border-b border-border dark:border-slate-800">
                 <tr>
                   <th className="px-6 py-3 font-semibold">Doctor Name</th>
                   <th className="px-6 py-3 font-semibold">Clinic & City</th>
@@ -198,10 +198,10 @@ export function ReferralsPage() {
                   <th className="px-6 py-3 font-semibold text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+              <tbody className="divide-y divide-border dark:divide-slate-800">
                 {allDoctors.map((doc) => (
-                  <tr key={doc.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/40">
-                    <td className="px-6 py-4 font-bold text-slate-900 dark:text-slate-100">
+                  <tr key={doc.id} className="hover:bg-page dark:hover:bg-slate-900/40">
+                    <td className="px-6 py-4 font-bold text-ink dark:text-slate-100">
                       {doc.name}
                       <span className="block text-xs font-normal text-slate-400">{doc.speciality}</span>
                     </td>
@@ -218,7 +218,7 @@ export function ReferralsPage() {
                           variant="ghost"
                           onClick={() => handleDownloadStatement(doc)}
                           disabled={downloadingDoctorId === doc.id}
-                          className="text-teal-700 hover:text-teal-800 dark:text-teal-400 text-xs border border-slate-200 dark:border-slate-700"
+                          className="text-accent-hover hover:text-accent-hover dark:text-teal-400 text-xs border border-border dark:border-slate-700"
                           title="Download Commission Statement PDF"
                         >
                           {downloadingDoctorId === doc.id ? "..." : "📄 Statement"}
@@ -247,7 +247,7 @@ export function ReferralsPage() {
       {activeTab === "visits" && (
         <Card className="p-6 space-y-4">
           <div className="flex justify-between items-center">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Representative Field Visit Logs</h2>
+            <h2 className="text-lg font-bold text-ink dark:text-slate-100">Representative Field Visit Logs</h2>
             <Button size="sm" variant="secondary" onClick={() => setShowLogVisit(true)}>
               + Log Field Visit
             </Button>
@@ -257,13 +257,13 @@ export function ReferralsPage() {
           ) : (
             <div className="space-y-3">
               {visits.map((v) => (
-                <Card key={v.id} className="p-4 border border-slate-200 dark:border-slate-800 space-y-2">
+                <Card key={v.id} className="p-4 border border-border dark:border-slate-800 space-y-2">
                   <div className="flex justify-between items-center">
-                    <h3 className="font-bold text-slate-900 dark:text-slate-100">{v.referring_doctor_name}</h3>
+                    <h3 className="font-bold text-ink dark:text-slate-100">{v.referring_doctor_name}</h3>
                     <span className="text-xs text-slate-400">Visit Date: {v.visit_date}</span>
                   </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-300">{v.notes}</p>
-                  {v.outcome && <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">Outcome: {v.outcome}</p>}
+                  <p className="text-xs text-ink-3 dark:text-slate-300">{v.notes}</p>
+                  {v.outcome && <p className="text-xs font-semibold text-success dark:text-emerald-400">Outcome: {v.outcome}</p>}
                 </Card>
               ))}
             </div>

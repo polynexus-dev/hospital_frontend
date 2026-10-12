@@ -25,8 +25,8 @@ function errorText(err: unknown) {
 
 const STATUS_TONE = { active: "ok", expired: "warn", revoked: "bad" } as const
 
-const inputClass = "w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm"
-const labelClass = "block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1"
+const inputClass = "w-full rounded-lg border border-border-strong dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm"
+const labelClass = "block text-xs font-semibold text-ink-3 dark:text-slate-300 mb-1"
 
 /** SaaS console: issue a signed license file for an on-premise installation,
  *  and see / re-download / revoke the ones already issued. */
@@ -91,17 +91,17 @@ export function LicenseGeneratorModal({ hospital, onClose }: { hospital: SaaSHos
         role="dialog"
         aria-modal="true"
         aria-labelledby="license-gen-title"
-        className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-2xl p-6 w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col shadow-2xl border border-slate-200 dark:border-slate-800"
+        className="bg-white dark:bg-slate-900 text-ink dark:text-slate-100 rounded-2xl p-6 w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col shadow-2xl border border-border dark:border-slate-800"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex justify-between items-start pb-4 border-b border-slate-200 dark:border-slate-800">
+        <div className="flex justify-between items-start pb-4 border-b border-border dark:border-slate-800">
           <div>
             <h2 id="license-gen-title" className="text-xl font-bold tracking-tight">On-Premise License Generator</h2>
-            <p className="text-xs text-slate-500 mt-1">
-              Tenant: <span className="font-semibold text-slate-800 dark:text-slate-200">{hospital.name}</span> — signs a license.lic for their own server.
+            <p className="text-xs text-ink-4 mt-1">
+              Tenant: <span className="font-semibold text-ink dark:text-slate-200">{hospital.name}</span> — signs a license.lic for their own server.
             </p>
           </div>
-          <button onClick={onClose} aria-label="Close" className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg p-1">✕</button>
+          <button onClick={onClose} aria-label="Close" className="text-slate-400 hover:text-ink-3 dark:hover:text-slate-200 text-lg p-1">✕</button>
         </div>
 
         <div className="flex-1 overflow-y-auto py-4 pr-1 space-y-5">
@@ -117,7 +117,7 @@ export function LicenseGeneratorModal({ hospital, onClose }: { hospital: SaaSHos
               />
             </div>
             <div className="md:col-span-2">
-              <label className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">
+              <label className="flex items-center gap-2 text-xs font-semibold text-ink-3 dark:text-slate-300 mb-1">
                 <input type="checkbox" checked={binding} onChange={(e) => setBinding(e.target.checked)} />
                 Bind to one machine (hardware binding)
               </label>
@@ -135,7 +135,7 @@ export function LicenseGeneratorModal({ hospital, onClose }: { hospital: SaaSHos
             <div>
               <label className={labelClass} htmlFor="lic-exp">Expires on</label>
               <input id="lic-exp" type="date" value={expiresOn} min={isoDate(new Date(Date.now() + DAY))} onChange={(e) => setExpiresOn(e.target.value)} className={inputClass} />
-              <span className="text-[11px] text-slate-500">{durationDays > 0 ? `${durationDays} days from today` : "Pick a future date"}</span>
+              <span className="text-[11px] text-ink-4">{durationDays > 0 ? `${durationDays} days from today` : "Pick a future date"}</span>
             </div>
             <div>
               <label className={labelClass} htmlFor="lic-grace">Grace period (days after expiry, before read-only)</label>
@@ -161,7 +161,7 @@ export function LicenseGeneratorModal({ hospital, onClose }: { hospital: SaaSHos
             <div className="text-sm font-bold mb-2">Licensed features</div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {LICENCE_FEATURES.map((f) => (
-                <label key={f.key} className={`flex items-center gap-2 rounded-lg border p-2.5 text-xs cursor-pointer ${features.includes(f.key) ? "border-teal-500 bg-teal-50/50 dark:bg-teal-950/20" : "border-slate-200 dark:border-slate-800"}`}>
+                <label key={f.key} className={`flex items-center gap-2 rounded-lg border p-2.5 text-xs cursor-pointer ${features.includes(f.key) ? "border-accent bg-accent-tint/50 dark:bg-teal-950/20" : "border-border dark:border-slate-800"}`}>
                   <input type="checkbox" checked={features.includes(f.key)} onChange={() => toggleFeature(f.key)} />
                   {f.label}
                 </label>
@@ -172,16 +172,16 @@ export function LicenseGeneratorModal({ hospital, onClose }: { hospital: SaaSHos
           <section>
             <div className="text-sm font-bold mb-2">Issued licenses</div>
             {history.isLoading ? (
-              <p className="text-xs text-slate-500">Loading…</p>
+              <p className="text-xs text-ink-4">Loading…</p>
             ) : !history.data?.results.length ? (
-              <p className="text-xs text-slate-500">None yet.</p>
+              <p className="text-xs text-ink-4">None yet.</p>
             ) : (
-              <div className="divide-y divide-slate-200 dark:divide-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl">
+              <div className="divide-y divide-border dark:divide-slate-800 border border-border dark:border-slate-800 rounded-xl">
                 {history.data.results.map((lic) => (
                   <div key={lic.id} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5 text-xs">
                     <div className="min-w-0">
                       <div className="font-mono font-semibold">{lic.license_id}</div>
-                      <div className="text-slate-500">
+                      <div className="text-ink-4">
                         {lic.issued_by_code && <>by {lic.issued_by_code}{lic.approved_by_code && lic.approved_by_code !== lic.issued_by_code ? `, approved ${lic.approved_by_code}` : ""} · </>}
                         until {new Date(lic.expires_at).toLocaleDateString()} · {lic.max_active_users || "∞"} users · {lic.max_beds || "∞"} beds ·{" "}
                         {lic.machine_fingerprint === "*" || lic.machine_fingerprint === "-" ? "any machine" : `${lic.machine_fingerprint.slice(0, 12)}…`} · {lic.features?.length ?? 0} features
@@ -210,12 +210,12 @@ export function LicenseGeneratorModal({ hospital, onClose }: { hospital: SaaSHos
           </section>
         </div>
 
-        <div className="flex items-center justify-between gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
+        <div className="flex items-center justify-between gap-3 pt-4 border-t border-border dark:border-slate-800">
           <span className="text-xs">
-            {generate.isError ? <span className="text-rose-600">{errorText(generate.error)}</span>
-              : issued ? <span className="text-emerald-600 font-semibold">{issued.license_id} issued and downloaded.</span>
-              : pending ? <span className="text-amber-600 font-semibold">Sent to a SaaS Owner for approval — track it under On-Premise Licences.</span>
-              : <span className="text-slate-500">The hospital uploads the file in Settings → License, or places it at ./license/hospital.lic.</span>}
+            {generate.isError ? <span className="text-danger-text">{errorText(generate.error)}</span>
+              : issued ? <span className="text-success font-semibold">{issued.license_id} issued and downloaded.</span>
+              : pending ? <span className="text-warning-text font-semibold">Sent to a SaaS Owner for approval — track it under On-Premise Licences.</span>
+              : <span className="text-ink-4">The hospital uploads the file in Settings → License, or places it at ./license/hospital.lic.</span>}
           </span>
           <div className="flex items-center gap-2">
             <input

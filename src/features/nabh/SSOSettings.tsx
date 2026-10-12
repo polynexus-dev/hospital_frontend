@@ -12,9 +12,9 @@ function SetupGuide() {
   useEffect(() => { api.get<any>("/sso-providers/setup/").then(setSetup).catch(() => setSetup(null)) }, [])
   if (!setup) return null
   return (
-    <section className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 space-y-3 text-sm">
+    <section className="rounded-xl border border-border dark:border-slate-700 bg-white dark:bg-slate-800 p-5 space-y-3 text-sm">
       <h2 className="text-lg font-bold">Set up single sign-on</h2>
-      <ol className="list-decimal pl-5 space-y-1.5 text-slate-600 dark:text-slate-300">
+      <ol className="list-decimal pl-5 space-y-1.5 text-ink-3 dark:text-slate-300">
         <li><b>Microsoft 365:</b> Entra ID › App registrations › New registration. Add a <i>Web</i> redirect URI (below), then create a client secret. Copy the Application (client) ID, the secret and the Directory (tenant) ID.</li>
         <li><b>Google Workspace:</b> Google Cloud console › APIs &amp; Services › Credentials › OAuth client ID (Web application). Add the redirect URI below; set the consent screen to <i>Internal</i>.</li>
         <li>Add the provider here with those values and your email domain, then press <b>Test</b>.</li>
@@ -22,12 +22,12 @@ function SetupGuide() {
         <li>Optional: turn on <b>Require single sign-on</b> in the Security policy tab. Owner and administrator roles keep password sign-in as a fallback.</li>
       </ol>
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs font-semibold text-slate-500">Redirect URI</span>
-        <code className="px-2 py-1 rounded bg-slate-100 dark:bg-slate-900 text-[12.5px]">{setup.redirect_uri}</code>
-        <button className="text-xs font-semibold text-emerald-700" onClick={() => { navigator.clipboard?.writeText(setup.redirect_uri); setCopied(true) }}>{copied ? "Copied" : "Copy"}</button>
-        <span className="text-xs text-slate-500">· scopes: {setup.scopes}</span>
+        <span className="text-xs font-semibold text-ink-4">Redirect URI</span>
+        <code className="px-2 py-1 rounded bg-chip-bg dark:bg-slate-900 text-[12.5px]">{setup.redirect_uri}</code>
+        <button className="text-xs font-semibold text-success-text" onClick={() => { navigator.clipboard?.writeText(setup.redirect_uri); setCopied(true) }}>{copied ? "Copied" : "Copy"}</button>
+        <span className="text-xs text-ink-4">· scopes: {setup.scopes}</span>
       </div>
-      {!setup.password_login && <div className="text-xs text-amber-700">Single sign-on is required: staff can't use passwords (owner/admin roles excepted).</div>}
+      {!setup.password_login && <div className="text-xs text-warning-text">Single sign-on is required: staff can't use passwords (owner/admin roles excepted).</div>}
     </section>
   )
 }

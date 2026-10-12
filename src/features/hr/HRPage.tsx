@@ -159,17 +159,17 @@ export function HRPage() {
     <div className="p-6 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+          <h1 className="text-2xl font-bold tracking-tight text-ink dark:text-slate-100">
             Human Resources (HR) & Staff Management
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-sm text-ink-4 dark:text-slate-400">
             Manage hospital staff directory, user account linkages, attendance, leave approvals, and shift rosters.
           </p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => setShowEmpModal(true)}
-            className="px-4 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-lg shadow-sm"
+            className="px-4 py-2 text-sm font-medium text-white bg-accent hover:bg-accent-hover rounded-lg shadow-sm"
           >
             + Register Staff
           </button>
@@ -177,13 +177,13 @@ export function HRPage() {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-slate-200 dark:border-slate-700 flex gap-4">
+      <div className="border-b border-border dark:border-slate-700 flex gap-4">
         <button
           onClick={() => setActiveTab("employees")}
           className={`pb-2 text-sm font-semibold border-b-2 transition-colors ${
             activeTab === "employees"
-              ? "border-teal-600 text-teal-600 dark:text-teal-400"
-              : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              ? "border-accent text-accent dark:text-teal-400"
+              : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
           Staff Directory ({employees.length})
@@ -192,8 +192,8 @@ export function HRPage() {
           onClick={() => setActiveTab("attendance")}
           className={`pb-2 text-sm font-semibold border-b-2 transition-colors ${
             activeTab === "attendance"
-              ? "border-teal-600 text-teal-600 dark:text-teal-400"
-              : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              ? "border-accent text-accent dark:text-teal-400"
+              : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
           Attendance ({attendance.length})
@@ -202,8 +202,8 @@ export function HRPage() {
           onClick={() => setActiveTab("leaves")}
           className={`pb-2 text-sm font-semibold border-b-2 transition-colors ${
             activeTab === "leaves"
-              ? "border-teal-600 text-teal-600 dark:text-teal-400"
-              : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              ? "border-accent text-accent dark:text-teal-400"
+              : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
           Leave Requests ({leaves.length})
@@ -212,8 +212,8 @@ export function HRPage() {
           onClick={() => setActiveTab("shifts")}
           className={`pb-2 text-sm font-semibold border-b-2 transition-colors ${
             activeTab === "shifts"
-              ? "border-teal-600 text-teal-600 dark:text-teal-400"
-              : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              ? "border-accent text-accent dark:text-teal-400"
+              : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
           Shift Roster ({shifts.length})
@@ -221,12 +221,12 @@ export function HRPage() {
       </div>
 
       {loading ? (
-        <div className="py-12 text-center text-slate-500">Loading HR records...</div>
+        <div className="py-12 text-center text-ink-4">Loading HR records...</div>
       ) : activeTab === "employees" ? (
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-hidden">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-xs font-semibold text-slate-500 uppercase">
+              <tr className="border-b border-border dark:border-slate-700 bg-page dark:bg-slate-900/50 text-xs font-semibold text-ink-4 uppercase">
                 <th className="px-4 py-3">Code</th>
                 <th className="px-4 py-3">Designation</th>
                 <th className="px-4 py-3">Employment Type</th>
@@ -235,34 +235,34 @@ export function HRPage() {
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+            <tbody className="divide-y divide-border dark:divide-slate-700">
               {employees.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan={6} className="px-4 py-8 text-center text-ink-4">
                     No employees registered.
                   </td>
                 </tr>
               ) : (
                 employees.map((e) => (
-                  <tr key={e.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
-                    <td className="px-4 py-3 font-bold text-teal-600 dark:text-teal-400">{e.employee_code}</td>
-                    <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">{e.designation}</td>
-                    <td className="px-4 py-3 capitalize text-xs font-semibold text-slate-600">{e.employment_type}</td>
+                  <tr key={e.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
+                    <td className="px-4 py-3 font-bold text-accent dark:text-teal-400">{e.employee_code}</td>
+                    <td className="px-4 py-3 font-medium text-ink dark:text-slate-100">{e.designation}</td>
+                    <td className="px-4 py-3 capitalize text-xs font-semibold text-ink-3">{e.employment_type}</td>
                     <td className="px-4 py-3">
                       {e.user_detail ? (
-                        <span className="text-xs text-green-700 dark:text-green-300 font-medium">
+                        <span className="text-xs text-success-text dark:text-green-300 font-medium">
                           {e.user_detail.first_name} ({e.user_detail.email})
                         </span>
                       ) : (
                         <span className="text-xs text-slate-400">Unlinked</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-slate-500">{e.date_of_joining}</td>
+                    <td className="px-4 py-3 text-ink-4">{e.date_of_joining}</td>
                     <td className="px-4 py-3 text-right">
                       {!e.user && (
                         <button
                           onClick={() => setSelectedEmp(e)}
-                          className="px-3 py-1 text-xs font-semibold bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-300 rounded hover:bg-teal-200"
+                          className="px-3 py-1 text-xs font-semibold bg-accent-tint text-accent-hover dark:bg-teal-900/40 dark:text-teal-300 rounded hover:bg-accent/25"
                         >
                           Link Account
                         </button>
@@ -279,33 +279,33 @@ export function HRPage() {
           <div className="flex justify-end">
             <button
               onClick={() => setShowAttModal(true)}
-              className="px-3 py-1.5 text-xs font-semibold bg-teal-600 text-white rounded hover:bg-teal-700"
+              className="px-3 py-1.5 text-xs font-semibold bg-accent text-white rounded hover:bg-accent-hover"
             >
               + Record Attendance
             </button>
           </div>
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-hidden">
             <table className="w-full text-left border-collapse text-sm">
               <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-xs font-semibold text-slate-500 uppercase">
+                <tr className="border-b border-border dark:border-slate-700 bg-page dark:bg-slate-900/50 text-xs font-semibold text-ink-4 uppercase">
                   <th className="px-4 py-3">Employee</th>
                   <th className="px-4 py-3">Date</th>
                   <th className="px-4 py-3">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+              <tbody className="divide-y divide-border dark:divide-slate-700">
                 {attendance.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="px-4 py-8 text-center text-slate-500">
+                    <td colSpan={3} className="px-4 py-8 text-center text-ink-4">
                       No attendance logs recorded.
                     </td>
                   </tr>
                 ) : (
                   attendance.map((a) => (
-                    <tr key={a.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
-                      <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">{a.employee_code}</td>
-                      <td className="px-4 py-3 text-slate-500">{a.date}</td>
-                      <td className="px-4 py-3 capitalize font-semibold text-teal-600">{a.status}</td>
+                    <tr key={a.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
+                      <td className="px-4 py-3 font-medium text-ink dark:text-slate-100">{a.employee_code}</td>
+                      <td className="px-4 py-3 text-ink-4">{a.date}</td>
+                      <td className="px-4 py-3 capitalize font-semibold text-accent">{a.status}</td>
                     </tr>
                   ))
                 )}
@@ -318,15 +318,15 @@ export function HRPage() {
           <div className="flex justify-end">
             <button
               onClick={() => setShowLeaveModal(true)}
-              className="px-3 py-1.5 text-xs font-semibold bg-teal-600 text-white rounded hover:bg-teal-700"
+              className="px-3 py-1.5 text-xs font-semibold bg-accent text-white rounded hover:bg-accent-hover"
             >
               + Apply Leave
             </button>
           </div>
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-hidden">
             <table className="w-full text-left border-collapse text-sm">
               <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-xs font-semibold text-slate-500 uppercase">
+                <tr className="border-b border-border dark:border-slate-700 bg-page dark:bg-slate-900/50 text-xs font-semibold text-ink-4 uppercase">
                   <th className="px-4 py-3">Employee</th>
                   <th className="px-4 py-3">Leave Type</th>
                   <th className="px-4 py-3">Dates</th>
@@ -334,34 +334,34 @@ export function HRPage() {
                   <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+              <tbody className="divide-y divide-border dark:divide-slate-700">
                 {leaves.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
+                    <td colSpan={5} className="px-4 py-8 text-center text-ink-4">
                       No leave requests.
                     </td>
                   </tr>
                 ) : (
                   leaves.map((l) => (
-                    <tr key={l.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
-                      <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">{l.employee_code}</td>
-                      <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{l.leave_type}</td>
-                      <td className="px-4 py-3 text-slate-500">
+                    <tr key={l.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
+                      <td className="px-4 py-3 font-medium text-ink dark:text-slate-100">{l.employee_code}</td>
+                      <td className="px-4 py-3 text-ink-2 dark:text-slate-300">{l.leave_type}</td>
+                      <td className="px-4 py-3 text-ink-4">
                         {l.start_date} to {l.end_date}
                       </td>
-                      <td className="px-4 py-3 capitalize font-semibold text-slate-800 dark:text-slate-200">{l.status}</td>
+                      <td className="px-4 py-3 capitalize font-semibold text-ink dark:text-slate-200">{l.status}</td>
                       <td className="px-4 py-3 text-right space-x-2">
                         {l.status === "pending" && (
                           <>
                             <button
                               onClick={() => handleApproveLeave(l.id)}
-                              className="px-2.5 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded hover:bg-green-200"
+                              className="px-2.5 py-1 text-xs font-semibold bg-success-bg text-success-text rounded hover:bg-success/25"
                             >
                               Approve
                             </button>
                             <button
                               onClick={() => handleRejectLeave(l.id)}
-                              className="px-2.5 py-1 text-xs font-semibold bg-red-100 text-red-800 rounded hover:bg-red-200"
+                              className="px-2.5 py-1 text-xs font-semibold bg-danger-bg text-danger-text rounded hover:bg-danger-border"
                             >
                               Reject
                             </button>
@@ -380,33 +380,33 @@ export function HRPage() {
           <div className="flex justify-end">
             <button
               onClick={() => setShowShiftModal(true)}
-              className="px-3 py-1.5 text-xs font-semibold bg-teal-600 text-white rounded hover:bg-teal-700"
+              className="px-3 py-1.5 text-xs font-semibold bg-accent text-white rounded hover:bg-accent-hover"
             >
               + Assign Shift
             </button>
           </div>
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-hidden">
             <table className="w-full text-left border-collapse text-sm">
               <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-xs font-semibold text-slate-500 uppercase">
+                <tr className="border-b border-border dark:border-slate-700 bg-page dark:bg-slate-900/50 text-xs font-semibold text-ink-4 uppercase">
                   <th className="px-4 py-3">Employee</th>
                   <th className="px-4 py-3">Shift Date</th>
                   <th className="px-4 py-3">Shift Type</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+              <tbody className="divide-y divide-border dark:divide-slate-700">
                 {shifts.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="px-4 py-8 text-center text-slate-500">
+                    <td colSpan={3} className="px-4 py-8 text-center text-ink-4">
                       No shift assignments.
                     </td>
                   </tr>
                 ) : (
                   shifts.map((s) => (
-                    <tr key={s.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
-                      <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">{s.employee_code}</td>
-                      <td className="px-4 py-3 text-slate-500">{s.shift_date}</td>
-                      <td className="px-4 py-3 capitalize font-semibold text-teal-600">{s.shift_type}</td>
+                    <tr key={s.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
+                      <td className="px-4 py-3 font-medium text-ink dark:text-slate-100">{s.employee_code}</td>
+                      <td className="px-4 py-3 text-ink-4">{s.shift_date}</td>
+                      <td className="px-4 py-3 capitalize font-semibold text-accent">{s.shift_type}</td>
                     </tr>
                   ))
                 )}
@@ -420,10 +420,10 @@ export function HRPage() {
       {showEmpModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-800 max-w-md w-full rounded-xl p-6 space-y-4">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Register Staff Member</h2>
+            <h2 className="text-lg font-bold text-ink dark:text-slate-100">Register Staff Member</h2>
             <form onSubmit={handleCreateEmployee} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Employee Code</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Employee Code</label>
                 <input
                   type="text"
                   required
@@ -434,7 +434,7 @@ export function HRPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Designation</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Designation</label>
                 <input
                   type="text"
                   required
@@ -445,7 +445,7 @@ export function HRPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Employment Type</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Employment Type</label>
                 <select
                   value={empType}
                   onChange={(e) => setEmpType(e.target.value as any)}
@@ -457,10 +457,10 @@ export function HRPage() {
                 </select>
               </div>
               <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setShowEmpModal(false)} className="px-4 py-2 text-sm text-slate-500">
+                <button type="button" onClick={() => setShowEmpModal(false)} className="px-4 py-2 text-sm text-ink-4">
                   Cancel
                 </button>
-                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg">
+                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-accent rounded-lg">
                   Save Staff Member
                 </button>
               </div>
@@ -473,10 +473,10 @@ export function HRPage() {
       {selectedEmp && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-800 max-w-md w-full rounded-xl p-6 space-y-4">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Link User Account</h2>
+            <h2 className="text-lg font-bold text-ink dark:text-slate-100">Link User Account</h2>
             <form onSubmit={handleLinkUser} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Target User ID</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Target User ID</label>
                 <input
                   type="number"
                   required
@@ -487,10 +487,10 @@ export function HRPage() {
                 />
               </div>
               <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setSelectedEmp(null)} className="px-4 py-2 text-sm text-slate-500">
+                <button type="button" onClick={() => setSelectedEmp(null)} className="px-4 py-2 text-sm text-ink-4">
                   Cancel
                 </button>
-                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg">
+                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-accent rounded-lg">
                   Link Account
                 </button>
               </div>
@@ -503,10 +503,10 @@ export function HRPage() {
       {showAttModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-800 max-w-md w-full rounded-xl p-6 space-y-4">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Record Attendance</h2>
+            <h2 className="text-lg font-bold text-ink dark:text-slate-100">Record Attendance</h2>
             <form onSubmit={handleCreateAttendance} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Employee ID</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Employee ID</label>
                 <input
                   type="number"
                   required
@@ -516,7 +516,7 @@ export function HRPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Status</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Status</label>
                 <select
                   value={attStatus}
                   onChange={(e) => setAttStatus(e.target.value as any)}
@@ -529,10 +529,10 @@ export function HRPage() {
                 </select>
               </div>
               <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setShowAttModal(false)} className="px-4 py-2 text-sm text-slate-500">
+                <button type="button" onClick={() => setShowAttModal(false)} className="px-4 py-2 text-sm text-ink-4">
                   Cancel
                 </button>
-                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg">
+                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-accent rounded-lg">
                   Save Attendance
                 </button>
               </div>
@@ -545,10 +545,10 @@ export function HRPage() {
       {showLeaveModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-800 max-w-md w-full rounded-xl p-6 space-y-4">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Apply Leave Request</h2>
+            <h2 className="text-lg font-bold text-ink dark:text-slate-100">Apply Leave Request</h2>
             <form onSubmit={handleCreateLeave} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Employee ID</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Employee ID</label>
                 <input
                   type="number"
                   required
@@ -558,7 +558,7 @@ export function HRPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Leave Type</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Leave Type</label>
                 <input
                   type="text"
                   required
@@ -569,7 +569,7 @@ export function HRPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Start Date</label>
+                  <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Start Date</label>
                   <input
                     type="date"
                     required
@@ -579,7 +579,7 @@ export function HRPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">End Date</label>
+                  <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">End Date</label>
                   <input
                     type="date"
                     required
@@ -590,10 +590,10 @@ export function HRPage() {
                 </div>
               </div>
               <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setShowLeaveModal(false)} className="px-4 py-2 text-sm text-slate-500">
+                <button type="button" onClick={() => setShowLeaveModal(false)} className="px-4 py-2 text-sm text-ink-4">
                   Cancel
                 </button>
-                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg">
+                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-accent rounded-lg">
                   Submit Leave Request
                 </button>
               </div>
@@ -606,10 +606,10 @@ export function HRPage() {
       {showShiftModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-800 max-w-md w-full rounded-xl p-6 space-y-4">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Assign Shift</h2>
+            <h2 className="text-lg font-bold text-ink dark:text-slate-100">Assign Shift</h2>
             <form onSubmit={handleCreateShift} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Employee ID</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Employee ID</label>
                 <input
                   type="number"
                   required
@@ -620,7 +620,7 @@ export function HRPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Shift Date</label>
+                  <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Shift Date</label>
                   <input
                     type="date"
                     required
@@ -630,7 +630,7 @@ export function HRPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Shift Type</label>
+                  <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Shift Type</label>
                   <select
                     value={shiftType}
                     onChange={(e) => setShiftType(e.target.value as any)}
@@ -643,10 +643,10 @@ export function HRPage() {
                 </div>
               </div>
               <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setShowShiftModal(false)} className="px-4 py-2 text-sm text-slate-500">
+                <button type="button" onClick={() => setShowShiftModal(false)} className="px-4 py-2 text-sm text-ink-4">
                   Cancel
                 </button>
-                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg">
+                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-accent rounded-lg">
                   Assign Shift
                 </button>
               </div>

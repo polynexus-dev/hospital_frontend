@@ -91,13 +91,13 @@ export function EmergencyPage() {
   const getTriageBadge = (cat?: string) => {
     switch (cat) {
       case "1_resuscitation":
-        return <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-red-600 text-white animate-pulse">Cat 1 - Resuscitation</span>
+        return <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-danger text-white animate-pulse">Cat 1 - Resuscitation</span>
       case "2_emergent":
-        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-orange-500 text-white">Cat 2 - Emergent</span>
+        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-warning text-white">Cat 2 - Emergent</span>
       case "3_urgent":
-        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-yellow-500 text-slate-900">Cat 3 - Urgent</span>
+        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-warning text-ink">Cat 3 - Urgent</span>
       case "4_less_urgent":
-        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-500 text-white">Cat 4 - Less Urgent</span>
+        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-brand text-white">Cat 4 - Less Urgent</span>
       default:
         return <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-slate-600 text-white">Cat 5 - Non-Urgent</span>
     }
@@ -107,35 +107,35 @@ export function EmergencyPage() {
     <div className="p-6 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+          <h1 className="text-2xl font-bold tracking-tight text-ink dark:text-slate-100">
             Emergency Department (ED) & Triage
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-sm text-ink-4 dark:text-slate-400">
             Manage incoming emergency patient triage, vital assessments, and IPD transfers.
           </p>
         </div>
         <button
           onClick={() => setShowNewVisitModal(true)}
-          className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-sm transition-colors"
+          className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-danger hover:bg-danger rounded-lg shadow-sm transition-colors"
         >
           + Register ED Walk-in
         </button>
       </div>
 
       {error && (
-        <div className="p-4 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-900/30 dark:text-red-300">
+        <div className="p-4 text-sm text-danger-text bg-danger-bg rounded-lg dark:bg-red-900/30 dark:text-red-300">
           {error}
         </div>
       )}
 
       {loading ? (
-        <div className="py-12 text-center text-slate-500">Loading ED visits...</div>
+        <div className="py-12 text-center text-ink-4">Loading ED visits...</div>
       ) : (
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                <tr className="border-b border-border dark:border-slate-700 bg-page dark:bg-slate-900/50 text-xs font-semibold text-ink-4 uppercase tracking-wider">
                   <th className="px-4 py-3">Patient</th>
                   <th className="px-4 py-3">Arrived At</th>
                   <th className="px-4 py-3">Chief Complaint</th>
@@ -144,36 +144,36 @@ export function EmergencyPage() {
                   <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-700 text-sm">
+              <tbody className="divide-y divide-border dark:divide-slate-700 text-sm">
                 {visits.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
+                    <td colSpan={6} className="px-4 py-8 text-center text-ink-4">
                       No active emergency visits recorded.
                     </td>
                   </tr>
                 ) : (
                   visits.map((v) => (
-                    <tr key={v.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/50 transition-colors">
-                      <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">
+                    <tr key={v.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50 transition-colors">
+                      <td className="px-4 py-3 font-medium text-ink dark:text-slate-100">
                         {v.patient_detail ? `${v.patient_detail.first_name} ${v.patient_detail.last_name}` : `Patient #${v.patient}`}
                       </td>
-                      <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
+                      <td className="px-4 py-3 text-ink-3 dark:text-slate-300">
                         {new Date(v.arrived_at).toLocaleString()}
                       </td>
-                      <td className="px-4 py-3 text-slate-700 dark:text-slate-200 max-w-xs truncate">
+                      <td className="px-4 py-3 text-ink-2 dark:text-slate-200 max-w-xs truncate">
                         {v.chief_complaint}
                       </td>
                       <td className="px-4 py-3">
-                        {v.triage ? getTriageBadge(v.triage.triage_category) : <span className="text-xs text-amber-600 font-medium">Pending Triage</span>}
+                        {v.triage ? getTriageBadge(v.triage.triage_category) : <span className="text-xs text-warning-text font-medium">Pending Triage</span>}
                       </td>
-                      <td className="px-4 py-3 capitalize font-medium text-slate-800 dark:text-slate-200">
+                      <td className="px-4 py-3 capitalize font-medium text-ink dark:text-slate-200">
                         {v.status.replace("_", " ")}
                       </td>
                       <td className="px-4 py-3 text-right space-x-2">
                         {!v.triage && (
                           <button
                             onClick={() => setSelectedVisit(v)}
-                            className="text-xs font-semibold px-2.5 py-1 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 rounded hover:bg-amber-200"
+                            className="text-xs font-semibold px-2.5 py-1 bg-warning-bg text-warning-text dark:bg-amber-900/40 dark:text-amber-300 rounded hover:bg-warning/30"
                           >
                             + Triage
                           </button>
@@ -184,7 +184,7 @@ export function EmergencyPage() {
                               setSelectedVisit(v)
                               setShowAdmitModal(true)
                             }}
-                            className="text-xs font-semibold px-2.5 py-1 bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300 rounded hover:bg-indigo-200"
+                            className="text-xs font-semibold px-2.5 py-1 bg-brand-tint text-brand-dark dark:bg-indigo-900/40 dark:text-indigo-300 rounded hover:bg-brand-border"
                           >
                             Admit to IPD
                           </button>
@@ -202,28 +202,28 @@ export function EmergencyPage() {
       {/* New Visit Modal */}
       {showNewVisitModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-800 max-w-md w-full rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 p-6 space-y-4">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Register ED Patient</h2>
+          <div className="bg-white dark:bg-slate-800 max-w-md w-full rounded-xl shadow-xl border border-border dark:border-slate-700 p-6 space-y-4">
+            <h2 className="text-lg font-bold text-ink dark:text-slate-100">Register ED Patient</h2>
             <form onSubmit={handleCreateVisit} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Patient ID</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Patient ID</label>
                 <input
                   type="number"
                   required
                   value={patientId}
                   onChange={(e) => setPatientId(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border rounded-lg dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100"
+                  className="w-full px-3 py-2 text-sm border rounded-lg dark:bg-slate-900 border-border-strong dark:border-slate-700 text-ink dark:text-slate-100"
                   placeholder="Enter patient numeric ID"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Chief Complaint</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Chief Complaint</label>
                 <textarea
                   required
                   rows={3}
                   value={chiefComplaint}
                   onChange={(e) => setChiefComplaint(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border rounded-lg dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100"
+                  className="w-full px-3 py-2 text-sm border rounded-lg dark:bg-slate-900 border-border-strong dark:border-slate-700 text-ink dark:text-slate-100"
                   placeholder="Describe patient emergency symptoms..."
                 />
               </div>
@@ -231,13 +231,13 @@ export function EmergencyPage() {
                 <button
                   type="button"
                   onClick={() => setShowNewVisitModal(false)}
-                  className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 dark:text-slate-400"
+                  className="px-4 py-2 text-sm text-ink-3 hover:text-ink dark:text-slate-400"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg"
+                  className="px-4 py-2 text-sm font-medium text-white bg-danger hover:bg-danger rounded-lg"
                 >
                   Create ED Visit
                 </button>
@@ -250,15 +250,15 @@ export function EmergencyPage() {
       {/* Triage Modal */}
       {selectedVisit && !showAdmitModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-800 max-w-md w-full rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 p-6 space-y-4">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Perform Emergency Triage</h2>
+          <div className="bg-white dark:bg-slate-800 max-w-md w-full rounded-xl shadow-xl border border-border dark:border-slate-700 p-6 space-y-4">
+            <h2 className="text-lg font-bold text-ink dark:text-slate-100">Perform Emergency Triage</h2>
             <form onSubmit={handleCreateTriage} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Triage Category</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Triage Category</label>
                 <select
                   value={triageCategory}
                   onChange={(e) => setTriageCategory(e.target.value as any)}
-                  className="w-full px-3 py-2 text-sm border rounded-lg dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100"
+                  className="w-full px-3 py-2 text-sm border rounded-lg dark:bg-slate-900 border-border-strong dark:border-slate-700 text-ink dark:text-slate-100"
                 >
                   <option value="1_resuscitation">Category 1 - Resuscitation (Immediate)</option>
                   <option value="2_emergent">Category 2 - Emergent (Within 10 mins)</option>
@@ -268,12 +268,12 @@ export function EmergencyPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Vitals Summary</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Vitals Summary</label>
                 <input
                   type="text"
                   value={vitalsSummary}
                   onChange={(e) => setVitalsSummary(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border rounded-lg dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100"
+                  className="w-full px-3 py-2 text-sm border rounded-lg dark:bg-slate-900 border-border-strong dark:border-slate-700 text-ink dark:text-slate-100"
                   placeholder="BP, Pulse, SpO2, Temp"
                 />
               </div>
@@ -281,13 +281,13 @@ export function EmergencyPage() {
                 <button
                   type="button"
                   onClick={() => setSelectedVisit(null)}
-                  className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 dark:text-slate-400"
+                  className="px-4 py-2 text-sm text-ink-3 hover:text-ink dark:text-slate-400"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-lg"
+                  className="px-4 py-2 text-sm font-medium text-white bg-warning hover:bg-warning-text rounded-lg"
                 >
                   Save Triage
                 </button>
@@ -300,28 +300,28 @@ export function EmergencyPage() {
       {/* Admit Modal */}
       {selectedVisit && showAdmitModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-800 max-w-md w-full rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 p-6 space-y-4">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Admit ED Patient to IPD Bed</h2>
+          <div className="bg-white dark:bg-slate-800 max-w-md w-full rounded-xl shadow-xl border border-border dark:border-slate-700 p-6 space-y-4">
+            <h2 className="text-lg font-bold text-ink dark:text-slate-100">Admit ED Patient to IPD Bed</h2>
             <form onSubmit={handleAdmitToIPD} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Admitting Doctor ID</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Admitting Doctor ID</label>
                 <input
                   type="number"
                   required
                   value={admitDoctorId}
                   onChange={(e) => setAdmitDoctorId(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border rounded-lg dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100"
+                  className="w-full px-3 py-2 text-sm border rounded-lg dark:bg-slate-900 border-border-strong dark:border-slate-700 text-ink dark:text-slate-100"
                   placeholder="Doctor ID"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Target Bed ID</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Target Bed ID</label>
                 <input
                   type="number"
                   required
                   value={admitBedId}
                   onChange={(e) => setAdmitBedId(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border rounded-lg dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100"
+                  className="w-full px-3 py-2 text-sm border rounded-lg dark:bg-slate-900 border-border-strong dark:border-slate-700 text-ink dark:text-slate-100"
                   placeholder="Bed ID"
                 />
               </div>
@@ -332,13 +332,13 @@ export function EmergencyPage() {
                     setShowAdmitModal(false)
                     setSelectedVisit(null)
                   }}
-                  className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 dark:text-slate-400"
+                  className="px-4 py-2 text-sm text-ink-3 hover:text-ink dark:text-slate-400"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg"
+                  className="px-4 py-2 text-sm font-medium text-white bg-brand hover:bg-brand-dark rounded-lg"
                 >
                   Confirm IPD Admission
                 </button>

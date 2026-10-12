@@ -1085,7 +1085,7 @@ export function AnatomyExplorerPage() {
           {/* Toggle Sidebar Button */}
           <button
             onClick={() => setIsSidebarOpen((v) => !v)}
-            className="px-2.5 py-1 rounded-control border text-xs font-medium transition-colors bg-surface border-border text-ink-2 hover:bg-slate-50 flex items-center gap-1.5"
+            className="px-2.5 py-1 rounded-control border text-xs font-medium transition-colors bg-surface border-border text-ink-2 hover:bg-page flex items-center gap-1.5"
             title={isSidebarOpen ? "Hide Body Parts List" : "Show Body Parts List"}
           >
             <span>{isSidebarOpen ? "◀" : "▶"}</span>
@@ -1093,7 +1093,7 @@ export function AnatomyExplorerPage() {
           </button>
 
           {/* Model Selection Dropdown (public/models + custom 3D file loader) */}
-          <div className="flex items-center gap-1 bg-slate-100/90 p-0.5 rounded-control border border-border">
+          <div className="flex items-center gap-1 bg-chip-bg/90 p-0.5 rounded-control border border-border">
             <span className="text-[11px] font-semibold text-ink-3 pl-2 pr-0.5 flex items-center gap-1">
               <span>🧬</span>
               <span className="hidden sm:inline">Model:</span>
@@ -1135,8 +1135,8 @@ export function AnatomyExplorerPage() {
             onClick={() => setIsPerformanceMode((v) => !v)}
             className={`px-2.5 py-1 rounded-control border text-xs font-medium transition-colors flex items-center gap-1 ${
               isPerformanceMode
-                ? "bg-emerald-50 text-emerald-800 border-emerald-300 font-semibold shadow-xs"
-                : "bg-surface border-border text-ink-3 hover:bg-slate-50"
+                ? "bg-success-bg text-success-text border-success/25 font-semibold shadow-xs"
+                : "bg-surface border-border text-ink-3 hover:bg-page"
             }`}
             title={
               isPerformanceMode
@@ -1148,11 +1148,11 @@ export function AnatomyExplorerPage() {
           </button>
 
           {/* X-Ray Model Switch (Changes ONLY 3D model, not the UI colors!) */}
-          <div className="flex items-center p-0.5 rounded-control border text-xs bg-slate-100 border-slate-200">
+          <div className="flex items-center p-0.5 rounded-control border text-xs bg-chip-bg border-border">
             <button
               onClick={() => setIsXRayMode(false)}
               className={`px-2.5 py-1 rounded transition-all font-medium ${
-                !isXRayMode ? "bg-white text-slate-900 shadow-xs font-semibold" : "text-slate-600 hover:text-slate-900"
+                !isXRayMode ? "bg-white text-ink shadow-xs font-semibold" : "text-ink-3 hover:text-ink"
               }`}
             >
               Natural
@@ -1160,7 +1160,7 @@ export function AnatomyExplorerPage() {
             <button
               onClick={() => setIsXRayMode(true)}
               className={`px-2.5 py-1 rounded transition-all font-medium ${
-                isXRayMode ? "bg-brand text-white shadow-xs font-semibold" : "text-slate-600 hover:text-slate-900"
+                isXRayMode ? "bg-brand text-white shadow-xs font-semibold" : "text-ink-3 hover:text-ink"
               }`}
             >
               ⚡ X-Ray Model
@@ -1168,7 +1168,7 @@ export function AnatomyExplorerPage() {
           </div>
 
           {/* Quick Angle Viewers (View from any angle) */}
-          <div className="hidden md:flex items-center p-0.5 rounded-control border text-xs bg-slate-100 border-slate-200">
+          <div className="hidden md:flex items-center p-0.5 rounded-control border text-xs bg-chip-bg border-border">
             <button
               onClick={() => handleSetViewAngle("front")}
               className="px-2 py-1 text-xs hover:bg-white rounded transition-colors"
@@ -1205,7 +1205,7 @@ export function AnatomyExplorerPage() {
             className={`px-2.5 py-1 rounded-control border text-xs font-medium transition-colors ${
               autoRotate
                 ? "bg-brand text-white border-brand shadow-xs"
-                : "bg-surface border-border text-ink-2 hover:bg-slate-50"
+                : "bg-surface border-border text-ink-2 hover:bg-page"
             }`}
           >
             {autoRotate ? "Auto-Rotate: On" : "Auto-Rotate"}
@@ -1230,7 +1230,7 @@ export function AnatomyExplorerPage() {
           }`}
         >
           {/* Search Bar */}
-          <div className="p-2.5 border-b border-border bg-slate-50/50">
+          <div className="p-2.5 border-b border-border bg-page/50">
             <div className="relative">
               <input
                 type="text"
@@ -1240,7 +1240,7 @@ export function AnatomyExplorerPage() {
                 className="w-full border rounded-control py-1.5 pl-7 pr-3 text-xs bg-white border-border text-ink placeholder:text-ink-4 focus:outline-none focus:border-brand transition-all"
               />
               <svg
-                className="w-3.5 h-3.5 text-slate-400 absolute left-2 top-2 pointer-events-none"
+                className="w-3.5 h-3.5 text-ink-5 absolute left-2 top-2 pointer-events-none"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -1250,7 +1250,7 @@ export function AnatomyExplorerPage() {
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-2 top-1.5 text-slate-400 hover:text-slate-600 text-xs"
+                  className="absolute right-2 top-1.5 text-ink-5 hover:text-ink-3 text-xs"
                 >
                   ✕
                 </button>
@@ -1259,11 +1259,11 @@ export function AnatomyExplorerPage() {
           </div>
 
           {/* List Count Header */}
-          <div className="px-3 py-1.5 border-b text-[11px] font-medium flex items-center justify-between bg-slate-100/60 border-border text-ink-3">
+          <div className="px-3 py-1.5 border-b text-[11px] font-medium flex items-center justify-between bg-chip-bg/60 border-border text-ink-3">
             <span>Body Parts ({filteredParts.length})</span>
             <button
               onClick={() => setIsSidebarOpen(false)}
-              className="w-4 h-4 rounded hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-800 text-[10px]"
+              className="w-4 h-4 rounded hover:bg-border-soft flex items-center justify-center text-ink-4 hover:text-ink text-[10px]"
               title="Hide body parts list"
             >
               ◀
@@ -1281,7 +1281,7 @@ export function AnatomyExplorerPage() {
                   className={`px-3 py-2 rounded-control border text-left cursor-pointer transition-all ${
                     isSelected
                       ? "bg-brand-tint border-brand-border shadow-xs text-brand font-semibold"
-                      : "bg-surface border-border-soft hover:bg-slate-50 hover:border-border text-ink-2"
+                      : "bg-surface border-border-soft hover:bg-page hover:border-border text-ink-2"
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -1295,7 +1295,7 @@ export function AnatomyExplorerPage() {
             })}
 
             {filteredParts.length === 0 && (
-              <div className="text-center py-8 text-slate-400 text-xs">
+              <div className="text-center py-8 text-ink-5 text-xs">
                 No body part found matching "{searchQuery}"
               </div>
             )}
@@ -1304,7 +1304,7 @@ export function AnatomyExplorerPage() {
 
         {/* 3D CENTER VIEWPORT: Real Streaming Loading Bar + Background Worker */}
         <main
-          className="flex-1 relative overflow-hidden flex flex-col cursor-grab active:cursor-grabbing select-none bg-slate-50"
+          className="flex-1 relative overflow-hidden flex flex-col cursor-grab active:cursor-grabbing select-none bg-page"
           onDoubleClick={() => setShowCard((v) => !v)}
           title="Double-click to toggle anatomical info card"
         >
@@ -1320,28 +1320,28 @@ export function AnatomyExplorerPage() {
               </div>
 
               {/* Title & Live Status */}
-              <div className="text-sm font-semibold text-slate-900 mb-1">
+              <div className="text-sm font-semibold text-ink mb-1">
                 Loading 3D Skeletal Anatomy
               </div>
-              <div className="text-xs text-slate-500 mb-3 max-w-sm font-medium">
+              <div className="text-xs text-ink-4 mb-3 max-w-sm font-medium">
                 {loadStatusMessage}
               </div>
 
               {/* Real-time Dynamic Progress Bar (No laggy CSS transitions) */}
-              <div className="w-64 bg-slate-200 rounded-full h-2 overflow-hidden shadow-inner p-0.5 border border-slate-200">
+              <div className="w-64 bg-border-soft rounded-full h-2 overflow-hidden shadow-inner p-0.5 border border-border">
                 <div
                   className={`h-full rounded-full transition-all duration-75 ${
-                    loadStage === "parsing" ? "bg-cyan-600 animate-pulse" : "bg-brand"
+                    loadStage === "parsing" ? "bg-accent animate-pulse" : "bg-brand"
                   }`}
                   style={{ width: `${Math.max(loadPercent, 3)}%` }}
                 />
               </div>
 
               {/* Live Bytes Loaded vs Total */}
-              <div className="flex items-center gap-3 mt-2 text-[11px] font-mono text-slate-600">
+              <div className="flex items-center gap-3 mt-2 text-[11px] font-mono text-ink-3">
                 <span>{loadBytesDetail || `${loadPercent}% completed`}</span>
                 {loadStage === "parsing" && (
-                  <span className="text-cyan-700 font-sans font-semibold text-[10.5px]">
+                  <span className="text-accent-hover font-sans font-semibold text-[10.5px]">
                     · Finalizing Mesh
                   </span>
                 )}
@@ -1409,13 +1409,13 @@ export function AnatomyExplorerPage() {
           {/* CORNER DETAIL CARD: Elevated at bottom-24 */}
           {showCard && !isLoading && (
             <div
-              className="absolute bottom-24 right-4 z-20 w-84 rounded-card shadow-xl p-3.5 border transition-all duration-200 bg-white/95 backdrop-blur border-red-500/40 text-slate-900"
+              className="absolute bottom-24 right-4 z-20 w-84 rounded-card shadow-xl p-3.5 border transition-all duration-200 bg-white/95 backdrop-blur border-danger/40 text-ink"
             >
               {/* Close Button & Header */}
-              <div className="flex items-start justify-between border-b pb-1.5 mb-2 border-slate-200/80">
+              <div className="flex items-start justify-between border-b pb-1.5 mb-2 border-border/80">
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-bold tracking-wider uppercase text-red-600">
+                    <span className="text-[10px] font-bold tracking-wider uppercase text-danger-text">
                       {selectedPart.shortLabel}
                     </span>
                     <span className="text-[10px] opacity-60 font-mono">
@@ -1435,7 +1435,7 @@ export function AnatomyExplorerPage() {
                     e.stopPropagation()
                     setShowCard(false)
                   }}
-                  className="w-5 h-5 rounded hover:bg-slate-200 flex items-center justify-center text-xs opacity-60 hover:opacity-100 transition-colors"
+                  className="w-5 h-5 rounded hover:bg-border-soft flex items-center justify-center text-xs opacity-60 hover:opacity-100 transition-colors"
                   title="Close card (or double-click anywhere on 3D)"
                 >
                   ✕
@@ -1451,7 +1451,7 @@ export function AnatomyExplorerPage() {
                   {selectedPart.keyBones.slice(0, 6).map((b, idx) => (
                     <span
                       key={idx}
-                      className="px-1.5 py-0.2 rounded text-[10px] border bg-slate-100 border-slate-200 text-slate-700"
+                      className="px-1.5 py-0.2 rounded text-[10px] border bg-chip-bg border-border text-ink-2"
                     >
                       {b}
                     </span>
@@ -1490,7 +1490,7 @@ export function AnatomyExplorerPage() {
               </div>
 
               {/* Subtle Double Click hint */}
-              <div className="mt-2 pt-1.5 border-t border-slate-200/60 text-[9.5px] opacity-50 flex items-center justify-between">
+              <div className="mt-2 pt-1.5 border-t border-border/60 text-[9.5px] opacity-50 flex items-center justify-between">
                 <span>💡 Tip: Double-click 3D viewport to hide/show</span>
                 <span>360° Free Rotate</span>
               </div>
@@ -1501,7 +1501,7 @@ export function AnatomyExplorerPage() {
           {!showCard && !isLoading && (
             <button
               onClick={() => setShowCard(true)}
-              className="absolute bottom-24 right-4 z-20 px-3 py-1.5 rounded-control text-xs font-medium shadow-md transition-all flex items-center gap-1.5 bg-white/95 text-slate-800 border border-slate-300 hover:bg-slate-50"
+              className="absolute bottom-24 right-4 z-20 px-3 py-1.5 rounded-control text-xs font-medium shadow-md transition-all flex items-center gap-1.5 bg-white/95 text-ink border border-border-strong hover:bg-page"
             >
               <span>ℹ️</span> Show {selectedPart.shortLabel} Details (or Double-Click)
             </button>

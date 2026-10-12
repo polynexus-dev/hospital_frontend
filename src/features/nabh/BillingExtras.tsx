@@ -5,7 +5,7 @@ import { col, opts } from "./fields"
 
 // Automatic bed / room-rent billing and doctor payouts (revenue share).
 
-const inputCls = "w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900"
+const inputCls = "w-full px-3 py-2 text-sm border border-border-strong dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900"
 const today = () => new Date().toISOString().slice(0, 10)
 const monthStart = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth() - 1, 1).toISOString().slice(0, 10) }
 const monthEnd = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 0).toISOString().slice(0, 10) }
@@ -28,44 +28,44 @@ function BedPolicyCard() {
       setError(extractApiError(e))
     }
   }
-  if (!policy) return error ? <div className="text-sm text-rose-700">{error}</div> : null
+  if (!policy) return error ? <div className="text-sm text-danger-text">{error}</div> : null
   return (
-    <section className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 space-y-4">
+    <section className="bg-white dark:bg-slate-800 rounded-xl border border-border dark:border-slate-700 p-5 space-y-4">
       <div>
         <h2 className="text-lg font-bold">How bed-days are counted</h2>
-        <p className="text-sm text-slate-500">Charges are posted to the patient's running bill every night, at discharge and when an interim bill is made. Re-posting never double-charges.</p>
+        <p className="text-sm text-ink-4">Charges are posted to the patient's running bill every night, at discharge and when an interim bill is made. Re-posting never double-charges.</p>
       </div>
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <label className="text-xs font-semibold text-slate-600">Day counting
+        <label className="text-xs font-semibold text-ink-3">Day counting
           <select className={`${inputCls} mt-1`} value={policy.cycle} onChange={(e) => setPolicy({ ...policy, cycle: e.target.value })}>
             <option value="24h">24-hour cycle from admission</option>
             <option value="calendar_day">Calendar day</option>
           </select>
         </label>
         {policy.cycle === "24h" ? (
-          <label className="text-xs font-semibold text-slate-600">Grace hours before a new day
+          <label className="text-xs font-semibold text-ink-3">Grace hours before a new day
             <input type="number" min={0} max={23} className={`${inputCls} mt-1`} value={policy.grace_hours} onChange={(e) => setPolicy({ ...policy, grace_hours: Number(e.target.value) })} />
           </label>
         ) : (
-          <label className="text-xs font-semibold text-slate-600">Checkout hour (discharge after it = extra day)
+          <label className="text-xs font-semibold text-ink-3">Checkout hour (discharge after it = extra day)
             <input type="number" min={0} max={23} className={`${inputCls} mt-1`} value={policy.checkout_hour} onChange={(e) => setPolicy({ ...policy, checkout_hour: Number(e.target.value) })} />
           </label>
         )}
-        <label className="text-xs font-semibold text-slate-600">On a transfer day, charge
+        <label className="text-xs font-semibold text-ink-3">On a transfer day, charge
           <select className={`${inputCls} mt-1`} value={policy.transfer_day_rule} onChange={(e) => setPolicy({ ...policy, transfer_day_rule: e.target.value })}>
             <option value="higher">the higher-rate bed</option>
             <option value="longest">the bed occupied longest</option>
           </select>
         </label>
-        <label className="text-xs font-semibold text-slate-600 flex items-end gap-2 pb-2">
+        <label className="text-xs font-semibold text-ink-3 flex items-end gap-2 pb-2">
           <input type="checkbox" checked={policy.auto_post} onChange={(e) => setPolicy({ ...policy, auto_post: e.target.checked })} />
           Post automatically
         </label>
       </div>
       <div className="flex items-center gap-3">
-        <button onClick={save} className="px-4 py-2 text-sm font-semibold rounded-lg bg-emerald-600 text-white">Save policy</button>
-        {notice && <span className="text-sm text-emerald-700">{notice}</span>}
-        {error && <span className="text-sm text-rose-700">{error}</span>}
+        <button onClick={save} className="px-4 py-2 text-sm font-semibold rounded-lg bg-success text-white">Save policy</button>
+        {notice && <span className="text-sm text-success-text">{notice}</span>}
+        {error && <span className="text-sm text-danger-text">{error}</span>}
       </div>
     </section>
   )
@@ -125,7 +125,7 @@ export function BedChargesCard({ admissionId }: { admissionId: number }) {
         <div className="text-[11px] font-semibold uppercase tracking-[.04em] text-ink-4">Bed charges</div>
         <button onClick={post} disabled={busy} className="text-[11px] font-semibold text-brand disabled:opacity-50">{busy ? "Posting…" : "Post to bill"}</button>
       </div>
-      {error && <div className="text-[12px] text-rose-600">{error}</div>}
+      {error && <div className="text-[12px] text-danger-text">{error}</div>}
       {data && (
         <div className="text-[12.5px] space-y-0.5">
           {data.lines.map((l, i) => (
@@ -135,7 +135,7 @@ export function BedChargesCard({ admissionId }: { admissionId: number }) {
             <span>{data.bed_days} bed-day{data.bed_days === 1 ? "" : "s"}{data.bill_number ? ` · bill ${data.bill_number}` : " · not posted yet"}</span>
             <span>{inr(data.total)}</span>
           </div>
-          {data.unpriced_beds.length > 0 && <div className="text-[12px] text-amber-700">No charge rule for: {data.unpriced_beds.join(", ")} — add one under Accounts › Bed charges.</div>}
+          {data.unpriced_beds.length > 0 && <div className="text-[12px] text-warning-text">No charge rule for: {data.unpriced_beds.join(", ")} — add one under Accounts › Bed charges.</div>}
         </div>
       )}
     </div>
@@ -156,25 +156,25 @@ function PayoutPreview() {
     }
   }
   return (
-    <section className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 space-y-3">
+    <section className="bg-white dark:bg-slate-800 rounded-xl border border-border dark:border-slate-700 p-5 space-y-3">
       <div>
         <h2 className="text-lg font-bold">What's due</h2>
-        <p className="text-sm text-slate-500">Services with a rendering doctor that aren't on a statement yet. Use “Generate statements” below to create drafts for approval.</p>
+        <p className="text-sm text-ink-4">Services with a rendering doctor that aren't on a statement yet. Use “Generate statements” below to create drafts for approval.</p>
       </div>
       <div className="flex flex-wrap gap-3 items-end">
-        <label className="text-xs font-semibold text-slate-600">From<input type="date" className={`${inputCls} mt-1`} value={start} onChange={(e) => setStart(e.target.value)} /></label>
-        <label className="text-xs font-semibold text-slate-600">To<input type="date" className={`${inputCls} mt-1`} value={end} max={today()} onChange={(e) => setEnd(e.target.value)} /></label>
-        <button onClick={run} className="px-4 py-2 text-sm font-semibold rounded-lg bg-slate-100 dark:bg-slate-700">Preview</button>
+        <label className="text-xs font-semibold text-ink-3">From<input type="date" className={`${inputCls} mt-1`} value={start} onChange={(e) => setStart(e.target.value)} /></label>
+        <label className="text-xs font-semibold text-ink-3">To<input type="date" className={`${inputCls} mt-1`} value={end} max={today()} onChange={(e) => setEnd(e.target.value)} /></label>
+        <button onClick={run} className="px-4 py-2 text-sm font-semibold rounded-lg bg-chip-bg dark:bg-slate-700">Preview</button>
       </div>
-      {error && <div className="text-sm text-rose-700">{error}</div>}
+      {error && <div className="text-sm text-danger-text">{error}</div>}
       {rows && (rows.length ? (
         <table className="w-full text-sm">
-          <thead><tr className="text-xs text-slate-500 uppercase text-left"><th className="py-2">Doctor</th><th>Services</th><th>Net billed</th><th>Payout (before TDS)</th></tr></thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+          <thead><tr className="text-xs text-ink-4 uppercase text-left"><th className="py-2">Doctor</th><th>Services</th><th>Net billed</th><th>Payout (before TDS)</th></tr></thead>
+          <tbody className="divide-y divide-border dark:divide-slate-700">
             {rows.map((r) => <tr key={r.doctor}><td className="py-2">Dr. {r.doctor_name}</td><td>{r.lines}</td><td>{inr(r.base_amount)}</td><td className="font-semibold">{inr(r.gross_payout)}</td></tr>)}
           </tbody>
         </table>
-      ) : <div className="text-sm text-slate-500">Nothing due in this period — check that bill lines have a rendering doctor and that a payout rule matches.</div>)}
+      ) : <div className="text-sm text-ink-4">Nothing due in this period — check that bill lines have a rendering doctor and that a payout rule matches.</div>)}
     </section>
   )
 }

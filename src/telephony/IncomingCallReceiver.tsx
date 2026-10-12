@@ -64,8 +64,8 @@ export function IncomingCallReceiver() {
       <div
         className={`w-88 rounded-2xl shadow-2xl border p-5 backdrop-blur-md transition-all ${
           isRinging
-            ? "bg-slate-900/95 border-amber-500/40 text-white ring-4 ring-amber-500/20"
-            : "bg-slate-900/95 border-emerald-500/40 text-white ring-4 ring-emerald-500/20"
+            ? "bg-slate-900/95 border-warning/40 text-white ring-4 ring-warning/20"
+            : "bg-slate-900/95 border-success/40 text-white ring-4 ring-success/20"
         }`}
       >
         {/* Header */}
@@ -74,8 +74,8 @@ export function IncomingCallReceiver() {
             <span
               className={`w-3 h-3 rounded-full ${
                 isRinging
-                  ? "bg-amber-400 animate-ping"
-                  : "bg-emerald-400 animate-pulse"
+                  ? "bg-warning animate-ping"
+                  : "bg-success animate-pulse"
               }`}
             />
             <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
@@ -84,7 +84,7 @@ export function IncomingCallReceiver() {
           </div>
 
           {isConnected && (
-            <span className="font-mono text-sm font-semibold text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30">
+            <span className="font-mono text-sm font-semibold text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-success/30">
               ⏱ {formatTimer(callDuration)}
             </span>
           )}
@@ -120,7 +120,7 @@ export function IncomingCallReceiver() {
                   ensureMicrophoneAccess()
                   answerIncomingCall()
                 }}
-                className="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm shadow-lg shadow-emerald-900/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="flex-1 py-2.5 px-4 rounded-xl bg-success hover:bg-success text-white font-semibold text-sm shadow-lg shadow-success/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>📞</span>
                 <span>Receive Call</span>
@@ -129,7 +129,7 @@ export function IncomingCallReceiver() {
               <button
                 type="button"
                 onClick={() => hangupCurrentCall()}
-                className="py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-semibold text-sm shadow-lg shadow-rose-900/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="py-2.5 px-4 rounded-xl bg-danger hover:bg-danger text-white font-semibold text-sm shadow-lg shadow-danger/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>✕</span>
                 <span>Decline Call</span>
@@ -139,7 +139,7 @@ export function IncomingCallReceiver() {
             <button
               type="button"
               onClick={() => hangupCurrentCall()}
-              className="w-full py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-semibold text-sm shadow-lg shadow-rose-900/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-2.5 px-4 rounded-xl bg-danger hover:bg-danger text-white font-semibold text-sm shadow-lg shadow-danger/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>🔴</span>
               <span>End Call</span>
@@ -154,7 +154,7 @@ export function IncomingCallReceiver() {
               type="checkbox"
               checked={autoAnswer}
               onChange={toggleAutoAnswer}
-              className="rounded accent-emerald-500 cursor-pointer"
+              className="rounded accent-accent cursor-pointer"
             />
             <span>Auto-answer next time</span>
           </label>

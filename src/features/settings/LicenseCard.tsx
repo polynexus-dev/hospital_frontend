@@ -106,14 +106,14 @@ export function LicenseCard() {
             <div className="text-ink-4 text-[12px] mt-1">Send the deployment ID and fingerprint above to support when renewing; the new license takes effect immediately.</div>
             <input ref={fileInput} type="file" accept=".lic" className="hidden" onChange={(e) => { take(e.target.files?.[0]); e.target.value = "" }} />
           </div>
-          {uploadError && <p className="mt-2 text-[12px] text-rose-600">{uploadError}</p>}
+          {uploadError && <p className="mt-2 text-[12px] text-danger-text">{uploadError}</p>}
           <div className="mt-3.5 flex items-center justify-between gap-3">
             <span className="text-[12px] text-ink-4">Usage report for renewal: user, bed and patient counts only, no patient details.</span>
             <Button size="sm" variant="secondary" onClick={async () => triggerBlobDownload(await downloadUsageReport(), `usage-${data.license_id ?? "report"}-${new Date().toISOString().slice(0, 10)}.json`)}>
               Download usage report
             </Button>
           </div>
-          {done && <p className="mt-2 text-[12px] text-emerald-600 font-semibold">License installed.</p>}
+          {done && <p className="mt-2 text-[12px] text-success font-semibold">License installed.</p>}
         </>
       )}
       {data.support && (data.support.email || data.support.phone) && (

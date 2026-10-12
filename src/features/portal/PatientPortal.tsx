@@ -60,16 +60,16 @@ function Login({ onDone }: { onDone: () => void }) {
     }
   }
   return (
-    <div className="min-h-screen flex items-center justify-center bg-emerald-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-success-bg p-4">
       <div className="w-full max-w-sm bg-white rounded-2xl shadow p-7 space-y-4">
-        <h1 className="text-xl font-bold text-slate-900">Patient portal</h1>
-        <p className="text-sm text-slate-500">Sign in with your registered mobile number. One sign-in shows everyone in your family registered on this number.</p>
+        <h1 className="text-xl font-bold text-ink">Patient portal</h1>
+        <p className="text-sm text-ink-4">Sign in with your registered mobile number. One sign-in shows everyone in your family registered on this number.</p>
         {!getSubdomain() && <input className="w-full px-3 py-2 border rounded-lg" placeholder="Hospital code" value={hospital} onChange={(e) => setHospital(e.target.value)} />}
         <input className="w-full px-3 py-2 border rounded-lg" placeholder="Mobile number" inputMode="tel" value={mobile} onChange={(e) => setMobile(e.target.value)} disabled={sent} />
         {sent && <input className="w-full px-3 py-2 border rounded-lg tracking-[0.3em]" placeholder="6-digit OTP" inputMode="numeric" maxLength={6} value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))} />}
-        {sent && <p className="text-xs text-slate-500">If this number is registered with us, an OTP has been sent by SMS.</p>}
-        {error && <div className="text-sm text-rose-700">{error}</div>}
-        <button onClick={sent ? verify : send} className="w-full py-2.5 rounded-xl bg-emerald-600 text-white font-semibold">{sent ? "Verify & sign in" : "Send OTP"}</button>
+        {sent && <p className="text-xs text-ink-4">If this number is registered with us, an OTP has been sent by SMS.</p>}
+        {error && <div className="text-sm text-danger-text">{error}</div>}
+        <button onClick={sent ? verify : send} className="w-full py-2.5 rounded-xl bg-success text-white font-semibold">{sent ? "Verify & sign in" : "Send OTP"}</button>
       </div>
     </div>
   )
@@ -113,19 +113,19 @@ export function PatientPortal() {
   }, [tab, patientId, reload])
 
   if (!authed) return <Login onDone={() => setAuthed(true)} />
-  if (!me) return <div className="p-8 text-slate-500">Loading…</div>
+  if (!me) return <div className="p-8 text-ink-4">Loading…</div>
 
   const download = async (path: string, name: string) => triggerBlobDownload(await portal<Blob>(path), name)
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="bg-emerald-700 text-white px-5 py-4 flex flex-wrap justify-between items-center gap-3">
+    <div className="min-h-screen bg-page">
+      <header className="bg-success-text text-white px-5 py-4 flex flex-wrap justify-between items-center gap-3">
         <div>
           <div className="text-xs opacity-80">{me.hospital}</div>
           <div className="text-lg font-bold">Patient portal</div>
         </div>
         <div className="flex items-center gap-3">
-          <select className="text-slate-900 rounded-lg px-2 py-1 text-sm" value={patientId ?? ""} onChange={(e) => setPatientId(Number(e.target.value))}>
+          <select className="text-ink rounded-lg px-2 py-1 text-sm" value={patientId ?? ""} onChange={(e) => setPatientId(Number(e.target.value))}>
             {me.patients.map((p: any) => <option key={p.id} value={p.id}>{p.name} · {p.uhid}</option>)}
           </select>
           <button onClick={() => { sessionStorage.removeItem(TOKEN_KEY); setAuthed(false) }} className="text-sm underline">Sign out</button>
@@ -133,32 +133,32 @@ export function PatientPortal() {
       </header>
       <nav className="flex gap-1 overflow-x-auto bg-white border-b px-3">
         {([["appointments", "Appointments"], ["reports", "Reports"], ["prescriptions", "Prescriptions"], ["discharge", "Discharge"], ["bills", "Bills"], ["video", "Video consults"], ["feedback", "Feedback"], ["info", "Hospital info"]] as [Tab, string][]).map(([k, l]) => (
-          <button key={k} onClick={() => { setTab(k); setMsg(null) }} className={`px-3 py-3 text-sm font-semibold whitespace-nowrap border-b-2 ${tab === k ? "border-emerald-600 text-emerald-700" : "border-transparent text-slate-500"}`}>{l}</button>
+          <button key={k} onClick={() => { setTab(k); setMsg(null) }} className={`px-3 py-3 text-sm font-semibold whitespace-nowrap border-b-2 ${tab === k ? "border-success text-success-text" : "border-transparent text-ink-4"}`}>{l}</button>
         ))}
       </nav>
       <main className="max-w-4xl mx-auto p-4 space-y-3">
-        {msg && <div className="text-sm bg-emerald-50 text-emerald-800 rounded-lg p-3">{msg}</div>}
-        {error && <div className="text-sm bg-rose-50 text-rose-700 rounded-lg p-3">{error}</div>}
-        {!data ? <div className="text-slate-500 text-sm">Loading…</div> : (
+        {msg && <div className="text-sm bg-success-bg text-success-text rounded-lg p-3">{msg}</div>}
+        {error && <div className="text-sm bg-danger-bg text-danger-text rounded-lg p-3">{error}</div>}
+        {!data ? <div className="text-ink-4 text-sm">Loading…</div> : (
           <>
             {tab === "appointments" && <Appointments rows={data} patientId={patientId!} onBooked={(m) => { setMsg(m); setReload((n) => n + 1) }} />}
             {tab === "reports" && (
               <>
-                <List title="Laboratory reports" rows={data.laboratory} render={(r: any) => <><b>{r.order_number}</b> · {new Date(r.date).toLocaleDateString()} · {r.tests.join(", ")} <button className="ml-2 text-emerald-700 font-semibold" onClick={() => download(`/reports/lab/${r.id}/pdf/`, `${r.order_number}.pdf`)}>Download PDF</button></>} />
-                <List title="Radiology reports" rows={data.radiology} render={(r: any) => <><b>{r.study}</b> · {new Date(r.date).toLocaleDateString()}{r.amended ? " · amended" : ""}<div className="text-slate-600">{r.impression}</div></>} />
+                <List title="Laboratory reports" rows={data.laboratory} render={(r: any) => <><b>{r.order_number}</b> · {new Date(r.date).toLocaleDateString()} · {r.tests.join(", ")} <button className="ml-2 text-success-text font-semibold" onClick={() => download(`/reports/lab/${r.id}/pdf/`, `${r.order_number}.pdf`)}>Download PDF</button></>} />
+                <List title="Radiology reports" rows={data.radiology} render={(r: any) => <><b>{r.study}</b> · {new Date(r.date).toLocaleDateString()}{r.amended ? " · amended" : ""}<div className="text-ink-3">{r.impression}</div></>} />
               </>
             )}
-            {tab === "prescriptions" && <List title="Prescriptions" rows={data} render={(r: any) => <><b>{new Date(r.date).toLocaleDateString()}</b> · {r.doctor} · {r.diagnosis}<div className="text-slate-600">{(r.medications ?? []).map((m: any) => m.name ?? m).join(", ")}</div><button className="text-emerald-700 font-semibold" onClick={() => download(`/prescriptions/${r.id}/pdf/`, `prescription-${r.id}.pdf`)}>Download PDF</button></>} />}
-            {tab === "discharge" && <List title="Discharge summaries" rows={data} render={(r: any) => <><b>{new Date(r.admitted_at).toLocaleDateString()} → {r.discharged_at ? new Date(r.discharged_at).toLocaleDateString() : "—"}</b><div>Diagnosis: {r.final_diagnosis}</div><div className="whitespace-pre-wrap text-slate-600">{r.discharge_medications}</div><div className="text-slate-600">Follow-up: {r.follow_up_instructions}</div></>} />}
+            {tab === "prescriptions" && <List title="Prescriptions" rows={data} render={(r: any) => <><b>{new Date(r.date).toLocaleDateString()}</b> · {r.doctor} · {r.diagnosis}<div className="text-ink-3">{(r.medications ?? []).map((m: any) => m.name ?? m).join(", ")}</div><button className="text-success-text font-semibold" onClick={() => download(`/prescriptions/${r.id}/pdf/`, `prescription-${r.id}.pdf`)}>Download PDF</button></>} />}
+            {tab === "discharge" && <List title="Discharge summaries" rows={data} render={(r: any) => <><b>{new Date(r.admitted_at).toLocaleDateString()} → {r.discharged_at ? new Date(r.discharged_at).toLocaleDateString() : "—"}</b><div>Diagnosis: {r.final_diagnosis}</div><div className="whitespace-pre-wrap text-ink-3">{r.discharge_medications}</div><div className="text-ink-3">Follow-up: {r.follow_up_instructions}</div></>} />}
             {tab === "bills" && (
               <>
-                <div className="bg-white rounded-xl p-4 border"><div className="text-xs text-slate-500">Outstanding</div><div className="text-2xl font-bold">₹{data.outstanding}</div></div>
+                <div className="bg-white rounded-xl p-4 border"><div className="text-xs text-ink-4">Outstanding</div><div className="text-2xl font-bold">₹{data.outstanding}</div></div>
                 <List title="Bills" rows={data.bills} render={(b: any) => <><b>{new Date(b.date).toLocaleDateString()}</b> · ₹{b.net_amount} · paid ₹{b.paid} · balance ₹{b.balance} · {b.status}</>} />
               </>
             )}
-            {tab === "video" && <List title="Video consultations" rows={data} render={(c: any) => <><b>{new Date(c.scheduled_at).toLocaleString()}</b> · {c.doctor} · {c.status}{c.join_token && <a className="ml-2 text-emerald-700 font-semibold" href={`/tele/join/${c.join_token}`}>Join</a>}</>} />}
+            {tab === "video" && <List title="Video consultations" rows={data} render={(c: any) => <><b>{new Date(c.scheduled_at).toLocaleString()}</b> · {c.doctor} · {c.status}{c.join_token && <a className="ml-2 text-success-text font-semibold" href={`/tele/join/${c.join_token}`}>Join</a>}</>} />}
             {tab === "feedback" && <Feedback instruments={data} patientId={patientId!} onDone={setMsg} />}
-            {tab === "info" && <List title="Information for patients" rows={data} render={(i: any) => <><b>{i.title}</b><div className="whitespace-pre-wrap text-slate-600">{i.body}</div></>} />}
+            {tab === "info" && <List title="Information for patients" rows={data} render={(i: any) => <><b>{i.title}</b><div className="whitespace-pre-wrap text-ink-3">{i.body}</div></>} />}
           </>
         )}
       </main>
@@ -170,7 +170,7 @@ function List({ title, rows, render }: { title: string; rows: any[]; render: (r:
   return (
     <section className="bg-white rounded-xl border">
       <h2 className="px-4 py-3 font-semibold border-b">{title}</h2>
-      {rows?.length ? rows.map((r, i) => <div key={r.id ?? i} className="px-4 py-3 border-b last:border-0 text-sm">{render(r)}</div>) : <div className="px-4 py-3 text-sm text-slate-500">Nothing here yet.</div>}
+      {rows?.length ? rows.map((r, i) => <div key={r.id ?? i} className="px-4 py-3 border-b last:border-0 text-sm">{render(r)}</div>) : <div className="px-4 py-3 text-sm text-ink-4">Nothing here yet.</div>}
     </section>
   )
 }
@@ -209,10 +209,10 @@ function Appointments({ rows, patientId, onBooked }: { rows: any[]; patientId: n
         </div>
         {doctor && (
           <div className="flex flex-wrap gap-2">
-            {slots.length ? slots.map((s) => <button key={s.id} onClick={() => book(s.id)} className="px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 text-sm font-semibold hover:bg-emerald-100">{String(s.start_time).slice(0, 5)}</button>) : <span className="text-sm text-slate-500">No free slots that day.</span>}
+            {slots.length ? slots.map((s) => <button key={s.id} onClick={() => book(s.id)} className="px-3 py-1.5 rounded-lg bg-success-bg text-success-text text-sm font-semibold hover:bg-success-bg">{String(s.start_time).slice(0, 5)}</button>) : <span className="text-sm text-ink-4">No free slots that day.</span>}
           </div>
         )}
-        {error && <div className="text-sm text-rose-700">{error}</div>}
+        {error && <div className="text-sm text-danger-text">{error}</div>}
       </section>
       <List title="Your appointments" rows={rows} render={(a: any) => <><b>{a.date} {String(a.time).slice(0, 5)}</b> · {a.doctor} · {a.status}{a.token ? ` · token ${a.token}` : ""}</>} />
     </>
@@ -240,12 +240,12 @@ function Feedback({ instruments, patientId, onDone }: { instruments: Record<stri
             <div className="mb-1">{q.text}</div>
             <div className="flex gap-1 flex-wrap">
               {Array.from({ length: q.scale === 10 ? 11 : q.scale }, (_, i) => (q.scale === 10 ? i : i + 1)).map((n) => (
-                <button key={n} onClick={() => setAnswers({ ...answers, [q.id]: n })} className={`w-9 h-9 rounded-lg text-sm font-semibold ${answers[q.id] === n ? "bg-emerald-600 text-white" : "bg-slate-100"}`}>{n}</button>
+                <button key={n} onClick={() => setAnswers({ ...answers, [q.id]: n })} className={`w-9 h-9 rounded-lg text-sm font-semibold ${answers[q.id] === n ? "bg-success text-white" : "bg-chip-bg"}`}>{n}</button>
               ))}
             </div>
           </div>
         ))}
-        <button disabled={Object.keys(answers).length < inst.questions.length} onClick={submit} className="px-4 py-2 rounded-lg bg-emerald-600 text-white font-semibold disabled:opacity-50">Submit</button>
+        <button disabled={Object.keys(answers).length < inst.questions.length} onClick={submit} className="px-4 py-2 rounded-lg bg-success text-white font-semibold disabled:opacity-50">Submit</button>
       </section>
       <section className="bg-white rounded-xl border p-4 space-y-2">
         <h2 className="font-semibold">Raise a complaint</h2>

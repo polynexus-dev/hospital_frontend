@@ -78,13 +78,13 @@ export function IdleLock() {
       <form onSubmit={unlock} className="w-full max-w-sm bg-white dark:bg-slate-800 rounded-2xl p-7 space-y-4 shadow-2xl">
         <div className="text-3xl">🔒</div>
         <div>
-          <div className="text-lg font-bold text-slate-900 dark:text-slate-100">Screen locked</div>
-          <div className="text-sm text-slate-500">Locked after {policy?.idle_lock_minutes ?? "—"} minutes of inactivity. Enter your password to continue as {user.email}.</div>
+          <div className="text-lg font-bold text-ink dark:text-slate-100">Screen locked</div>
+          <div className="text-sm text-ink-4">Locked after {policy?.idle_lock_minutes ?? "—"} minutes of inactivity. Enter your password to continue as {user.email}.</div>
         </div>
         <input type="password" autoFocus required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-3 py-2 border rounded-lg" placeholder="Password" />
-        {error && <div className="text-sm text-rose-600">{error}</div>}
+        {error && <div className="text-sm text-danger-text">{error}</div>}
         <div className="flex gap-2">
-          <button className="flex-1 px-4 py-2 rounded-lg bg-emerald-600 text-white font-semibold">Unlock</button>
+          <button className="flex-1 px-4 py-2 rounded-lg bg-success text-white font-semibold">Unlock</button>
           <button
             type="button"
             onClick={() => {
@@ -95,7 +95,7 @@ export function IdleLock() {
               }
               logout()
             }}
-            className="px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-700"
+            className="px-4 py-2 rounded-lg bg-chip-bg dark:bg-slate-700"
           >
             Sign out
           </button>

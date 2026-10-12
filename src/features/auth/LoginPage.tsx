@@ -26,10 +26,10 @@ const SSO_ERRORS: Record<string, string> = {
 }
 
 const inputCls =
-  "w-full h-11 pl-10 pr-3 rounded-xl border border-slate-200 bg-white text-[14px] text-slate-800 placeholder:text-slate-400 outline-none focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
-const labelCls = "block text-[11.5px] font-semibold tracking-[.06em] uppercase text-slate-600 mb-2"
+  "w-full h-11 pl-10 pr-3 rounded-xl border border-border bg-white text-[14px] text-ink placeholder:text-ink-5 outline-none focus:border-brand-dark focus:ring-2 focus:ring-brand-border"
+const labelCls = "block text-[11.5px] font-semibold tracking-[.06em] uppercase text-ink-3 mb-2"
 const primaryBtn =
-  "w-full h-12 rounded-xl bg-blue-900 hover:bg-blue-800 text-white text-[15px] font-semibold shadow-md shadow-blue-900/20 flex items-center justify-center gap-2 disabled:opacity-60"
+  "w-full h-12 rounded-xl bg-brand-dark hover:bg-brand-dark text-white text-[15px] font-semibold shadow-md shadow-brand/20 flex items-center justify-center gap-2 disabled:opacity-60"
 
 const Icon = {
   at: <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="4" /><path d="M16 12v1.5a2.5 2.5 0 0 0 5 0V12a9 9 0 1 0-3.5 7.1" /></svg>,
@@ -40,7 +40,7 @@ const Icon = {
   user: <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg>,
   briefcase: <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18" /></svg>,
   arrow: <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6" /></svg>,
-  shield: <svg viewBox="0 0 24 24" className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z" /><path d="M9 12l2 2 4-4" /></svg>,
+  shield: <svg viewBox="0 0 24 24" className="w-4 h-4 text-success" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z" /><path d="M9 12l2 2 4-4" /></svg>,
   check: <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12l5 5 9-10" /></svg>,
 }
 
@@ -63,7 +63,7 @@ function Field({ id, label, icon, right, children }: { id: string; label: string
         {right}
       </div>
       <div className="relative">
-        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">{icon}</span>
+        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-5">{icon}</span>
         {children}
       </div>
     </div>
@@ -266,49 +266,49 @@ export function LoginPage() {
   const subtitle = expired ? notice : mfaToken ? t("login.otpSubtitle") : tab === "patient" ? "Use the mobile number registered with the hospital." : "Please enter your credentials to access your dashboard."
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-slate-50 to-white text-slate-800">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-page to-white text-ink">
       <header className="flex items-center justify-between px-6 sm:px-10 py-5">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-700 flex items-center justify-center shadow-sm">
+          <div className="w-10 h-10 rounded-xl bg-brand-dark flex items-center justify-center shadow-sm">
             <svg viewBox="0 0 24 24" className="w-6 h-6 text-white" fill="currentColor" aria-hidden><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z" /></svg>
           </div>
           <div className="leading-tight">
-            <div className="text-[17px] font-semibold text-slate-900">{hospitalName}</div>
-            <div className="text-[10.5px] font-semibold tracking-[.12em] uppercase text-blue-700">{hospitalTagline}</div>
+            <div className="text-[17px] font-semibold text-ink">{hospitalName}</div>
+            <div className="text-[10.5px] font-semibold tracking-[.12em] uppercase text-brand-dark">{hospitalTagline}</div>
           </div>
         </div>
         {branding?.helpline_phone && (
-          <a href={`tel:${branding.helpline_phone.replace(/[^\d+]/g, "")}`} className="hidden sm:flex items-center gap-2 text-[13px] font-medium text-rose-600">
-            <span className="w-2 h-2 rounded-full bg-rose-500" /> 24/7 Helpline: {branding.helpline_phone}
+          <a href={`tel:${branding.helpline_phone.replace(/[^\d+]/g, "")}`} className="hidden sm:flex items-center gap-2 text-[13px] font-medium text-danger-text">
+            <span className="w-2 h-2 rounded-full bg-danger" /> 24/7 Helpline: {branding.helpline_phone}
           </a>
         )}
       </header>
 
       <main className="flex-1 flex items-center justify-center px-4 py-6">
-        <div className="w-full max-w-[920px] grid md:grid-cols-[1fr_1.15fr] bg-white rounded-3xl shadow-xl shadow-slate-200/70 border border-slate-100 overflow-hidden">
+        <div className="w-full max-w-[920px] grid md:grid-cols-[1fr_1.15fr] bg-white rounded-3xl shadow-xl shadow-slate-200/70 border border-border-faint overflow-hidden">
           {/* Left: welcome panel */}
-          <section className="hidden md:flex flex-col bg-gradient-to-br from-blue-50 via-sky-50 to-cyan-100/60 p-8">
-            <span className="self-start inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white text-[11.5px] font-medium text-blue-700 shadow-sm">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-600" /> Patient &amp; Clinical Access
+          <section className="hidden md:flex flex-col bg-gradient-to-br from-brand-tint via-brand-tint to-accent-tint/60 p-8">
+            <span className="self-start inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white text-[11.5px] font-medium text-brand-dark shadow-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-brand" /> Patient &amp; Clinical Access
             </span>
-            <h1 className="mt-4 text-[27px] leading-tight font-semibold text-slate-900">
-              Your Health &amp; Wellness,<br /><span className="text-blue-800">Always Connected.</span>
+            <h1 className="mt-4 text-[27px] leading-tight font-semibold text-ink">
+              Your Health &amp; Wellness,<br /><span className="text-brand-dark">Always Connected.</span>
             </h1>
-            <p className="mt-3 text-[13.5px] leading-relaxed text-slate-600">
+            <p className="mt-3 text-[13.5px] leading-relaxed text-ink-3">
               Access medical records, appointments, test results, and virtual consultations in one secure place.
             </p>
             <DoctorIllustration className="w-full max-w-[300px] mx-auto my-6" />
-            <div className="mt-auto pt-5 border-t border-blue-100 flex flex-col items-center gap-2">
+            <div className="mt-auto pt-5 border-t border-brand-border flex flex-col items-center gap-2">
               {accreditations.length > 0 ? (
                 accreditations.map((a) => (
-                  <div key={a.id} className="flex items-center gap-2 text-[12px] text-slate-600">
-                    {a.logo ? <img src={a.logo} alt={a.issuing_body} className="w-6 h-6 object-contain" /> : <span className="w-5 h-5 rounded bg-white shadow-sm flex items-center justify-center text-blue-700">{Icon.check}</span>}
+                  <div key={a.id} className="flex items-center gap-2 text-[12px] text-ink-3">
+                    {a.logo ? <img src={a.logo} alt={a.issuing_body} className="w-6 h-6 object-contain" /> : <span className="w-5 h-5 rounded bg-white shadow-sm flex items-center justify-center text-brand-dark">{Icon.check}</span>}
                     <span><b>{a.name}</b> · {a.issuing_body}{a.valid_until ? ` · valid till ${a.valid_until}` : ""}</span>
                   </div>
                 ))
               ) : (
-                <div className="flex items-center gap-2 text-[12.5px] text-slate-600">
-                  <span className="w-5 h-5 rounded bg-white shadow-sm flex items-center justify-center text-blue-700">{Icon.check}</span>
+                <div className="flex items-center gap-2 text-[12.5px] text-ink-3">
+                  <span className="w-5 h-5 rounded bg-white shadow-sm flex items-center justify-center text-brand-dark">{Icon.check}</span>
                   {branding?.helpline_phone ? "24/7 Care Access" : "Secure, encrypted access"}
                 </div>
               )}
@@ -317,14 +317,14 @@ export function LoginPage() {
 
           {/* Right: sign-in */}
           <section className="p-7 sm:p-10">
-            <h2 className="text-[24px] font-semibold text-slate-900">{title}</h2>
-            <p className="mt-1 text-[13.5px] text-slate-500">{subtitle}</p>
+            <h2 className="text-[24px] font-semibold text-ink">{title}</h2>
+            <p className="mt-1 text-[13.5px] text-ink-4">{subtitle}</p>
 
             {!expired && !mfaToken && !isSaasPortal && (
-              <div className="mt-6 grid grid-cols-2 p-1 rounded-xl bg-slate-100" role="tablist">
+              <div className="mt-6 grid grid-cols-2 p-1 rounded-xl bg-chip-bg" role="tablist">
                 {([["patient", "Patient Portal", Icon.user], ["staff", "Doctor & Staff", Icon.briefcase]] as const).map(([key, label, icon]) => (
                   <button key={key} type="button" role="tab" aria-selected={tab === key} onClick={() => chooseTab(key)}
-                    className={`h-10 rounded-lg flex items-center justify-center gap-2 text-[13.5px] font-medium transition ${tab === key ? "bg-white text-blue-800 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}>
+                    className={`h-10 rounded-lg flex items-center justify-center gap-2 text-[13.5px] font-medium transition ${tab === key ? "bg-white text-brand-dark shadow-sm" : "text-ink-4 hover:text-ink-2"}`}>
                     {icon} {label}
                   </button>
                 ))}
@@ -337,8 +337,8 @@ export function LoginPage() {
                   <Field id="new-password" label="New password" icon={Icon.lock}>
                     <input id="new-password" type="password" required value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className={inputCls} />
                   </Field>
-                  <p className="text-[12px] text-slate-500">Must meet your hospital's password policy and differ from recent passwords.</p>
-                  {error && <div className="text-[13px] text-rose-700">{error}</div>}
+                  <p className="text-[12px] text-ink-4">Must meet your hospital's password policy and differ from recent passwords.</p>
+                  {error && <div className="text-[13px] text-danger-text">{error}</div>}
                   <button type="submit" disabled={loading} className={primaryBtn}>{loading ? t("common.loading") : "Change password"}</button>
                 </form>
               ) : mfaToken ? (
@@ -347,9 +347,9 @@ export function LoginPage() {
                     <input id="login-otp" type="text" inputMode="numeric" autoComplete="one-time-code" required autoFocus maxLength={6} value={otp}
                       onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))} className={`${inputCls} tracking-[0.3em]`} />
                   </Field>
-                  {error && <div className="text-[13px] text-rose-700">{error}</div>}
+                  {error && <div className="text-[13px] text-danger-text">{error}</div>}
                   <button type="submit" disabled={loading || otp.length !== 6} className={primaryBtn}>{loading ? t("common.loading") : t("login.otpSubmit")}</button>
-                  <button type="button" onClick={() => { setMfaToken(null); setOtp(""); setError("") }} className="text-[13px] text-slate-500 hover:text-slate-700">{t("login.back")}</button>
+                  <button type="button" onClick={() => { setMfaToken(null); setOtp(""); setError("") }} className="text-[13px] text-ink-4 hover:text-ink-2">{t("login.back")}</button>
                 </form>
               ) : tab === "patient" && !isSaasPortal ? (
                 <form onSubmit={handlePatientSubmit} className="flex flex-col gap-4">
@@ -363,19 +363,19 @@ export function LoginPage() {
                   </Field>
                   {otpSent && (
                     <Field id="patient-otp" label="One-time password" icon={Icon.lock}
-                      right={<button type="button" className="text-[12px] font-medium text-blue-700" onClick={() => { setOtpSent(false); setPortalOtp(""); setNotice("") }}>Change number</button>}>
+                      right={<button type="button" className="text-[12px] font-medium text-brand-dark" onClick={() => { setOtpSent(false); setPortalOtp(""); setNotice("") }}>Change number</button>}>
                       <input id="patient-otp" required autoFocus inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={portalOtp}
                         onChange={(e) => setPortalOtp(e.target.value.replace(/\D/g, ""))} placeholder="6-digit OTP" className={`${inputCls} tracking-[0.3em]`} />
                     </Field>
                   )}
-                  {notice && !error && <div className="text-[13px] text-emerald-700">{notice}</div>}
-                  {error && <div className="text-[13px] text-rose-700">{error}</div>}
+                  {notice && !error && <div className="text-[13px] text-success-text">{notice}</div>}
+                  {error && <div className="text-[13px] text-danger-text">{error}</div>}
                   <button type="submit" disabled={loading || (otpSent && portalOtp.length !== 6)} className={primaryBtn}>
                     {loading ? t("common.loading") : otpSent ? "Verify & open portal" : "Send OTP"} {!loading && Icon.arrow}
                   </button>
-                  <p className="text-center text-[12.5px] text-slate-500">
+                  <p className="text-center text-[12.5px] text-ink-4">
                     First time visiting {branding?.name ?? "us"}? Your number is registered at your first visit
-                    {branding?.helpline_phone ? <> — or call <a className="font-medium text-blue-700" href={`tel:${branding.helpline_phone.replace(/[^\d+]/g, "")}`}>{branding.helpline_phone}</a></> : ""}.
+                    {branding?.helpline_phone ? <> — or call <a className="font-medium text-brand-dark" href={`tel:${branding.helpline_phone.replace(/[^\d+]/g, "")}`}>{branding.helpline_phone}</a></> : ""}.
                   </p>
                 </form>
               ) : (
@@ -386,58 +386,58 @@ export function LoginPage() {
                         <input id="login-email" type="email" required autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="e.g. name@domain.com" className={inputCls} />
                       </Field>
                       <Field id="login-password" label={t("login.password")} icon={Icon.lock}
-                        right={<button type="button" className="text-[12px] font-medium text-blue-700" onClick={() => setForgot((v) => !v)}>Forgot password?</button>}>
+                        right={<button type="button" className="text-[12px] font-medium text-brand-dark" onClick={() => setForgot((v) => !v)}>Forgot password?</button>}>
                         <input id="login-password" type={showPassword ? "text" : "password"} required autoComplete="current-password" value={password}
                           onChange={(e) => setPassword(e.target.value)} placeholder="Enter password" className={`${inputCls} pr-10`} />
                         <button type="button" onClick={() => setShowPassword((v) => !v)} aria-label={showPassword ? "Hide the password" : "Show the password"}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">{Icon.eye}</button>
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-5 hover:text-ink-3">{Icon.eye}</button>
                       </Field>
                       {forgot && (
-                        <div className="text-[12.5px] text-slate-600 bg-slate-50 rounded-lg px-3 py-2">
+                        <div className="text-[12.5px] text-ink-3 bg-page rounded-lg px-3 py-2">
                           Ask your hospital administrator to reset it (Admin › Users › Set password).{ssoButtons.length > 0 && " Or sign in with your work account below."}
                         </div>
                       )}
                       <div className="flex items-center justify-between text-[12.5px]">
-                        <label className="flex items-center gap-2 text-slate-600">
-                          <input type="checkbox" checked={keepSignedIn} onChange={(e) => setKeepSignedIn(e.target.checked)} className="w-4 h-4 rounded border-slate-300" />
+                        <label className="flex items-center gap-2 text-ink-3">
+                          <input type="checkbox" checked={keepSignedIn} onChange={(e) => setKeepSignedIn(e.target.checked)} className="w-4 h-4 rounded border-border-strong" />
                           Keep me signed in
                         </label>
-                        <span className="flex items-center gap-1 text-slate-400">{Icon.lock} Encrypted session</span>
+                        <span className="flex items-center gap-1 text-ink-5">{Icon.lock} Encrypted session</span>
                       </div>
-                      {notice && !error && <div className="text-[13px] text-emerald-700">{notice}</div>}
-                      {error && <div className="text-[13px] text-rose-700">{error}</div>}
+                      {notice && !error && <div className="text-[13px] text-success-text">{notice}</div>}
+                      {error && <div className="text-[13px] text-danger-text">{error}</div>}
                       <button type="submit" disabled={loading} className={primaryBtn}>
                         {loading ? t("common.loading") : isSaasPortal ? "Sign in to console" : "Sign in to dashboard"} {!loading && Icon.arrow}
                       </button>
                     </form>
                   )}
-                  {!showPasswordForm && error && <div className="text-[13px] text-rose-700 mb-3">{error}</div>}
+                  {!showPasswordForm && error && <div className="text-[13px] text-danger-text mb-3">{error}</div>}
 
                   {ssoButtons.length > 0 && (
                     <>
                       {showPasswordForm && (
-                        <div className="flex items-center gap-3 my-6 text-[11px] font-semibold tracking-[.1em] uppercase text-slate-400">
-                          <span className="flex-1 h-px bg-slate-200" /> Or sign in with <span className="flex-1 h-px bg-slate-200" />
+                        <div className="flex items-center gap-3 my-6 text-[11px] font-semibold tracking-[.1em] uppercase text-ink-5">
+                          <span className="flex-1 h-px bg-border-soft" /> Or sign in with <span className="flex-1 h-px bg-border-soft" />
                         </div>
                       )}
                       <div className={`grid gap-3 ${ssoButtons.length > 1 ? "sm:grid-cols-2" : ""}`}>
                         {ssoButtons.map((b) => (
                           <button key={b.id} type="button" onClick={() => startSso(b)}
-                            className="h-11 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 flex items-center justify-center gap-2 text-[13.5px] font-medium text-slate-700">
+                            className="h-11 rounded-xl border border-border bg-white hover:bg-page flex items-center justify-center gap-2 text-[13.5px] font-medium text-ink-2">
                             {b.kind === "google" ? <GoogleLogo /> : Icon.shield}
                             {b.kind === "google" ? "Continue with Google" : b.name}
                           </button>
                         ))}
                       </div>
                       {!showPasswordForm && (
-                        <button type="button" onClick={() => setShowAdminPassword(true)} className="block mx-auto mt-5 text-[12.5px] text-slate-500 hover:text-slate-700">
+                        <button type="button" onClick={() => setShowAdminPassword(true)} className="block mx-auto mt-5 text-[12.5px] text-ink-4 hover:text-ink-2">
                           Administrator? Sign in with a password
                         </button>
                       )}
                     </>
                   )}
                   {!isSaasPortal && (
-                    <p className="mt-6 text-center text-[12.5px] text-slate-500">
+                    <p className="mt-6 text-center text-[12.5px] text-ink-4">
                       Trouble signing in? Contact your hospital's IT or administrator.
                     </p>
                   )}
@@ -448,11 +448,11 @@ export function LoginPage() {
         </div>
       </main>
 
-      <footer className="border-t border-slate-100 px-6 sm:px-10 py-4 flex flex-col sm:flex-row gap-2 justify-between text-[12px] text-slate-500">
+      <footer className="border-t border-border-faint px-6 sm:px-10 py-4 flex flex-col sm:flex-row gap-2 justify-between text-[12px] text-ink-4">
         <span>© {new Date().getFullYear()} {isSaasPortal ? "Polynexus" : hospitalName}. All rights reserved.</span>
         <span className="flex gap-3">
-          {!isSaasPortal && <button type="button" className="hover:text-slate-700" onClick={() => chooseTab("patient")}>Patient portal</button>}
-          {branding?.helpline_phone && <><span>•</span><a className="hover:text-slate-700" href={`tel:${branding.helpline_phone.replace(/[^\d+]/g, "")}`}>Patient help desk</a></>}
+          {!isSaasPortal && <button type="button" className="hover:text-ink-2" onClick={() => chooseTab("patient")}>Patient portal</button>}
+          {branding?.helpline_phone && <><span>•</span><a className="hover:text-ink-2" href={`tel:${branding.helpline_phone.replace(/[^\d+]/g, "")}`}>Patient help desk</a></>}
         </span>
       </footer>
     </div>

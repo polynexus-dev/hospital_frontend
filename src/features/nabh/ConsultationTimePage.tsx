@@ -70,8 +70,8 @@ export function ConsultationTimePage() {
   return (
     <div className="p-6 space-y-5">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Consultation Time</h1>
-        <p className="text-sm text-slate-500">
+        <h1 className="text-2xl font-bold tracking-tight text-ink dark:text-slate-100">Consultation Time</h1>
+        <p className="text-sm text-ink-4">
           How long each doctor spends per patient, from “Start consult” to “Complete”. Figures are only as accurate as those two clicks.
           Consultations longer than {report?.max_plausible_minutes ?? 120} minutes are treated as a forgotten click and left out.
         </p>
@@ -79,24 +79,24 @@ export function ConsultationTimePage() {
 
       <div className="flex flex-wrap items-end gap-3 justify-between">
         <div className="flex flex-wrap gap-3 items-end">
-          <label className="text-xs font-semibold text-slate-600">From<input type="date" value={start} onChange={(e) => setStart(e.target.value)} className="block mt-1 px-3 py-2 text-sm border rounded-lg" /></label>
-          <label className="text-xs font-semibold text-slate-600">To<input type="date" value={end} onChange={(e) => setEnd(e.target.value)} className="block mt-1 px-3 py-2 text-sm border rounded-lg" /></label>
-          <label className="text-xs font-semibold text-slate-600">
+          <label className="text-xs font-semibold text-ink-3">From<input type="date" value={start} onChange={(e) => setStart(e.target.value)} className="block mt-1 px-3 py-2 text-sm border rounded-lg" /></label>
+          <label className="text-xs font-semibold text-ink-3">To<input type="date" value={end} onChange={(e) => setEnd(e.target.value)} className="block mt-1 px-3 py-2 text-sm border rounded-lg" /></label>
+          <label className="text-xs font-semibold text-ink-3">
             Department
             <select value={department} onChange={(e) => setDepartment(e.target.value)} className="block mt-1 px-3 py-2 text-sm border rounded-lg bg-white dark:bg-slate-800">
               <option value="">All departments</option>
               {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
             </select>
           </label>
-          <label className="text-xs font-semibold text-slate-600">
+          <label className="text-xs font-semibold text-ink-3">
             Flag consults under (min)
             <input type="number" min={1} max={30} value={shortUnder} onChange={(e) => setShortUnder(e.target.value)} className="block mt-1 w-28 px-3 py-2 text-sm border rounded-lg" />
           </label>
         </div>
-        <button onClick={download} className="px-3 py-2 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-700 uppercase">Excel</button>
+        <button onClick={download} className="px-3 py-2 text-xs font-semibold rounded-lg bg-chip-bg dark:bg-slate-700 uppercase">Excel</button>
       </div>
 
-      {error && <div className="text-sm text-rose-700 bg-rose-50 rounded-lg px-3 py-2">{error}</div>}
+      {error && <div className="text-sm text-danger-text bg-danger-bg rounded-lg px-3 py-2">{error}</div>}
 
       {o && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -107,10 +107,10 @@ export function ConsultationTimePage() {
         </div>
       )}
 
-      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-x-auto">
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-border dark:border-slate-700 overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-slate-50 dark:bg-slate-900/50 text-xs font-semibold text-slate-500 uppercase text-left">
+            <tr className="bg-page dark:bg-slate-900/50 text-xs font-semibold text-ink-4 uppercase text-left">
               <th className="px-4 py-3">Doctor</th>
               <th className="px-4 py-3">Patients</th>
               <th className="px-4 py-3">Average</th>
@@ -122,19 +122,19 @@ export function ConsultationTimePage() {
               <th className="px-4 py-3">Excluded</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+          <tbody className="divide-y divide-border dark:divide-slate-700">
             {loading ? (
-              <tr><td colSpan={9} className="px-4 py-8 text-center text-slate-500">Calculating…</td></tr>
+              <tr><td colSpan={9} className="px-4 py-8 text-center text-ink-4">Calculating…</td></tr>
             ) : !report?.doctors.length ? (
-              <tr><td colSpan={9} className="px-4 py-8 text-center text-slate-500">No completed consultations in this period.</td></tr>
+              <tr><td colSpan={9} className="px-4 py-8 text-center text-ink-4">No completed consultations in this period.</td></tr>
             ) : (
               report.doctors.map((r) => (
                 <tr key={r.doctor_id}>
-                  <td className="px-4 py-3 font-medium">Dr. {r.doctor}<div className="text-xs text-slate-400">{r.department || "No department"}{r.opd_days ? ` · ${r.opd_days} OPD day${r.opd_days > 1 ? "s" : ""}` : ""}</div></td>
+                  <td className="px-4 py-3 font-medium">Dr. {r.doctor}<div className="text-xs text-ink-5">{r.department || "No department"}{r.opd_days ? ` · ${r.opd_days} OPD day${r.opd_days > 1 ? "s" : ""}` : ""}</div></td>
                   <td className="px-4 py-3">{r.consultations}</td>
                   <td className="px-4 py-3 font-semibold whitespace-nowrap">
                     {m(r.average_minutes)}
-                    {r.configured_minutes !== undefined && <div className="text-xs font-normal text-slate-400">slot set to {r.configured_minutes} min</div>}
+                    {r.configured_minutes !== undefined && <div className="text-xs font-normal text-ink-5">slot set to {r.configured_minutes} min</div>}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">{m(r.median_minutes)}</td>
                   <td className="px-4 py-3 whitespace-nowrap">{r.consultations ? `${r.shortest_minutes} – ${r.longest_minutes} min` : "—"}</td>
@@ -142,14 +142,14 @@ export function ConsultationTimePage() {
                   <td className="px-4 py-3 whitespace-nowrap">{m(r.average_wait_minutes)}</td>
                   <td className="px-4 py-3 whitespace-nowrap">
                     {r.short_consultations ? (
-                      <span className={`text-xs font-semibold px-2 py-0.5 rounded ${(r.short_percent ?? 0) >= 20 ? "bg-rose-100 text-rose-700" : "bg-amber-100 text-amber-700"}`}>
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded ${(r.short_percent ?? 0) >= 20 ? "bg-danger-bg text-danger-text" : "bg-warning-bg text-warning-text"}`}>
                         {r.short_consultations} ({r.short_percent}%)
                       </span>
                     ) : (
                       "0"
                     )}
                   </td>
-                  <td className="px-4 py-3 text-slate-500">{r.excluded || "—"}</td>
+                  <td className="px-4 py-3 text-ink-4">{r.excluded || "—"}</td>
                 </tr>
               ))
             )}
@@ -158,19 +158,19 @@ export function ConsultationTimePage() {
       </div>
 
       {!!report?.short_consultations.length && (
-        <section className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-          <h2 className="px-4 py-3 font-semibold border-b border-slate-200 dark:border-slate-700">
+        <section className="bg-white dark:bg-slate-800 rounded-xl border border-border dark:border-slate-700">
+          <h2 className="px-4 py-3 font-semibold border-b border-border dark:border-slate-700">
             Consultations under {report.short_under_minutes} minutes
-            <span className="ml-2 text-xs font-normal text-slate-500">May be a rushed OPD, a quick follow-up or report review, or late “Start consult” clicks. Worth a look, not a verdict.</span>
+            <span className="ml-2 text-xs font-normal text-ink-4">May be a rushed OPD, a quick follow-up or report review, or late “Start consult” clicks. Worth a look, not a verdict.</span>
           </h2>
           <table className="w-full text-sm">
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+            <tbody className="divide-y divide-border dark:divide-slate-700">
               {[...report.short_consultations].reverse().map((s) => (
                 <tr key={s.appointment}>
                   <td className="px-4 py-2 whitespace-nowrap">{new Date(s.started_at).toLocaleString()}</td>
                   <td className="px-4 py-2">Dr. {s.doctor}</td>
-                  <td className="px-4 py-2">{s.patient} <span className="text-slate-400">{s.uhid}</span></td>
-                  <td className="px-4 py-2 font-semibold text-amber-700">{s.minutes} min</td>
+                  <td className="px-4 py-2">{s.patient} <span className="text-ink-5">{s.uhid}</span></td>
+                  <td className="px-4 py-2 font-semibold text-warning-text">{s.minutes} min</td>
                 </tr>
               ))}
             </tbody>
@@ -183,9 +183,9 @@ export function ConsultationTimePage() {
 
 function Stat({ label, value, tone }: { label: string; value: string; tone?: "warn" }) {
   return (
-    <div className={`rounded-xl border p-4 ${tone === "warn" ? "border-amber-200 bg-amber-50" : "border-slate-200 bg-white dark:bg-slate-800 dark:border-slate-700"}`}>
-      <div className="text-xs text-slate-500">{label}</div>
-      <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">{value}</div>
+    <div className={`rounded-xl border p-4 ${tone === "warn" ? "border-warning/30 bg-warning-bg" : "border-border bg-white dark:bg-slate-800 dark:border-slate-700"}`}>
+      <div className="text-xs text-ink-4">{label}</div>
+      <div className="text-2xl font-bold text-ink dark:text-slate-100">{value}</div>
     </div>
   )
 }

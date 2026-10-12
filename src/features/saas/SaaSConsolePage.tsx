@@ -93,7 +93,7 @@ function HighlightMatch({ text, query }: { text: string; query: string }) {
         part.toLowerCase() === query.trim().toLowerCase() ? (
           <span
             key={i}
-            className="bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-200 font-bold rounded-xs px-0.5"
+            className="bg-warning-bg dark:bg-amber-950/80 text-warning-text dark:text-amber-200 font-bold rounded-xs px-0.5"
           >
             {part}
           </span>
@@ -223,7 +223,7 @@ function SubscriptionRow({
       <div className="min-w-0">
         <div className="font-semibold truncate">{subscription.hospital_name ?? hospital?.name ?? subscription.hospital}</div>
         {hospital?.slug && (
-          <div className="text-[11px] font-mono text-teal-600 dark:text-teal-400 truncate">
+          <div className="text-[11px] font-mono text-accent dark:text-teal-400 truncate">
             {hospital.slug}.hms.polynexus.in
           </div>
         )}
@@ -764,7 +764,7 @@ export function SaaSConsolePage() {
                                 }`}
                               >
                                 <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                                  <div className="w-7 h-7 rounded-lg bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800/60 text-teal-700 dark:text-teal-300 flex items-center justify-center font-bold text-xs shrink-0">
+                                  <div className="w-7 h-7 rounded-lg bg-accent-tint dark:bg-teal-950/60 border border-accent/25 dark:border-teal-800/60 text-accent-hover dark:text-teal-300 flex items-center justify-center font-bold text-xs shrink-0">
                                     {h.name.charAt(0).toUpperCase()}
                                   </div>
                                   <div className="min-w-0 flex-1">
@@ -780,7 +780,7 @@ export function SaaSConsolePage() {
                                     </div>
                                     <div className="flex items-center gap-2 text-[11px] text-ink-4 mt-0.5">
                                       {h.slug && (
-                                        <span className="font-mono text-teal-600 dark:text-teal-400">
+                                        <span className="font-mono text-accent dark:text-teal-400">
                                           <HighlightMatch text={`${h.slug}.hms.polynexus.in`} query={searchQuery} />
                                         </span>
                                       )}

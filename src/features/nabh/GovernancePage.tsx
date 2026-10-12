@@ -11,11 +11,11 @@ function SecurityPolicyForm() {
   useEffect(() => {
     api.get<Record<string, any>>("/governance/security-policy/").then(setP).catch((e) => setErr(extractApiError(e)))
   }, [])
-  if (!p) return <div className="text-sm text-slate-500">{err ?? "Loading…"}</div>
+  if (!p) return <div className="text-sm text-ink-4">{err ?? "Loading…"}</div>
   const set = (k: string, v: unknown) => setP({ ...p, [k]: v })
   const num = (k: string, label: string) => (
     <label className="text-sm">
-      <span className="block text-xs font-semibold text-slate-600 mb-1">{label}</span>
+      <span className="block text-xs font-semibold text-ink-3 mb-1">{label}</span>
       <input type="number" className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-900" value={p[k]} onChange={(e) => set(k, Number(e.target.value))} />
     </label>
   )
@@ -33,7 +33,7 @@ function SecurityPolicyForm() {
   }
   return (
     <div className="grid lg:grid-cols-3 gap-4">
-      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 space-y-3">
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-border dark:border-slate-700 p-5 space-y-3">
         <h3 className="font-semibold">Password policy</h3>
         {num("password_min_length", "Minimum length")}
         {box("password_require_uppercase", "Uppercase letter")}
@@ -43,20 +43,20 @@ function SecurityPolicyForm() {
         {num("password_expiry_days", "Expire after (days, 0 = never)")}
         {num("password_history_count", "Block reuse of last N passwords")}
       </div>
-      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 space-y-3">
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-border dark:border-slate-700 p-5 space-y-3">
         <h3 className="font-semibold">Lockout & MFA</h3>
         {num("lockout_threshold", "Failed logins before lockout (0 = off)")}
         {num("lockout_minutes", "Lockout duration (minutes)")}
         {box("enforce_mfa_for_all", "Require MFA for every user")}
         {box("sso_required", "Require single sign-on (owner/admin keep password fallback)")}
       </div>
-      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 space-y-3">
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-border dark:border-slate-700 p-5 space-y-3">
         <h3 className="font-semibold">Auto screen lock</h3>
         {box("idle_lock_enabled", "Lock idle screens")}
         {num("idle_lock_minutes", "Lock after (minutes of inactivity)")}
-        <button onClick={save} className="mt-4 px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg">Save policy</button>
-        {msg && <div className="text-sm text-emerald-700">{msg}</div>}
-        {err && <div className="text-sm text-rose-700">{err}</div>}
+        <button onClick={save} className="mt-4 px-4 py-2 text-sm font-medium text-white bg-success hover:bg-success-text rounded-lg">Save policy</button>
+        {msg && <div className="text-sm text-success-text">{msg}</div>}
+        {err && <div className="text-sm text-danger-text">{err}</div>}
       </div>
     </div>
   )
@@ -70,12 +70,12 @@ function RetentionForm() {
   }, [])
   if (!p) return null
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 flex flex-wrap gap-4 items-end">
+    <div className="bg-white dark:bg-slate-800 rounded-xl border border-border dark:border-slate-700 p-5 flex flex-wrap gap-4 items-end">
       <label className="text-sm">Backup retention (days)<input type="number" className="block mt-1 px-3 py-2 border rounded-lg" value={p.backup_retention_days} onChange={(e) => setP({ ...p, backup_retention_days: Number(e.target.value) })} /></label>
       <label className="text-sm">Auto backup every (hours)<input type="number" className="block mt-1 px-3 py-2 border rounded-lg" value={p.auto_backup_frequency_hours} onChange={(e) => setP({ ...p, auto_backup_frequency_hours: Number(e.target.value) })} /></label>
       <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={p.auto_backup_enabled} onChange={(e) => setP({ ...p, auto_backup_enabled: e.target.checked })} /> Scheduled backups</label>
-      <button onClick={async () => { setP(await api.patch("/governance/retention-policy/", p)); setMsg("Saved.") }} className="px-4 py-2 text-sm text-white bg-emerald-600 rounded-lg">Save</button>
-      {msg && <span className="text-sm text-emerald-700">{msg}</span>}
+      <button onClick={async () => { setP(await api.patch("/governance/retention-policy/", p)); setMsg("Saved.") }} className="px-4 py-2 text-sm text-white bg-success rounded-lg">Save</button>
+      {msg && <span className="text-sm text-success-text">{msg}</span>}
     </div>
   )
 }
@@ -93,15 +93,15 @@ export function HelpCenter() {
       <input className="w-full px-4 py-3 text-sm border rounded-xl bg-white dark:bg-slate-900" placeholder="Search help, FAQs, tutorials, troubleshooting…" value={q} onChange={(e) => setQ(e.target.value)} />
       {Object.entries(groups).map(([cat, items]) => (
         <div key={cat}>
-          <h3 className="text-xs uppercase font-semibold text-slate-500 mb-2">{cat}</h3>
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-700">
+          <h3 className="text-xs uppercase font-semibold text-ink-4 mb-2">{cat}</h3>
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-border dark:border-slate-700 divide-y divide-border-faint dark:divide-slate-700">
             {items.map((a) => (
               <div key={a.id} className="p-4">
-                <button onClick={() => setOpen(open === a.id ? null : a.id)} className="w-full text-left font-semibold text-slate-900 dark:text-slate-100">{a.title} <span className="text-xs text-slate-400 font-normal">{a.module}</span></button>
+                <button onClick={() => setOpen(open === a.id ? null : a.id)} className="w-full text-left font-semibold text-ink dark:text-slate-100">{a.title} <span className="text-xs text-ink-5 font-normal">{a.module}</span></button>
                 {open === a.id && (
-                  <div className="mt-2 text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
+                  <div className="mt-2 text-sm text-ink-2 dark:text-slate-300 whitespace-pre-wrap">
                     {a.body}
-                    {a.video_url && <div className="mt-2"><a href={a.video_url} target="_blank" rel="noreferrer" className="text-emerald-700 underline">Watch tutorial</a></div>}
+                    {a.video_url && <div className="mt-2"><a href={a.video_url} target="_blank" rel="noreferrer" className="text-success-text underline">Watch tutorial</a></div>}
                   </div>
                 )}
               </div>
@@ -109,7 +109,7 @@ export function HelpCenter() {
           </div>
         </div>
       ))}
-      {rows.length === 0 && <div className="text-sm text-slate-500">No articles match.</div>}
+      {rows.length === 0 && <div className="text-sm text-ink-4">No articles match.</div>}
     </div>
   )
 }
@@ -212,22 +212,22 @@ function BackupsTable() {
     }
   }
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 space-y-3">
+    <div className="bg-white dark:bg-slate-800 rounded-xl border border-border dark:border-slate-700 p-4 space-y-3">
       <div className="flex justify-between items-center">
         <h3 className="font-semibold">Backups</h3>
-        <button onClick={() => act(() => api.post("/governance/backups/", {}), "Backup completed.")} className="px-4 py-2 text-sm text-white bg-emerald-600 rounded-lg">Back up now</button>
+        <button onClick={() => act(() => api.post("/governance/backups/", {}), "Backup completed.")} className="px-4 py-2 text-sm text-white bg-success rounded-lg">Back up now</button>
       </div>
-      {msg && <div className="text-sm text-slate-700">{msg}</div>}
+      {msg && <div className="text-sm text-ink-2">{msg}</div>}
       <table className="w-full text-sm">
-        <thead><tr className="text-xs text-slate-500 text-left"><th>Started</th><th>Kind</th><th>Status</th><th>Records</th><th>Size</th><th>Expires</th><th /></tr></thead>
+        <thead><tr className="text-xs text-ink-4 text-left"><th>Started</th><th>Kind</th><th>Status</th><th>Records</th><th>Size</th><th>Expires</th><th /></tr></thead>
         <tbody>
           {rows.map((b) => (
-            <tr key={b.id} className="border-t border-slate-100 dark:border-slate-700">
+            <tr key={b.id} className="border-t border-border-faint dark:border-slate-700">
               <td className="py-2">{new Date(b.started_at).toLocaleString()}</td><td>{b.kind}</td><td>{b.status}</td><td>{b.record_count}</td>
               <td>{(b.size_bytes / 1024).toFixed(1)} KB</td><td>{b.expires_at ? new Date(b.expires_at).toLocaleDateString() : "—"}</td>
               <td className="text-right">
                 {["success", "restored"].includes(b.status) && (
-                  <button onClick={() => window.confirm("Restore this backup? Current values of the same records will be overwritten.") && act(() => api.post(`/governance/backups/${b.id}/restore/`, {}), "Restore complete.")} className="text-xs font-semibold text-rose-700">Restore</button>
+                  <button onClick={() => window.confirm("Restore this backup? Current values of the same records will be overwritten.") && act(() => api.post(`/governance/backups/${b.id}/restore/`, {}), "Restore complete.")} className="text-xs font-semibold text-danger-text">Restore</button>
                 )}
               </td>
             </tr>

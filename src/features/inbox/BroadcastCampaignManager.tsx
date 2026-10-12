@@ -136,14 +136,14 @@ export function BroadcastCampaignManager() {
     <div className="flex flex-col gap-5 h-full overflow-y-auto pb-10">
       {/* Alert banner */}
       {dispatchNotice && (
-        <div className="bg-emerald-50 border border-emerald-300 text-emerald-900 px-4 py-3 rounded-lg flex items-center justify-between shadow-sm animate-fade-in">
+        <div className="bg-success-bg border border-success/25 text-success-text px-4 py-3 rounded-lg flex items-center justify-between shadow-sm animate-fade-in">
           <div className="flex items-center gap-2">
             <span className="text-xl">🚀</span>
             <span className="font-semibold text-sm">{dispatchNotice}</span>
           </div>
           <button
             onClick={() => setDispatchNotice(null)}
-            className="text-emerald-700 hover:text-emerald-900 font-bold text-sm"
+            className="text-success-text hover:text-success-text font-bold text-sm"
           >
             ✕
           </button>
@@ -185,8 +185,8 @@ export function BroadcastCampaignManager() {
                 }}
                 className={`p-3.5 rounded-xl border transition-all cursor-pointer bg-white shadow-xs ${
                   isSelected
-                    ? "border-emerald-500 ring-2 ring-emerald-100 bg-emerald-50/20"
-                    : "border-border-faint hover:border-border-strong hover:bg-slate-50/50"
+                    ? "border-success ring-2 ring-success/15 bg-success-bg/20"
+                    : "border-border-faint hover:border-border-strong hover:bg-page/50"
                 }`}
               >
                 <div className="flex items-center justify-between mb-1.5">
@@ -203,7 +203,7 @@ export function BroadcastCampaignManager() {
 
       {/* Campaign Creation Drawer / Modal */}
       {isCreating && (
-        <Card padded className="border-2 border-emerald-400/80 bg-gradient-to-b from-emerald-50/30 to-white shadow-md">
+        <Card padded className="border-2 border-success/80 bg-gradient-to-b from-success-bg/30 to-white shadow-md">
           <div className="flex items-center justify-between pb-3 border-b border-border-faint">
             <div className="flex items-center gap-2">
               <span className="text-2xl">⚡</span>
@@ -222,7 +222,7 @@ export function BroadcastCampaignManager() {
                     key={idx}
                     type="button"
                     onClick={() => applyPreset(p)}
-                    className="text-[11px] px-2.5 py-1 bg-white hover:bg-emerald-50 border border-border-strong rounded font-medium text-ink-2 hover:text-emerald-700 transition"
+                    className="text-[11px] px-2.5 py-1 bg-white hover:bg-success-bg border border-border-strong rounded font-medium text-ink-2 hover:text-success-text transition"
                   >
                     {p.title.split(" ")[0]}…
                   </button>
@@ -248,7 +248,7 @@ export function BroadcastCampaignManager() {
                   placeholder="e.g. Free Cardiology Health Camp - Sunday"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full text-xs px-3 py-2 border border-border-strong rounded-control bg-surface focus:border-emerald-500 focus:outline-none"
+                  className="w-full text-xs px-3 py-2 border border-border-strong rounded-control bg-surface focus:border-success focus:outline-none"
                 />
               </div>
 
@@ -269,7 +269,7 @@ export function BroadcastCampaignManager() {
                   <select
                     value={selectedAudience}
                     onChange={(e) => setSelectedAudience(e.target.value as any)}
-                    className="w-full text-xs px-3 py-2 border border-border-strong rounded-control bg-surface font-semibold text-emerald-800"
+                    className="w-full text-xs px-3 py-2 border border-border-strong rounded-control bg-surface font-semibold text-success-text"
                   >
                     {Object.entries(AUDIENCE_LABELS).map(([k, v]) => (
                       <option key={k} value={k}>
@@ -287,14 +287,14 @@ export function BroadcastCampaignManager() {
                     <button
                       type="button"
                       onClick={() => setMessageBody((prev) => prev + " {{patient_name}}")}
-                      className="text-[10px] px-1.5 py-0.5 bg-slate-100 hover:bg-slate-200 border rounded text-ink-3"
+                      className="text-[10px] px-1.5 py-0.5 bg-chip-bg hover:bg-border-soft border rounded text-ink-3"
                     >
                       + Name
                     </button>
                     <button
                       type="button"
                       onClick={() => setMessageBody((prev) => prev + " {{hospital_name}}")}
-                      className="text-[10px] px-1.5 py-0.5 bg-slate-100 hover:bg-slate-200 border rounded text-ink-3"
+                      className="text-[10px] px-1.5 py-0.5 bg-chip-bg hover:bg-border-soft border rounded text-ink-3"
                     >
                       + Hospital
                     </button>
@@ -305,7 +305,7 @@ export function BroadcastCampaignManager() {
                   value={messageBody}
                   onChange={(e) => setMessageBody(e.target.value)}
                   placeholder="Enter broadcast message here..."
-                  className="w-full text-xs p-3 border border-border-strong rounded-control bg-surface font-sans leading-relaxed focus:border-emerald-500 focus:outline-none"
+                  className="w-full text-xs p-3 border border-border-strong rounded-control bg-surface font-sans leading-relaxed focus:border-success focus:outline-none"
                 />
                 <div className="flex justify-between items-center text-[11px] text-ink-4 mt-1">
                   <span>Estimated Reach: {(counts as any)[selectedAudience] || 0} recipients</span>
@@ -330,8 +330,8 @@ export function BroadcastCampaignManager() {
             </div>
 
             {/* Right: WhatsApp Mockup Preview */}
-            <div className="flex flex-col items-center justify-center p-4 bg-slate-100 rounded-xl border border-slate-200">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+            <div className="flex flex-col items-center justify-center p-4 bg-chip-bg rounded-xl border border-border">
+              <span className="text-xs font-semibold text-ink-4 uppercase tracking-wider mb-2">
                 WhatsApp Patient Phone Preview
               </span>
               <div className="w-[300px] bg-[#075e54] text-white px-3 py-2 rounded-t-xl text-xs font-semibold flex items-center justify-between shadow">
@@ -342,13 +342,13 @@ export function BroadcastCampaignManager() {
                 <span className="text-[10px] text-emerald-200">Verified</span>
               </div>
               <div className="w-[300px] bg-[#efeae2] p-3 rounded-b-xl shadow min-h-[160px] flex flex-col justify-end">
-                <div className="bg-white rounded-lg p-2.5 shadow-sm text-xs text-slate-800 leading-relaxed max-w-[260px]">
+                <div className="bg-white rounded-lg p-2.5 shadow-sm text-xs text-ink leading-relaxed max-w-[260px]">
                   <p className="whitespace-pre-wrap">
                     {messageBody.replace(/{{patient_name}}/g, "Rahul Sharma") || "Your broadcast message will appear here..."}
                   </p>
-                  <div className="text-[9px] text-slate-400 text-right mt-1.5 flex items-center justify-end gap-1">
+                  <div className="text-[9px] text-ink-5 text-right mt-1.5 flex items-center justify-end gap-1">
                     <span>10:30 AM</span>
-                    <span className="text-blue-500 font-bold">✓✓</span>
+                    <span className="text-brand font-bold">✓✓</span>
                   </div>
                 </div>
               </div>
@@ -418,19 +418,19 @@ export function BroadcastCampaignManager() {
                   </div>
 
                   {/* Delivery & Read Metrics */}
-                  <div className="flex items-center gap-4 shrink-0 bg-slate-50 px-3.5 py-2 rounded-lg border border-slate-200">
+                  <div className="flex items-center gap-4 shrink-0 bg-page px-3.5 py-2 rounded-lg border border-border">
                     <div className="text-center">
                       <div className="text-xs font-bold text-ink-1">{campaign.total_recipients}</div>
                       <div className="text-[10px] text-ink-4 uppercase">Recipients</div>
                     </div>
-                    <div className="h-6 w-px bg-slate-200" />
+                    <div className="h-6 w-px bg-border-soft" />
                     <div className="text-center">
-                      <div className="text-xs font-bold text-emerald-600">{deliveryRate}%</div>
+                      <div className="text-xs font-bold text-success">{deliveryRate}%</div>
                       <div className="text-[10px] text-ink-4 uppercase">Delivered</div>
                     </div>
-                    <div className="h-6 w-px bg-slate-200" />
+                    <div className="h-6 w-px bg-border-soft" />
                     <div className="text-center">
-                      <div className="text-xs font-bold text-blue-600">{readRate}%</div>
+                      <div className="text-xs font-bold text-brand">{readRate}%</div>
                       <div className="text-[10px] text-ink-4 uppercase">Read</div>
                     </div>
                     {campaign.status !== "completed" && (

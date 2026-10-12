@@ -8,7 +8,7 @@ export function StatusDot({ status }: { status: SIPStatus }) {
       bg: "#f0fdf4",
       border: "#bbf7d0",
       label: "● Online",
-      dot: "bg-emerald-500",
+      dot: "bg-success",
     },
     offline: {
       color: "#6b7280",
@@ -22,14 +22,14 @@ export function StatusDot({ status }: { status: SIPStatus }) {
       bg: "#fffbeb",
       border: "#fde68a",
       label: "◉ On Call",
-      dot: "bg-amber-500 animate-pulse",
+      dot: "bg-warning animate-pulse",
     },
     registering: {
       color: "#1d4ed8",
       bg: "#eff6ff",
       border: "#bfdbfe",
       label: "◌ Registering…",
-      dot: "bg-blue-500 animate-pulse",
+      dot: "bg-brand animate-pulse",
     },
   }
 
@@ -77,11 +77,11 @@ export function WebRTCHeaderBadge() {
         <span
           className={`w-2 h-2 rounded-full ${
             sipStatus === "online"
-              ? "bg-emerald-500"
+              ? "bg-success"
               : sipStatus === "busy"
-              ? "bg-amber-500 animate-ping"
+              ? "bg-warning animate-ping"
               : sipStatus === "registering"
-              ? "bg-blue-500 animate-pulse"
+              ? "bg-brand animate-pulse"
               : "bg-slate-400"
           }`}
         />
@@ -103,7 +103,7 @@ export function WebRTCHeaderBadge() {
       {sipStatus === "busy" && (
         <button
           onClick={hangup}
-          className="h-8 px-2.5 rounded-control text-xs font-bold text-white bg-red-600 hover:bg-red-700 transition-colors shadow-xs flex items-center gap-1.5 animate-pulse"
+          className="h-8 px-2.5 rounded-control text-xs font-bold text-white bg-danger hover:bg-danger transition-colors shadow-xs flex items-center gap-1.5 animate-pulse"
           title="Hang up current WebRTC call"
         >
           <span>🛑</span>

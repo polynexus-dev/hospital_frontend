@@ -84,23 +84,23 @@ export function FinancePage() {
     <div className="p-6 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+          <h1 className="text-2xl font-bold tracking-tight text-ink dark:text-slate-100">
             Finance & Operational Ledger
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-sm text-ink-4 dark:text-slate-400">
             Monitor revenue streams, hospital operational expenses, and corporate/insurance receivables aging.
           </p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => setShowExpModal(true)}
-            className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 rounded-lg"
+            className="px-4 py-2 text-sm font-medium text-ink-2 dark:text-slate-200 bg-chip-bg dark:bg-slate-700 hover:bg-border-soft rounded-lg"
           >
             + Log Expense
           </button>
           <button
             onClick={() => setShowRecModal(true)}
-            className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm"
+            className="px-4 py-2 text-sm font-medium text-white bg-success hover:bg-success-text rounded-lg shadow-sm"
           >
             + New Receivable
           </button>
@@ -108,13 +108,13 @@ export function FinancePage() {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-slate-200 dark:border-slate-700 flex gap-4">
+      <div className="border-b border-border dark:border-slate-700 flex gap-4">
         <button
           onClick={() => setActiveTab("ledger")}
           className={`pb-2 text-sm font-semibold border-b-2 transition-colors ${
             activeTab === "ledger"
-              ? "border-emerald-600 text-emerald-600 dark:text-emerald-400"
-              : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              ? "border-success text-success dark:text-emerald-400"
+              : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
           General Ledger ({ledger.length})
@@ -123,8 +123,8 @@ export function FinancePage() {
           onClick={() => setActiveTab("expenses")}
           className={`pb-2 text-sm font-semibold border-b-2 transition-colors ${
             activeTab === "expenses"
-              ? "border-emerald-600 text-emerald-600 dark:text-emerald-400"
-              : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              ? "border-success text-success dark:text-emerald-400"
+              : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
           Expenses ({expenses.length})
@@ -133,8 +133,8 @@ export function FinancePage() {
           onClick={() => setActiveTab("receivables")}
           className={`pb-2 text-sm font-semibold border-b-2 transition-colors ${
             activeTab === "receivables"
-              ? "border-emerald-600 text-emerald-600 dark:text-emerald-400"
-              : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              ? "border-success text-success dark:text-emerald-400"
+              : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
           Receivables Aging ({receivables.length})
@@ -142,12 +142,12 @@ export function FinancePage() {
       </div>
 
       {loading ? (
-        <div className="py-12 text-center text-slate-500">Loading financial records...</div>
+        <div className="py-12 text-center text-ink-4">Loading financial records...</div>
       ) : activeTab === "ledger" ? (
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-hidden">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-xs font-semibold text-slate-500 uppercase">
+              <tr className="border-b border-border dark:border-slate-700 bg-page dark:bg-slate-900/50 text-xs font-semibold text-ink-4 uppercase">
                 <th className="px-4 py-3">Entry Type</th>
                 <th className="px-4 py-3">Category</th>
                 <th className="px-4 py-3">Amount</th>
@@ -155,27 +155,27 @@ export function FinancePage() {
                 <th className="px-4 py-3">Date</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+            <tbody className="divide-y divide-border dark:divide-slate-700">
               {ledger.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan={5} className="px-4 py-8 text-center text-ink-4">
                     No ledger entries recorded.
                   </td>
                 </tr>
               ) : (
                 ledger.map((l) => (
-                  <tr key={l.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
+                  <tr key={l.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
                     <td className="px-4 py-3 font-semibold uppercase text-xs">
                       {l.entry_type === "revenue" ? (
-                        <span className="text-emerald-600 dark:text-emerald-400">Revenue</span>
+                        <span className="text-success dark:text-emerald-400">Revenue</span>
                       ) : (
-                        <span className="text-rose-600 dark:text-rose-400">Expense</span>
+                        <span className="text-danger-text dark:text-rose-400">Expense</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">{l.category}</td>
-                    <td className="px-4 py-3 font-bold text-slate-900 dark:text-slate-100">₹{l.amount}</td>
-                    <td className="px-4 py-3 text-slate-500 text-xs">{l.reference_type ? `${l.reference_type} #${l.reference_id}` : "N/A"}</td>
-                    <td className="px-4 py-3 text-slate-500">{new Date(l.entry_date).toLocaleString()}</td>
+                    <td className="px-4 py-3 font-medium text-ink dark:text-slate-100">{l.category}</td>
+                    <td className="px-4 py-3 font-bold text-ink dark:text-slate-100">₹{l.amount}</td>
+                    <td className="px-4 py-3 text-ink-4 text-xs">{l.reference_type ? `${l.reference_type} #${l.reference_id}` : "N/A"}</td>
+                    <td className="px-4 py-3 text-ink-4">{new Date(l.entry_date).toLocaleString()}</td>
                   </tr>
                 ))
               )}
@@ -183,10 +183,10 @@ export function FinancePage() {
           </table>
         </div>
       ) : activeTab === "expenses" ? (
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-hidden">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-xs font-semibold text-slate-500 uppercase">
+              <tr className="border-b border-border dark:border-slate-700 bg-page dark:bg-slate-900/50 text-xs font-semibold text-ink-4 uppercase">
                 <th className="px-4 py-3">Category</th>
                 <th className="px-4 py-3">Paid To</th>
                 <th className="px-4 py-3">Amount</th>
@@ -195,27 +195,27 @@ export function FinancePage() {
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+            <tbody className="divide-y divide-border dark:divide-slate-700">
               {expenses.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan={6} className="px-4 py-8 text-center text-ink-4">
                     No expense records found.
                   </td>
                 </tr>
               ) : (
                 expenses.map((e) => (
-                  <tr key={e.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
-                    <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">{e.category}</td>
-                    <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{e.paid_to}</td>
-                    <td className="px-4 py-3 font-bold text-slate-900 dark:text-slate-100">₹{e.amount}</td>
-                    <td className="px-4 py-3 text-slate-500">{e.expense_date}</td>
+                  <tr key={e.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
+                    <td className="px-4 py-3 font-medium text-ink dark:text-slate-100">{e.category}</td>
+                    <td className="px-4 py-3 text-ink-2 dark:text-slate-300">{e.paid_to}</td>
+                    <td className="px-4 py-3 font-bold text-ink dark:text-slate-100">₹{e.amount}</td>
+                    <td className="px-4 py-3 text-ink-4">{e.expense_date}</td>
                     <td className="px-4 py-3">
                       {e.approved_by ? (
-                        <span className="px-2.5 py-1 text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300 rounded-full">
+                        <span className="px-2.5 py-1 text-xs font-medium bg-success-bg text-success-text dark:bg-green-900/40 dark:text-green-300 rounded-full">
                           Approved
                         </span>
                       ) : (
-                        <span className="px-2.5 py-1 text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 rounded-full">
+                        <span className="px-2.5 py-1 text-xs font-medium bg-warning-bg text-warning-text dark:bg-amber-900/40 dark:text-amber-300 rounded-full">
                           Pending Approval
                         </span>
                       )}
@@ -224,7 +224,7 @@ export function FinancePage() {
                       {!e.approved_by && (
                         <button
                           onClick={() => handleApproveExpense(e.id)}
-                          className="px-3 py-1 text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 rounded hover:bg-emerald-200"
+                          className="px-3 py-1 text-xs font-semibold bg-success-bg text-success-text dark:bg-emerald-900/40 dark:text-emerald-300 rounded hover:bg-success/25"
                         >
                           Approve
                         </button>
@@ -237,10 +237,10 @@ export function FinancePage() {
           </table>
         </div>
       ) : (
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-hidden">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-xs font-semibold text-slate-500 uppercase">
+              <tr className="border-b border-border dark:border-slate-700 bg-page dark:bg-slate-900/50 text-xs font-semibold text-ink-4 uppercase">
                 <th className="px-4 py-3">Source Type</th>
                 <th className="px-4 py-3">Source ID / Claim #</th>
                 <th className="px-4 py-3">Amount</th>
@@ -248,23 +248,23 @@ export function FinancePage() {
                 <th className="px-4 py-3">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+            <tbody className="divide-y divide-border dark:divide-slate-700">
               {receivables.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan={5} className="px-4 py-8 text-center text-ink-4">
                     No receivables outstanding.
                   </td>
                 </tr>
               ) : (
                 receivables.map((r) => (
-                  <tr key={r.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
-                    <td className="px-4 py-3 uppercase text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  <tr key={r.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
+                    <td className="px-4 py-3 uppercase text-xs font-semibold text-ink-2 dark:text-slate-300">
                       {r.source_type.replace("_", " ")}
                     </td>
-                    <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">{r.source_id}</td>
-                    <td className="px-4 py-3 font-bold text-slate-900 dark:text-slate-100">₹{r.amount}</td>
-                    <td className="px-4 py-3 text-slate-500">{r.due_date}</td>
-                    <td className="px-4 py-3 capitalize font-semibold text-indigo-600 dark:text-indigo-400">{r.status}</td>
+                    <td className="px-4 py-3 font-medium text-ink dark:text-slate-100">{r.source_id}</td>
+                    <td className="px-4 py-3 font-bold text-ink dark:text-slate-100">₹{r.amount}</td>
+                    <td className="px-4 py-3 text-ink-4">{r.due_date}</td>
+                    <td className="px-4 py-3 capitalize font-semibold text-brand dark:text-indigo-400">{r.status}</td>
                   </tr>
                 ))
               )}
@@ -277,10 +277,10 @@ export function FinancePage() {
       {showExpModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-800 max-w-md w-full rounded-xl p-6 space-y-4">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Record Operational Expense</h2>
+            <h2 className="text-lg font-bold text-ink dark:text-slate-100">Record Operational Expense</h2>
             <form onSubmit={handleCreateExpense} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Category</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Category</label>
                 <input
                   type="text"
                   required
@@ -290,7 +290,7 @@ export function FinancePage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Paid To / Vendor</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Paid To / Vendor</label>
                 <input
                   type="text"
                   required
@@ -300,7 +300,7 @@ export function FinancePage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Amount (₹)</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Amount (₹)</label>
                 <input
                   type="number"
                   step="0.01"
@@ -311,7 +311,7 @@ export function FinancePage() {
                 />
               </div>
               <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setShowExpModal(false)} className="px-4 py-2 text-sm text-slate-500">
+                <button type="button" onClick={() => setShowExpModal(false)} className="px-4 py-2 text-sm text-ink-4">
                   Cancel
                 </button>
                 <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-slate-800 dark:bg-slate-700 rounded-lg">
@@ -327,10 +327,10 @@ export function FinancePage() {
       {showRecModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-800 max-w-md w-full rounded-xl p-6 space-y-4">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">Log Outstanding Receivable</h2>
+            <h2 className="text-lg font-bold text-ink dark:text-slate-100">Log Outstanding Receivable</h2>
             <form onSubmit={handleCreateReceivable} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Source Type</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Source Type</label>
                 <select
                   value={recSourceType}
                   onChange={(e) => setRecSourceType(e.target.value as any)}
@@ -341,7 +341,7 @@ export function FinancePage() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Source Reference / Claim #</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Source Reference / Claim #</label>
                 <input
                   type="text"
                   required
@@ -351,7 +351,7 @@ export function FinancePage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Amount (₹)</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Amount (₹)</label>
                 <input
                   type="number"
                   step="0.01"
@@ -362,7 +362,7 @@ export function FinancePage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Due Date</label>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Due Date</label>
                 <input
                   type="date"
                   required
@@ -372,10 +372,10 @@ export function FinancePage() {
                 />
               </div>
               <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setShowRecModal(false)} className="px-4 py-2 text-sm text-slate-500">
+                <button type="button" onClick={() => setShowRecModal(false)} className="px-4 py-2 text-sm text-ink-4">
                   Cancel
                 </button>
-                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg">
+                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-success rounded-lg">
                   Save Receivable
                 </button>
               </div>

@@ -16,18 +16,18 @@ export function ModuleHub({ title, subtitle, tabs }: { title: string; subtitle?:
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">{title}</h1>
-        {subtitle && <p className="text-sm text-slate-500 dark:text-slate-400">{subtitle}</p>}
+        <h1 className="text-2xl font-bold tracking-tight text-ink dark:text-slate-100">{title}</h1>
+        {subtitle && <p className="text-sm text-ink-4 dark:text-slate-400">{subtitle}</p>}
       </div>
-      <div className="border-b border-slate-200 dark:border-slate-700 flex gap-4 overflow-x-auto">
+      <div className="border-b border-border dark:border-slate-700 flex gap-4 overflow-x-auto">
         {tabs.map((t) => (
           <button
             key={t.key}
             onClick={() => setParams({ tab: t.key })}
             className={`pb-2 text-sm font-semibold border-b-2 whitespace-nowrap transition-colors ${
               t.key === active.key
-                ? "border-emerald-600 text-emerald-700 dark:text-emerald-400"
-                : "border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                ? "border-success text-success-text dark:text-emerald-400"
+                : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
             }`}
           >
             {t.label}

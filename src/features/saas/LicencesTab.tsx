@@ -142,7 +142,7 @@ function LicenceRegister({ canManage, isOwner }: { canManage: boolean; isOwner: 
         />
       </div>
       {uploadMessage && (
-        <div className={`mx-3.5 mt-3 rounded-control px-3 py-2 text-[12px] font-semibold ${uploadMessage.ok ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300" : "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300"}`}>
+        <div className={`mx-3.5 mt-3 rounded-control px-3 py-2 text-[12px] font-semibold ${uploadMessage.ok ? "bg-success-bg text-success-text dark:bg-emerald-950/40 dark:text-emerald-300" : "bg-danger-bg text-danger-text dark:bg-rose-950/40 dark:text-rose-300"}`}>
           {uploadMessage.text}
         </div>
       )}
@@ -187,9 +187,9 @@ function LicenceRegister({ canManage, isOwner }: { canManage: boolean; isOwner: 
                       <Pill tone={expiryTone(lic)}>{expiryText(lic)}</Pill>
                     </td>
                     <td className="py-2.5 pr-3">
-                      {usage ? <span className={overLimit ? "font-semibold text-rose-600" : ""}>{usage.active_users}</span> : <span className="text-ink-4">?</span>}
+                      {usage ? <span className={overLimit ? "font-semibold text-danger-text" : ""}>{usage.active_users}</span> : <span className="text-ink-4">?</span>}
                       <span className="text-ink-4"> / {limit ?? "∞"}</span>
-                      {overLimit && <div className="text-[11px] text-rose-600">over the limit</div>}
+                      {overLimit && <div className="text-[11px] text-danger-text">over the limit</div>}
                     </td>
                     <td className="py-2.5 pr-3">
                       {usage ? (

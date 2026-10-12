@@ -86,29 +86,29 @@ export function InboundWebhookModal({ open, onClose, onLeadCaptured }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm animate-fade-in overflow-y-auto">
-      <div className="w-full max-w-2xl rounded-xl bg-white shadow-2xl ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800 my-8">
-        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 dark:border-slate-800">
+      <div className="w-full max-w-2xl rounded-xl bg-white shadow-2xl ring-1 ring-border dark:bg-slate-900 dark:ring-slate-800 my-8">
+        <div className="flex items-center justify-between border-b border-border-faint px-6 py-4 dark:border-slate-800">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-ink dark:text-white flex items-center gap-2">
               <span>⚡</span> Inbound Lead Webhooks & Ad Integrations
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-ink-4 dark:text-slate-400">
               Connect Meta Lead Ads, Google Ads, Zapier, WordPress, or Elementor to automatically ingest patient enquiries
             </p>
           </div>
-          <button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200">
+          <button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-chip-bg hover:text-ink-3 dark:hover:bg-slate-800 dark:hover:text-slate-200">
             ✕
           </button>
         </div>
 
         {/* Tab Header */}
-        <div className="flex border-b border-slate-100 px-6 pt-3 dark:border-slate-800 gap-4">
+        <div className="flex border-b border-border-faint px-6 pt-3 dark:border-slate-800 gap-4">
           <button
             onClick={() => setActiveTab("overview")}
             className={`pb-2 text-xs font-semibold border-b-2 transition-colors ${
               activeTab === "overview"
-                ? "border-teal-600 text-teal-700 dark:border-teal-400 dark:text-teal-300"
-                : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                ? "border-accent text-accent-hover dark:border-teal-400 dark:text-teal-300"
+                : "border-transparent text-ink-4 hover:text-ink-2 dark:text-slate-400 dark:hover:text-slate-200"
             }`}
           >
             Webhook Endpoint & Guides
@@ -117,8 +117,8 @@ export function InboundWebhookModal({ open, onClose, onLeadCaptured }: Props) {
             onClick={() => setActiveTab("simulator")}
             className={`pb-2 text-xs font-semibold border-b-2 transition-colors flex items-center gap-1.5 ${
               activeTab === "simulator"
-                ? "border-teal-600 text-teal-700 dark:border-teal-400 dark:text-teal-300"
-                : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                ? "border-accent text-accent-hover dark:border-teal-400 dark:text-teal-300"
+                : "border-transparent text-ink-4 hover:text-ink-2 dark:text-slate-400 dark:hover:text-slate-200"
             }`}
           >
             <span>🧪</span> Live Webhook Simulator
@@ -127,39 +127,39 @@ export function InboundWebhookModal({ open, onClose, onLeadCaptured }: Props) {
 
         <div className="p-6">
           {isLoading ? (
-            <div className="py-12 text-center text-xs text-slate-500">Loading webhook configuration...</div>
+            <div className="py-12 text-center text-xs text-ink-4">Loading webhook configuration...</div>
           ) : activeTab === "overview" ? (
             <div className="space-y-4 text-xs">
               {/* Endpoint Card */}
-              <div className="rounded-xl border border-teal-100 bg-teal-50/50 p-4 dark:border-teal-900/40 dark:bg-teal-950/20">
+              <div className="rounded-xl border border-accent/15 bg-accent-tint/50 p-4 dark:border-teal-900/40 dark:bg-teal-950/20">
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="font-semibold text-teal-900 dark:text-teal-200 uppercase tracking-wider text-[11px]">
+                  <span className="font-semibold text-accent-hover dark:text-teal-200 uppercase tracking-wider text-[11px]">
                     Your Dedicated Inbound Webhook URL
                   </span>
-                  <span className="rounded bg-teal-100 px-2 py-0.5 text-[10px] font-bold text-teal-800 dark:bg-teal-900/60 dark:text-teal-300">
+                  <span className="rounded bg-accent-tint px-2 py-0.5 text-[10px] font-bold text-accent-hover dark:bg-teal-900/60 dark:text-teal-300">
                     HTTP POST • JSON
                   </span>
                 </div>
                 <div className="flex items-center gap-2 mt-1">
-                  <code className="flex-1 rounded-lg border border-teal-200 bg-white px-3 py-2 text-xs font-mono text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-teal-300 break-all select-all">
+                  <code className="flex-1 rounded-lg border border-accent/25 bg-white px-3 py-2 text-xs font-mono text-ink dark:border-slate-700 dark:bg-slate-800 dark:text-teal-300 break-all select-all">
                     {config?.webhook_url}
                   </code>
                   <Button size="sm" onClick={handleCopy}>
                     {copied ? "Copied! ✓" : "Copy URL"}
                   </Button>
                 </div>
-                <p className="mt-2 text-[11px] text-teal-800/80 dark:text-teal-300/80">
+                <p className="mt-2 text-[11px] text-accent-hover/80 dark:text-teal-300/80">
                   Authentication is secured via your hospital's unique token embedded in the URL path. No API key or JWT header needed.
                 </p>
               </div>
 
               {/* Guide Blocks */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
-                <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
-                  <div className="flex items-center gap-2 font-semibold text-slate-800 dark:text-slate-200 mb-1">
+                <div className="rounded-lg border border-border p-3 dark:border-slate-800">
+                  <div className="flex items-center gap-2 font-semibold text-ink dark:text-slate-200 mb-1">
                     <span>📱</span> Meta (Facebook/IG) Lead Ads
                   </div>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  <p className="text-[11px] text-ink-4 dark:text-slate-400">
                     Connect via Zapier, Make.com, or Meta Webhooks. Map Form fields:
                     <br />
                     • <code>full_name</code> ➔ <code>name</code>
@@ -170,11 +170,11 @@ export function InboundWebhookModal({ open, onClose, onLeadCaptured }: Props) {
                   </p>
                 </div>
 
-                <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
-                  <div className="flex items-center gap-2 font-semibold text-slate-800 dark:text-slate-200 mb-1">
+                <div className="rounded-lg border border-border p-3 dark:border-slate-800">
+                  <div className="flex items-center gap-2 font-semibold text-ink dark:text-slate-200 mb-1">
                     <span>🌐</span> Website Forms (Elementor/WP)
                   </div>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  <p className="text-[11px] text-ink-4 dark:text-slate-400">
                     In Elementor Form "Actions After Submit", choose <b>Webhook</b>. Paste the URL above.
                     Lead appears instantly in the CRM with full UTM source/medium attribution.
                   </p>
@@ -182,8 +182,8 @@ export function InboundWebhookModal({ open, onClose, onLeadCaptured }: Props) {
               </div>
 
               {/* Sample Payload */}
-              <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
-                <span className="font-semibold text-slate-700 dark:text-slate-300 text-[11px] mb-1.5 block">
+              <div className="rounded-lg border border-border p-3 dark:border-slate-800">
+                <span className="font-semibold text-ink-2 dark:text-slate-300 text-[11px] mb-1.5 block">
                   Standard Inbound JSON Payload
                 </span>
                 <pre className="overflow-x-auto rounded bg-slate-900 p-2.5 text-[10px] text-emerald-400 font-mono">
@@ -194,13 +194,13 @@ export function InboundWebhookModal({ open, onClose, onLeadCaptured }: Props) {
           ) : (
             /* Simulator Tab */
             <form onSubmit={handleSimulate} className="space-y-4 text-xs">
-              <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 dark:bg-amber-950/20 dark:border-amber-900/40 text-amber-800 dark:text-amber-300">
+              <div className="rounded-lg bg-warning-bg border border-warning/30 p-3 dark:bg-amber-950/20 dark:border-amber-900/40 text-warning-text dark:text-amber-300">
                 Test the ingestion pipeline in real-time. This fires an actual HTTP POST to your hospital's webhook endpoint and creates a test lead in the CRM.
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-[11px] font-semibold text-ink-2 dark:text-slate-300 mb-1">
                     Lead Name *
                   </label>
                   <input
@@ -208,12 +208,12 @@ export function InboundWebhookModal({ open, onClose, onLeadCaptured }: Props) {
                     required
                     value={simName}
                     onChange={(e) => setSimName(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-xs focus:border-teal-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                    className="w-full rounded-lg border border-border px-3 py-1.5 text-xs focus:border-accent focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-[11px] font-semibold text-ink-2 dark:text-slate-300 mb-1">
                     Mobile Number *
                   </label>
                   <input
@@ -221,18 +221,18 @@ export function InboundWebhookModal({ open, onClose, onLeadCaptured }: Props) {
                     required
                     value={simMobile}
                     onChange={(e) => setSimMobile(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-xs focus:border-teal-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                    className="w-full rounded-lg border border-border px-3 py-1.5 text-xs focus:border-accent focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-[11px] font-semibold text-ink-2 dark:text-slate-300 mb-1">
                     Channel / Source
                   </label>
                   <select
                     value={simSource}
                     onChange={(e) => setSimSource(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-xs focus:border-teal-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                    className="w-full rounded-lg border border-border px-3 py-1.5 text-xs focus:border-accent focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                   >
                     <option value="meta">Meta (FB / Instagram)</option>
                     <option value="google">Google Ads (Search/Display)</option>
@@ -243,51 +243,51 @@ export function InboundWebhookModal({ open, onClose, onLeadCaptured }: Props) {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-[11px] font-semibold text-ink-2 dark:text-slate-300 mb-1">
                     Service Requested
                   </label>
                   <input
                     type="text"
                     value={simService}
                     onChange={(e) => setSimService(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-xs focus:border-teal-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                    className="w-full rounded-lg border border-border px-3 py-1.5 text-xs focus:border-accent focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-[11px] font-semibold text-ink-2 dark:text-slate-300 mb-1">
                   Ad Campaign Name
                 </label>
                 <input
                   type="text"
                   value={simCampaign}
                   onChange={(e) => setSimCampaign(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-xs focus:border-teal-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                  className="w-full rounded-lg border border-border px-3 py-1.5 text-xs focus:border-accent focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-[11px] font-semibold text-ink-2 dark:text-slate-300 mb-1">
                     UTM Source
                   </label>
                   <input
                     type="text"
                     value={simUtmSource}
                     onChange={(e) => setSimUtmSource(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-xs focus:border-teal-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                    className="w-full rounded-lg border border-border px-3 py-1.5 text-xs focus:border-accent focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-[11px] font-semibold text-ink-2 dark:text-slate-300 mb-1">
                     UTM Medium
                   </label>
                   <input
                     type="text"
                     value={simUtmMedium}
                     onChange={(e) => setSimUtmMedium(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-xs focus:border-teal-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                    className="w-full rounded-lg border border-border px-3 py-1.5 text-xs focus:border-accent focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                   />
                 </div>
               </div>
@@ -297,8 +297,8 @@ export function InboundWebhookModal({ open, onClose, onLeadCaptured }: Props) {
                 <div
                   className={`rounded-lg p-3 text-xs font-semibold ${
                     simResult.success
-                      ? "bg-emerald-50 border border-emerald-200 text-emerald-800 dark:bg-emerald-950/30 dark:border-emerald-800 dark:text-emerald-300"
-                      : "bg-red-50 border border-red-200 text-red-800 dark:bg-red-950/30 dark:border-red-800 dark:text-red-300"
+                      ? "bg-success-bg border border-success/25 text-success-text dark:bg-emerald-950/30 dark:border-emerald-800 dark:text-emerald-300"
+                      : "bg-danger-bg border border-danger-border text-danger-text dark:bg-red-950/30 dark:border-red-800 dark:text-red-300"
                   }`}
                 >
                   {simResult.message}
@@ -314,7 +314,7 @@ export function InboundWebhookModal({ open, onClose, onLeadCaptured }: Props) {
           )}
         </div>
 
-        <div className="flex justify-end border-t border-slate-100 px-6 py-3 dark:border-slate-800">
+        <div className="flex justify-end border-t border-border-faint px-6 py-3 dark:border-slate-800">
           <Button variant="ghost" size="sm" onClick={onClose}>
             Close
           </Button>

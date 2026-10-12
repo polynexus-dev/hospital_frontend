@@ -33,20 +33,20 @@ export function TeleJoinPage() {
     )
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-page p-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow p-7 space-y-4">
         {error && !info ? (
-          <div className="text-rose-700">{error}</div>
+          <div className="text-danger-text">{error}</div>
         ) : !info ? (
-          <div className="text-slate-500">Loading…</div>
+          <div className="text-ink-4">Loading…</div>
         ) : (
           <>
             <div>
-              <div className="text-xs uppercase text-slate-500">{info.hospital}</div>
+              <div className="text-xs uppercase text-ink-4">{info.hospital}</div>
               <h1 className="text-xl font-bold">Video consultation with {info.doctor}</h1>
-              <div className="text-sm text-slate-600">Hello {info.patient_first_name} — scheduled {new Date(info.scheduled_at).toLocaleString()}</div>
+              <div className="text-sm text-ink-3">Hello {info.patient_first_name} — scheduled {new Date(info.scheduled_at).toLocaleString()}</div>
             </div>
-            <div className="text-sm text-slate-700 bg-slate-50 rounded-lg p-3">
+            <div className="text-sm text-ink-2 bg-page rounded-lg p-3">
               This is a teleconsultation under the Telemedicine Practice Guidelines 2020. The doctor may not be able to examine you physically and may ask you to visit the hospital.
               Your consultation notes and any prescription become part of your medical record.
             </div>
@@ -54,8 +54,8 @@ export function TeleJoinPage() {
               <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-1" />
               I consent to this teleconsultation.
             </label>
-            {error && <div className="text-sm text-rose-700">{error}</div>}
-            <button disabled={!consent} onClick={join} className="w-full py-3 rounded-xl bg-emerald-600 text-white font-semibold disabled:opacity-50">Join consultation</button>
+            {error && <div className="text-sm text-danger-text">{error}</div>}
+            <button disabled={!consent} onClick={join} className="w-full py-3 rounded-xl bg-success text-white font-semibold disabled:opacity-50">Join consultation</button>
           </>
         )}
       </div>

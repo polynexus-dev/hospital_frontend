@@ -44,8 +44,8 @@ export function LicenseBanner() {
       role="alert"
       className={`px-5 py-2.5 text-[13px] flex flex-wrap items-center gap-x-3 gap-y-1 border-b ${
         blocking || data.state === "grace_period"
-          ? "bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/40 dark:text-rose-200 dark:border-rose-900"
-          : "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-200 dark:border-amber-900"
+          ? "bg-danger-bg text-danger-text border-danger-border dark:bg-rose-950/40 dark:text-rose-200 dark:border-rose-900"
+          : "bg-warning-bg text-warning-text border-warning/30 dark:bg-amber-950/40 dark:text-amber-200 dark:border-amber-900"
       }`}
     >
       <span className="font-semibold">{headline(data)}</span>

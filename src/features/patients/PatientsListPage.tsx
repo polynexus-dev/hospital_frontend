@@ -176,21 +176,21 @@ export function PatientsListPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Patient Directory</h1>
-          <p className="text-sm text-slate-600 mt-0.5">Search and manage complete Patient 360 records</p>
+          <h1 className="text-2xl font-bold text-ink tracking-tight">Patient Directory</h1>
+          <p className="text-sm text-ink-3 mt-0.5">Search and manage complete Patient 360 records</p>
         </div>
         <div className="flex items-center gap-2">
           <Button
             variant="secondary"
             onClick={() => setIsNoticeModalOpen(true)}
-            className="border border-indigo-200 text-indigo-800 hover:bg-indigo-50"
+            className="border border-brand-border text-brand-dark hover:bg-brand-tint"
           >
             📋 DPDP Itemized Notice
           </Button>
           <Button
             variant="secondary"
             onClick={() => setIsRecallModalOpen(true)}
-            className="border border-teal-200 text-teal-800 hover:bg-teal-50"
+            className="border border-accent/25 text-accent-hover hover:bg-accent-tint"
           >
             🩺 Clinical Recalls Hub
           </Button>
@@ -211,21 +211,21 @@ export function PatientsListPage() {
 
       {/* Hospital Warning Banner if not attached to a branch */}
       {!user?.hospital && (
-        <div className="bg-amber-50 border border-amber-300 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+        <div className="bg-warning-bg border border-warning/30 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
           <div className="flex items-center gap-3">
             <span className="text-xl">⚠️</span>
             <div>
-              <h3 className="font-bold text-sm text-amber-900">Hospital Branch Required</h3>
-              <p className="text-xs text-amber-800">
+              <h3 className="font-bold text-sm text-warning-text">Hospital Branch Required</h3>
+              <p className="text-xs text-warning-text">
                 You are currently not attached to a hospital branch. Please select an active branch to register patients and view records.
               </p>
             </div>
           </div>
           {availableBranches.length > 0 && (
             <div className="flex items-center gap-2 shrink-0">
-              <span className="text-xs font-bold text-amber-900">Select Branch:</span>
+              <span className="text-xs font-bold text-warning-text">Select Branch:</span>
               <select
-                className="bg-white border border-amber-400 text-slate-900 font-bold px-3 py-1.5 rounded-lg text-xs shadow-xs focus:ring-2 focus:ring-amber-500"
+                className="bg-white border border-warning text-ink font-bold px-3 py-1.5 rounded-lg text-xs shadow-xs focus:ring-2 focus:ring-warning"
                 value={selectedBranch || ""}
                 onChange={(e) => handleSwitchBranchDirectly(e.target.value)}
               >
@@ -239,12 +239,12 @@ export function PatientsListPage() {
         </div>
       )}
 
-      <Card className="p-4 border border-slate-200 shadow-xs">
+      <Card className="p-4 border border-border shadow-xs">
         <div className="flex gap-2">
           <input
             type="text"
             placeholder="Search by patient name, mobile, MRN, email..."
-            className="flex-1 px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+            className="flex-1 px-4 py-2 rounded-lg border border-border-strong bg-white text-ink focus:outline-none focus:ring-2 focus:ring-success text-sm"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -255,10 +255,10 @@ export function PatientsListPage() {
       {isError && <ErrorState />}
 
       {!isLoading && !isError && (
-        <Card className="overflow-hidden border border-slate-200 shadow-xs">
+        <Card className="overflow-hidden border border-border shadow-xs">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-slate-700">
-              <thead className="bg-slate-50 text-slate-700 border-b border-slate-200">
+            <table className="w-full text-left text-sm text-ink-2">
+              <thead className="bg-page text-ink-2 border-b border-border">
                 <tr>
                   <th className="px-6 py-3 font-semibold">Patient Name</th>
                   <th className="px-6 py-3 font-semibold">Mobile</th>
@@ -269,7 +269,7 @@ export function PatientsListPage() {
                   <th className="px-6 py-3 font-semibold text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200">
+              <tbody className="divide-y divide-border">
                 {patients.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-6 py-8 text-center text-slate-400">
@@ -280,18 +280,18 @@ export function PatientsListPage() {
                   patients.map((p) => (
                     <tr
                       key={p.id}
-                      className="hover:bg-slate-50 cursor-pointer transition-colors"
+                      className="hover:bg-page cursor-pointer transition-colors"
                       onClick={() => navigate(`/patients/${p.id}`)}
                     >
-                      <td className="px-6 py-4 font-semibold text-slate-900">
+                      <td className="px-6 py-4 font-semibold text-ink">
                         {p.full_name || `${p.first_name} ${p.last_name}`}
                       </td>
-                      <td className="px-6 py-4 text-slate-700">
+                      <td className="px-6 py-4 text-ink-2">
                         {canViewSensitive || revealedPatientIds.includes(p.id) ? (
                           <span className="font-mono">{p.mobile}</span>
                         ) : (
                           <div className="flex items-center gap-2">
-                            <span className="font-mono text-slate-500">{maskPhone(p.mobile)}</span>
+                            <span className="font-mono text-ink-4">{maskPhone(p.mobile)}</span>
                             <button
                               type="button"
                               title="Reveal PII with Audit Log"
@@ -299,19 +299,19 @@ export function PatientsListPage() {
                                 e.stopPropagation()
                                 setRevealTargetPatient(p)
                               }}
-                              className="text-xs px-2 py-0.5 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded text-slate-700 font-semibold"
+                              className="text-xs px-2 py-0.5 bg-chip-bg hover:bg-border-soft border border-border-strong rounded text-ink-2 font-semibold"
                             >
                               👁️ Reveal
                             </button>
                           </div>
                         )}
                       </td>
-                      <td className="px-6 py-4 capitalize text-slate-700">{p.gender || "N/A"}</td>
+                      <td className="px-6 py-4 capitalize text-ink-2">{p.gender || "N/A"}</td>
                       <td className="px-6 py-4">
                         <NeutralTag>{(p.preferred_language || "en").toUpperCase()}</NeutralTag>
                       </td>
-                      <td className="px-6 py-4 text-slate-700">{p.city || "—"}</td>
-                      <td className="px-6 py-4 text-slate-700">{p.insurance_provider || "Self-pay"}</td>
+                      <td className="px-6 py-4 text-ink-2">{p.city || "—"}</td>
+                      <td className="px-6 py-4 text-ink-2">{p.insurance_provider || "Self-pay"}</td>
                       <td className="px-6 py-4 text-right">
                         <Button
                           variant="ghost"
@@ -336,25 +336,25 @@ export function PatientsListPage() {
       {/* New Patient Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-2xl border border-slate-200">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-              <h2 className="text-xl font-bold text-slate-900">Register New Patient</h2>
+          <div className="w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-2xl border border-border">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <h2 className="text-xl font-bold text-ink">Register New Patient</h2>
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 text-sm font-bold"
+                className="text-slate-400 hover:text-ink-3 text-sm font-bold"
               >
                 ✕
               </button>
             </div>
 
             {mutationError && (
-              <div className="p-3.5 rounded-lg bg-rose-50 border border-rose-300 text-rose-900 text-xs font-semibold flex items-start gap-2.5 shadow-2xs">
+              <div className="p-3.5 rounded-lg bg-danger-bg border border-danger-border text-danger-text text-xs font-semibold flex items-start gap-2.5 shadow-2xs">
                 <span className="text-base">❌</span>
                 <div className="flex-1">
                   <div>{mutationError}</div>
                   {mutationError.includes("not attached to a hospital") && (
-                    <div className="mt-1 font-normal text-rose-800">
+                    <div className="mt-1 font-normal text-danger-text">
                       Please select a hospital branch below to attach your account before saving this patient.
                     </div>
                   )}
@@ -366,12 +366,12 @@ export function PatientsListPage() {
               {/* Branch Selector inside modal if not attached to a hospital */}
               {!user?.hospital && (
                 <div>
-                  <label className="block text-xs font-bold uppercase text-slate-700 mb-1">
-                    Hospital Branch <span className="text-rose-500">*</span>
+                  <label className="block text-xs font-bold uppercase text-ink-2 mb-1">
+                    Hospital Branch <span className="text-danger-text">*</span>
                   </label>
                   <select
                     required
-                    className="w-full px-3.5 py-2.5 border rounded-lg bg-white text-slate-900 border-amber-400 font-semibold text-sm focus:ring-2 focus:ring-amber-500"
+                    className="w-full px-3.5 py-2.5 border rounded-lg bg-white text-ink border-warning font-semibold text-sm focus:ring-2 focus:ring-warning"
                     value={selectedBranch}
                     onChange={(e) => setSelectedBranch(e.target.value)}
                   >
@@ -380,7 +380,7 @@ export function PatientsListPage() {
                       <option key={b.id} value={b.id}>{b.name} ({b.city || "Main"})</option>
                     ))}
                   </select>
-                  <p className="text-[11px] text-amber-800 mt-1">
+                  <p className="text-[11px] text-warning-text mt-1">
                     Your account will attach to this hospital branch to complete registration.
                   </p>
                 </div>
@@ -388,20 +388,20 @@ export function PatientsListPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold uppercase text-slate-700 mb-1">First Name *</label>
+                  <label className="block text-xs font-bold uppercase text-ink-2 mb-1">First Name *</label>
                   <input
                     required
                     type="text"
-                    className="w-full px-3 py-2 border rounded-lg bg-white text-slate-900 border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full px-3 py-2 border rounded-lg bg-white text-ink border-border-strong text-sm focus:ring-2 focus:ring-success focus:outline-none"
                     value={formData.first_name}
                     onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase text-slate-700 mb-1">Last Name</label>
+                  <label className="block text-xs font-bold uppercase text-ink-2 mb-1">Last Name</label>
                   <input
                     type="text"
-                    className="w-full px-3 py-2 border rounded-lg bg-white text-slate-900 border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full px-3 py-2 border rounded-lg bg-white text-ink border-border-strong text-sm focus:ring-2 focus:ring-success focus:outline-none"
                     value={formData.last_name}
                     onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
                   />
@@ -410,20 +410,20 @@ export function PatientsListPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold uppercase text-slate-700 mb-1">Mobile *</label>
+                  <label className="block text-xs font-bold uppercase text-ink-2 mb-1">Mobile *</label>
                   <input
                     required
                     type="tel"
-                    className="w-full px-3 py-2 border rounded-lg bg-white text-slate-900 border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full px-3 py-2 border rounded-lg bg-white text-ink border-border-strong text-sm focus:ring-2 focus:ring-success focus:outline-none"
                     value={formData.mobile}
                     onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase text-slate-700 mb-1">Email</label>
+                  <label className="block text-xs font-bold uppercase text-ink-2 mb-1">Email</label>
                   <input
                     type="email"
-                    className="w-full px-3 py-2 border rounded-lg bg-white text-slate-900 border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full px-3 py-2 border rounded-lg bg-white text-ink border-border-strong text-sm focus:ring-2 focus:ring-success focus:outline-none"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   />
@@ -432,18 +432,18 @@ export function PatientsListPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold uppercase text-slate-700 mb-1">Date of Birth</label>
+                  <label className="block text-xs font-bold uppercase text-ink-2 mb-1">Date of Birth</label>
                   <input
                     type="date"
-                    className="w-full px-3 py-2 border rounded-lg bg-white text-slate-900 border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full px-3 py-2 border rounded-lg bg-white text-ink border-border-strong text-sm focus:ring-2 focus:ring-success focus:outline-none"
                     value={formData.date_of_birth || ""}
                     onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase text-slate-700 mb-1">Gender</label>
+                  <label className="block text-xs font-bold uppercase text-ink-2 mb-1">Gender</label>
                   <select
-                    className="w-full px-3 py-2 border rounded-lg bg-white text-slate-900 border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full px-3 py-2 border rounded-lg bg-white text-ink border-border-strong text-sm focus:ring-2 focus:ring-success focus:outline-none"
                     value={formData.gender}
                     onChange={(e) => setFormData({ ...formData, gender: e.target.value as any })}
                   >
@@ -456,43 +456,43 @@ export function PatientsListPage() {
 
               {/* DPDP §9 Minor Guardian Check */}
               {isMinor && (
-                <div className="p-4 bg-amber-50 border border-amber-300 rounded-xl space-y-3">
+                <div className="p-4 bg-warning-bg border border-warning/30 rounded-xl space-y-3">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-bold uppercase text-amber-900 tracking-wider">
+                    <h4 className="text-xs font-bold uppercase text-warning-text tracking-wider">
                       🛡️ Parent / Lawful Guardian Information (DPDP §9 Minor Consent Required)
                     </h4>
-                    <span className="text-[11px] font-bold text-amber-800 bg-amber-200 px-2 py-0.5 rounded">
+                    <span className="text-[11px] font-bold text-warning-text bg-warning/30 px-2 py-0.5 rounded">
                       Age: {patientAge} years
                     </span>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[11px] font-bold uppercase text-amber-900 mb-1">Guardian Name *</label>
+                      <label className="block text-[11px] font-bold uppercase text-warning-text mb-1">Guardian Name *</label>
                       <input
                         required
                         type="text"
                         placeholder="Parent / Guardian Full Name"
-                        className="w-full px-3 py-1.5 border rounded-lg bg-white text-slate-900 border-amber-400 text-xs focus:ring-2 focus:ring-amber-500"
+                        className="w-full px-3 py-1.5 border rounded-lg bg-white text-ink border-warning text-xs focus:ring-2 focus:ring-warning"
                         value={formData.guardian_name || ""}
                         onChange={(e) => setFormData({ ...formData, guardian_name: e.target.value })}
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold uppercase text-amber-900 mb-1">Guardian Phone / ID *</label>
+                      <label className="block text-[11px] font-bold uppercase text-warning-text mb-1">Guardian Phone / ID *</label>
                       <input
                         required
                         type="tel"
                         placeholder="Verified Phone Number"
-                        className="w-full px-3 py-1.5 border rounded-lg bg-white text-slate-900 border-amber-400 text-xs focus:ring-2 focus:ring-amber-500"
+                        className="w-full px-3 py-1.5 border rounded-lg bg-white text-ink border-warning text-xs focus:ring-2 focus:ring-warning"
                         value={formData.guardian_phone || ""}
                         onChange={(e) => setFormData({ ...formData, guardian_phone: e.target.value })}
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold uppercase text-amber-900 mb-1">Relationship to Minor</label>
+                    <label className="block text-[11px] font-bold uppercase text-warning-text mb-1">Relationship to Minor</label>
                     <select
-                      className="w-full px-3 py-1.5 border rounded-lg bg-white text-slate-900 border-amber-400 text-xs focus:ring-2 focus:ring-amber-500"
+                      className="w-full px-3 py-1.5 border rounded-lg bg-white text-ink border-warning text-xs focus:ring-2 focus:ring-warning"
                       value={formData.relationship_to_guardian || "Parent"}
                       onChange={(e) => setFormData({ ...formData, relationship_to_guardian: e.target.value })}
                     >
@@ -506,9 +506,9 @@ export function PatientsListPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold uppercase text-slate-700 mb-1">Preferred Language</label>
+                  <label className="block text-xs font-bold uppercase text-ink-2 mb-1">Preferred Language</label>
                   <select
-                    className="w-full px-3 py-2 border rounded-lg bg-white text-slate-900 border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full px-3 py-2 border rounded-lg bg-white text-ink border-border-strong text-sm focus:ring-2 focus:ring-success focus:outline-none"
                     value={formData.preferred_language}
                     onChange={(e) => setFormData({ ...formData, preferred_language: e.target.value as any })}
                   >
@@ -518,17 +518,17 @@ export function PatientsListPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold uppercase text-slate-700 mb-1">City</label>
+                  <label className="block text-xs font-bold uppercase text-ink-2 mb-1">City</label>
                   <input
                     type="text"
-                    className="w-full px-3 py-2 border rounded-lg bg-white text-slate-900 border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                    className="w-full px-3 py-2 border rounded-lg bg-white text-ink border-border-strong text-sm focus:ring-2 focus:ring-success focus:outline-none"
                     value={formData.city}
                     onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-4 border-t border-slate-200">
+              <div className="flex justify-end gap-2 pt-4 border-t border-border">
                 <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)}>
                   Cancel
                 </Button>
@@ -544,37 +544,37 @@ export function PatientsListPage() {
       {/* Audit Log PII Reveal Justification Modal */}
       {revealTargetPatient && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md p-6 space-y-4 bg-white rounded-xl shadow-2xl border border-slate-200">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+          <div className="w-full max-w-md p-6 space-y-4 bg-white rounded-xl shadow-2xl border border-border">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <h2 className="text-base font-bold text-ink flex items-center gap-2">
                 <span>🛡️</span> DPDP Audit Log: Reveal Patient PII
               </h2>
               <button
                 type="button"
                 onClick={() => setRevealTargetPatient(null)}
-                className="text-slate-400 hover:text-slate-600 text-sm font-bold"
+                className="text-slate-400 hover:text-ink-3 text-sm font-bold"
               >
                 ✕
               </button>
             </div>
 
-            <p className="text-xs text-slate-600">
+            <p className="text-xs text-ink-3">
               You are requesting to view full unmasked phone/contact details for <strong>{revealTargetPatient.full_name}</strong>. Under DPDP Act Section 4 data minimization, this action is audit-logged.
             </p>
 
             <div>
-              <label className="block text-xs font-bold uppercase text-slate-700 mb-1">Justification Reason *</label>
+              <label className="block text-xs font-bold uppercase text-ink-2 mb-1">Justification Reason *</label>
               <textarea
                 required
                 rows={3}
                 placeholder="e.g. Front-desk patient check-in & ID verification"
-                className="w-full p-2.5 border rounded-lg bg-white text-slate-900 border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                className="w-full p-2.5 border rounded-lg bg-white text-ink border-border-strong text-xs focus:ring-2 focus:ring-success focus:outline-none"
                 value={revealReason}
                 onChange={(e) => setRevealReason(e.target.value)}
               />
             </div>
 
-            <div className="flex justify-end gap-2 pt-3 border-t border-slate-200">
+            <div className="flex justify-end gap-2 pt-3 border-t border-border">
               <Button type="button" variant="secondary" onClick={() => setRevealTargetPatient(null)}>
                 Cancel
               </Button>
@@ -598,30 +598,30 @@ export function PatientsListPage() {
       {/* DPDP Section 5 Itemized Consent Notice Modal */}
       {isNoticeModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-xl p-6 space-y-4 max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-2xl border border-slate-200">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+          <div className="w-full max-w-xl p-6 space-y-4 max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-2xl border border-border">
+            <div className="flex items-center justify-between border-b border-border pb-3">
               <div>
-                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <h2 className="text-lg font-bold text-ink flex items-center gap-2">
                   📜 DPDP Act 2023 §5 Itemized Consent Notice
                 </h2>
-                <p className="text-xs text-slate-500">Multilingual Statutory Notice for Patient Onboarding</p>
+                <p className="text-xs text-ink-4">Multilingual Statutory Notice for Patient Onboarding</p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsNoticeModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 text-sm font-bold"
+                className="text-slate-400 hover:text-ink-3 text-sm font-bold"
               >
                 ✕
               </button>
             </div>
 
             {/* Language Switcher */}
-            <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-lg w-fit text-xs">
+            <div className="flex items-center gap-2 bg-chip-bg p-1 rounded-lg w-fit text-xs">
               <button
                 type="button"
                 onClick={() => setNoticeLang("en")}
                 className={`px-3 py-1 rounded-md font-bold transition-colors ${
-                  noticeLang === "en" ? "bg-white text-slate-900 shadow-2xs" : "text-slate-600"
+                  noticeLang === "en" ? "bg-white text-ink shadow-2xs" : "text-ink-3"
                 }`}
               >
                 English
@@ -630,7 +630,7 @@ export function PatientsListPage() {
                 type="button"
                 onClick={() => setNoticeLang("hi")}
                 className={`px-3 py-1 rounded-md font-bold transition-colors ${
-                  noticeLang === "hi" ? "bg-white text-slate-900 shadow-2xs" : "text-slate-600"
+                  noticeLang === "hi" ? "bg-white text-ink shadow-2xs" : "text-ink-3"
                 }`}
               >
                 हिंदी (Hindi)
@@ -639,7 +639,7 @@ export function PatientsListPage() {
                 type="button"
                 onClick={() => setNoticeLang("mr")}
                 className={`px-3 py-1 rounded-md font-bold transition-colors ${
-                  noticeLang === "mr" ? "bg-white text-slate-900 shadow-2xs" : "text-slate-600"
+                  noticeLang === "mr" ? "bg-white text-ink shadow-2xs" : "text-ink-3"
                 }`}
               >
                 मराठी (Marathi)
@@ -647,12 +647,12 @@ export function PatientsListPage() {
             </div>
 
             {/* Multilingual Notice Content */}
-            <div className="space-y-3 text-xs text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-200 leading-relaxed">
+            <div className="space-y-3 text-xs text-ink-2 bg-page p-4 rounded-xl border border-border leading-relaxed">
               {noticeLang === "en" && (
                 <>
-                  <h4 className="font-bold text-slate-900 text-sm">Itemized Patient Data Collection Notice</h4>
+                  <h4 className="font-bold text-ink text-sm">Itemized Patient Data Collection Notice</h4>
                   <p>In accordance with Digital Personal Data Protection Act 2023 (DPDP §5 & §9):</p>
-                  <ul className="list-disc list-inside space-y-1 text-slate-600">
+                  <ul className="list-disc list-inside space-y-1 text-ink-3">
                     <li><strong>Data Collected:</strong> Name, Contact Number, Gender, Address, Medical History, Lab Diagnostics, and Insurance Details.</li>
                     <li><strong>Specified Purposes:</strong> Clinical treatment provision, TPA/Insurance claim processing, OPD appointment scheduling, and emergency contact alerts.</li>
                     <li><strong>Children Data (§9):</strong> Processing data of minors (&lt; 18 years) is performed strictly with verifiable parent/guardian consent.</li>
@@ -663,9 +663,9 @@ export function PatientsListPage() {
 
               {noticeLang === "hi" && (
                 <>
-                  <h4 className="font-bold text-slate-900 text-sm">विस्तृत मरीज डेटा संग्रह सूचना (डीपीडीपी 2023)</h4>
+                  <h4 className="font-bold text-ink text-sm">विस्तृत मरीज डेटा संग्रह सूचना (डीपीडीपी 2023)</h4>
                   <p>डिजिटल व्यक्तिगत डेटा संरक्षण अधिनियम 2023 (§5 एवं §9) के अनुसार:</p>
-                  <ul className="list-disc list-inside space-y-1 text-slate-600">
+                  <ul className="list-disc list-inside space-y-1 text-ink-3">
                     <li><strong>एकत्रित डेटा:</strong> नाम, संपर्क नंबर, लिंग, पता, चिकित्सा इतिहास, लैब रिपोर्ट और बीमा विवरण।</li>
                     <li><strong>निर्दिष्ट उद्देश्य:</strong> चिकित्सीय उपचार, टीपीए/बीमा दावा प्रसंस्करण, अपॉइंटमेंट और आपातकालीन संपर्क।</li>
                     <li><strong>नाबालिगों का डेटा (§9):</strong> 18 वर्ष से कम उम्र के बच्चों का डेटा माता-पिता की सहमति से संसाधित होता है।</li>
@@ -676,9 +676,9 @@ export function PatientsListPage() {
 
               {noticeLang === "mr" && (
                 <>
-                  <h4 className="font-bold text-slate-900 text-sm">सविस्तर रुग्ण डेटा संकलन सूचना (डीपीडीपी २०२३)</h4>
+                  <h4 className="font-bold text-ink text-sm">सविस्तर रुग्ण डेटा संकलन सूचना (डीपीडीपी २०२३)</h4>
                   <p>डिजिटल वैयक्तिक डेटा संरक्षण कायदा २०२३ (कलम ५ आणि ९) नुसार:</p>
-                  <ul className="list-disc list-inside space-y-1 text-slate-600">
+                  <ul className="list-disc list-inside space-y-1 text-ink-3">
                     <li><strong>गोळा केलेला डेटा:</strong> नाव, संपर्क क्रमांक, लिंग, पत्ता, वैद्यकीय इतिहास, लॅब अहवाल आणि विमा तपशील.</li>
                     <li><strong>तपशीलवार उद्दिष्टे:</strong> वैद्यकीय उपचार, टीपीए/विमा दावा प्रक्रिया, भेटींचे नियोजन आणि आपत्कालीन संपर्क.</li>
                     <li><strong>अल्पवयीन मुलांचा डेटा (कलम ९):</strong> १८ वर्षांखालील मुलांचा डेटा पालकांच्या संमतीनेच प्रक्रिया केला जातो.</li>
@@ -688,7 +688,7 @@ export function PatientsListPage() {
               )}
             </div>
 
-            <div className="flex justify-end pt-3 border-t border-slate-200">
+            <div className="flex justify-end pt-3 border-t border-border">
               <Button type="button" variant="primary" onClick={() => setIsNoticeModalOpen(false)}>
                 I Understand & Acknowledge
               </Button>

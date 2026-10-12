@@ -53,10 +53,10 @@ async function listTemplates(setting?: "opd" | "ipd"): Promise<AssessmentTemplat
 
 const looks = {
   slate: {
-    input: "w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900",
-    label: "text-xs font-semibold text-slate-600 dark:text-slate-300",
-    chipOn: "bg-emerald-600 text-white border-emerald-600",
-    chipOff: "bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200",
+    input: "w-full px-3 py-2 text-sm border border-border-strong dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900",
+    label: "text-xs font-semibold text-ink-3 dark:text-slate-300",
+    chipOn: "bg-success text-white border-success",
+    chipOff: "bg-white dark:bg-slate-800 border-border-strong dark:border-slate-600 text-ink-2 dark:text-slate-200",
   },
   panel: {
     input: "w-full h-8 px-2.5 border border-border-strong rounded-control text-[12.5px] bg-transparent",
@@ -85,7 +85,7 @@ export function TemplateFields({ fields, value, onChange, look = "slate", disabl
           <label key={f.key} className={`block ${wide ? "sm:col-span-2" : ""}`}>
             <span className={L.label}>
               {f.label}
-              {f.required && <span className="text-rose-600"> *</span>}
+              {f.required && <span className="text-danger-text"> *</span>}
             </span>
             <div className="mt-1">
               {f.type === "textarea" ? (
@@ -201,7 +201,7 @@ export function SpecialtyAssessmentSection({ encounterId, patientId, doctorId }:
       {template && (
         <>
           <TemplateFields fields={template.fields} value={answers} onChange={setAnswers} look="panel" />
-          {error && <div className="text-[12px] text-rose-600 mt-1.5">{error}</div>}
+          {error && <div className="text-[12px] text-danger-text mt-1.5">{error}</div>}
           <button className="mt-2 h-7 px-3 rounded-control text-[12px] font-semibold bg-brand text-white disabled:opacity-50" disabled={save.isPending} onClick={() => save.mutate()}>
             Save assessment
           </button>
@@ -223,10 +223,10 @@ function FieldEditor({ field, onChange, onRemove, onMove, first, last }: {
   first: boolean
   last: boolean
 }) {
-  const input = "px-2 py-1.5 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900"
+  const input = "px-2 py-1.5 text-sm border border-border-strong dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900"
   const needsOptions = field.type === "select" || field.type === "multiselect"
   return (
-    <div className="border border-slate-200 dark:border-slate-700 rounded-lg p-3 space-y-2">
+    <div className="border border-border dark:border-slate-700 rounded-lg p-3 space-y-2">
       <div className="flex flex-wrap gap-2 items-center">
         <input className={`${input} flex-1 min-w-[180px]`} placeholder="Label shown to the doctor" value={field.label}
           onChange={(e) => onChange({ ...field, label: e.target.value, key: field._new ? slug(e.target.value) : field.key })} />
@@ -235,9 +235,9 @@ function FieldEditor({ field, onChange, onRemove, onMove, first, last }: {
         </select>
         <label className="text-xs flex items-center gap-1"><input type="checkbox" checked={!!field.required} onChange={(e) => onChange({ ...field, required: e.target.checked })} /> Required</label>
         <div className="flex gap-1 ml-auto">
-          <button type="button" disabled={first} onClick={() => onMove(-1)} className="px-2 text-slate-500 disabled:opacity-30" title="Move up">↑</button>
-          <button type="button" disabled={last} onClick={() => onMove(1)} className="px-2 text-slate-500 disabled:opacity-30" title="Move down">↓</button>
-          <button type="button" onClick={onRemove} className="px-2 text-rose-600 text-xs font-semibold">Remove</button>
+          <button type="button" disabled={first} onClick={() => onMove(-1)} className="px-2 text-ink-4 disabled:opacity-30" title="Move up">↑</button>
+          <button type="button" disabled={last} onClick={() => onMove(1)} className="px-2 text-ink-4 disabled:opacity-30" title="Move down">↓</button>
+          <button type="button" onClick={onRemove} className="px-2 text-danger-text text-xs font-semibold">Remove</button>
         </div>
       </div>
       {needsOptions && (
@@ -289,49 +289,49 @@ function TemplateEditor({ initial, onClose, onSaved }: { initial: Partial<Assess
     }
   }
 
-  const input = "w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900"
+  const input = "w-full px-3 py-2 text-sm border border-border-strong dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900"
   const move = (i: number, dir: -1 | 1) => setFields((fs) => { const next = [...fs]; [next[i], next[i + dir]] = [next[i + dir], next[i]]; return next })
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-start justify-center overflow-y-auto p-4" onClick={onClose}>
       <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-5xl my-8" onClick={(e) => e.stopPropagation()}>
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+        <div className="px-6 py-4 border-b border-border dark:border-slate-700 flex justify-between items-center">
           <h2 className="text-lg font-bold">{initial.id ? "Edit template" : "New template"}</h2>
           <button onClick={onClose} className="text-slate-400 text-xl leading-none">×</button>
         </div>
         <div className="grid lg:grid-cols-2 gap-6 p-6">
           <div className="space-y-3">
-            <label className="block text-xs font-semibold text-slate-600">Name<input className={`${input} mt-1`} value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Rheumatology consultation" /></label>
+            <label className="block text-xs font-semibold text-ink-3">Name<input className={`${input} mt-1`} value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Rheumatology consultation" /></label>
             <div className="grid grid-cols-2 gap-3">
-              <label className="block text-xs font-semibold text-slate-600">Specialty
+              <label className="block text-xs font-semibold text-ink-3">Specialty
                 <select className={`${input} mt-1`} value={category} onChange={(e) => setCategory(e.target.value)}>
                   {CATEGORIES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
                 </select>
               </label>
-              <label className="block text-xs font-semibold text-slate-600">Used in
+              <label className="block text-xs font-semibold text-ink-3">Used in
                 <select className={`${input} mt-1`} value={setting} onChange={(e) => setSetting(e.target.value as AssessmentTemplate["setting"])}>
                   <option value="opd">OPD</option><option value="ipd">IPD</option><option value="both">OPD & IPD</option>
                 </select>
               </label>
             </div>
-            <div className="text-xs font-semibold text-slate-600 pt-2">Fields</div>
+            <div className="text-xs font-semibold text-ink-3 pt-2">Fields</div>
             {fields.map((f, i) => (
               <FieldEditor key={i} field={f} first={i === 0} last={i === fields.length - 1}
                 onChange={(nf) => setFields((fs) => fs.map((x, j) => (j === i ? nf : x)))}
                 onRemove={() => setFields((fs) => fs.filter((_, j) => j !== i))} onMove={(d) => move(i, d)} />
             ))}
-            <button type="button" onClick={() => setFields((fs) => [...fs, { key: "", label: "", type: "text", _new: true }])} className="text-sm font-semibold text-emerald-700">+ Add field</button>
+            <button type="button" onClick={() => setFields((fs) => [...fs, { key: "", label: "", type: "text", _new: true }])} className="text-sm font-semibold text-success-text">+ Add field</button>
           </div>
           <div>
-            <div className="text-xs font-semibold text-slate-600 mb-2">Preview — what the doctor sees</div>
-            <div className="border border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-4">
+            <div className="text-xs font-semibold text-ink-3 mb-2">Preview — what the doctor sees</div>
+            <div className="border border-dashed border-border-strong dark:border-slate-600 rounded-xl p-4">
               <TemplateFields fields={clean.filter((f) => f.label)} value={preview} onChange={setPreview} />
             </div>
           </div>
         </div>
-        <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-700 flex items-center gap-3 justify-end">
-          {(error || problems[0]) && <div className="text-sm text-rose-700 mr-auto">{error ?? problems[0]}</div>}
-          <button onClick={onClose} className="px-4 py-2 text-sm rounded-lg bg-slate-100 dark:bg-slate-700">Cancel</button>
-          <button onClick={save} disabled={saving || problems.length > 0} className="px-4 py-2 text-sm font-semibold rounded-lg bg-emerald-600 text-white disabled:opacity-50">
+        <div className="px-6 py-4 border-t border-border dark:border-slate-700 flex items-center gap-3 justify-end">
+          {(error || problems[0]) && <div className="text-sm text-danger-text mr-auto">{error ?? problems[0]}</div>}
+          <button onClick={onClose} className="px-4 py-2 text-sm rounded-lg bg-chip-bg dark:bg-slate-700">Cancel</button>
+          <button onClick={save} disabled={saving || problems.length > 0} className="px-4 py-2 text-sm font-semibold rounded-lg bg-success text-white disabled:opacity-50">
             {saving ? "Saving…" : "Save template"}
           </button>
         </div>
@@ -373,27 +373,27 @@ export function ClinicalTemplatesPage() {
     <div className="p-6 space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Clinical Templates</h1>
-          <p className="text-sm text-slate-500">Structured forms doctors fill in during consultations. Use the pre-built specialty library, adapt a copy, or build your own.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-ink dark:text-slate-100">Clinical Templates</h1>
+          <p className="text-sm text-ink-4">Structured forms doctors fill in during consultations. Use the pre-built specialty library, adapt a copy, or build your own.</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={install} className="px-3 py-2 text-sm font-medium rounded-lg bg-slate-100 dark:bg-slate-700">Add specialty library</button>
-          <button onClick={() => setEditing({})} className="px-3 py-2 text-sm font-semibold rounded-lg bg-emerald-600 text-white">New template</button>
+          <button onClick={install} className="px-3 py-2 text-sm font-medium rounded-lg bg-chip-bg dark:bg-slate-700">Add specialty library</button>
+          <button onClick={() => setEditing({})} className="px-3 py-2 text-sm font-semibold rounded-lg bg-success text-white">New template</button>
         </div>
       </div>
-      {notice && <div className="text-sm text-emerald-800 bg-emerald-50 rounded-lg px-3 py-2">{notice}</div>}
-      {error && <div className="text-sm text-rose-700 bg-rose-50 rounded-lg px-3 py-2">{error}</div>}
-      <input className="w-full max-w-sm px-3 py-2 text-sm border border-slate-300 rounded-lg" placeholder="Search by name or specialty" value={filter} onChange={(e) => setFilter(e.target.value)} />
-      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-x-auto">
+      {notice && <div className="text-sm text-success-text bg-success-bg rounded-lg px-3 py-2">{notice}</div>}
+      {error && <div className="text-sm text-danger-text bg-danger-bg rounded-lg px-3 py-2">{error}</div>}
+      <input className="w-full max-w-sm px-3 py-2 text-sm border border-border-strong rounded-lg" placeholder="Search by name or specialty" value={filter} onChange={(e) => setFilter(e.target.value)} />
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-border dark:border-slate-700 overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-slate-50 dark:bg-slate-900/50 text-xs font-semibold text-slate-500 uppercase text-left">
+            <tr className="bg-page dark:bg-slate-900/50 text-xs font-semibold text-ink-4 uppercase text-left">
               <th className="px-4 py-3">Template</th><th className="px-4 py-3">Specialty</th><th className="px-4 py-3">Used in</th><th className="px-4 py-3">Fields</th><th className="px-4 py-3">Status</th><th className="px-4 py-3" />
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+          <tbody className="divide-y divide-border dark:divide-slate-700">
             {templatesQuery.isLoading ? (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-500">Loading…</td></tr>
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-ink-4">Loading…</td></tr>
             ) : rows.map((t) => (
               <tr key={t.id} className={t.is_active ? "" : "opacity-50"}>
                 <td className="px-4 py-3 font-medium">{t.name}</td>
@@ -402,9 +402,9 @@ export function ClinicalTemplatesPage() {
                 <td className="px-4 py-3">{t.fields.length}{t.fields.some((f) => f.required) && <span className="text-slate-400"> ({t.fields.filter((f) => f.required).length} required)</span>}</td>
                 <td className="px-4 py-3">{t.is_active ? "Active" : "Inactive"}</td>
                 <td className="px-4 py-3 text-right whitespace-nowrap space-x-3">
-                  <button onClick={() => setEditing(t)} className="text-xs font-semibold text-emerald-700">Edit</button>
-                  <button onClick={() => setEditing({ ...t, id: undefined, name: `${t.name} (copy)` })} className="text-xs font-semibold text-slate-600">Duplicate</button>
-                  <button onClick={() => toggle(t)} className="text-xs font-semibold text-slate-600">{t.is_active ? "Deactivate" : "Activate"}</button>
+                  <button onClick={() => setEditing(t)} className="text-xs font-semibold text-success-text">Edit</button>
+                  <button onClick={() => setEditing({ ...t, id: undefined, name: `${t.name} (copy)` })} className="text-xs font-semibold text-ink-3">Duplicate</button>
+                  <button onClick={() => toggle(t)} className="text-xs font-semibold text-ink-3">{t.is_active ? "Deactivate" : "Activate"}</button>
                 </td>
               </tr>
             ))}

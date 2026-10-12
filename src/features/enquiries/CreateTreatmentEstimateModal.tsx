@@ -134,17 +134,17 @@ export function CreateTreatmentEstimateModal({ open, onClose, onCreated, default
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm animate-fade-in overflow-y-auto">
-      <div className="w-full max-w-2xl rounded-xl bg-white shadow-2xl ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800 my-8">
-        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 dark:border-slate-800">
+      <div className="w-full max-w-2xl rounded-xl bg-white shadow-2xl ring-1 ring-border dark:bg-slate-900 dark:ring-slate-800 my-8">
+        <div className="flex items-center justify-between border-b border-border-faint px-6 py-4 dark:border-slate-800">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-ink dark:text-white flex items-center gap-2">
               <span>📋</span> Generate Surgical Treatment Estimate
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-ink-4 dark:text-slate-400">
               Create an itemized surgical package estimate & financial counseling quote for the patient
             </p>
           </div>
-          <button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200">
+          <button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-chip-bg hover:text-ink-3 dark:hover:bg-slate-800 dark:hover:text-slate-200">
             ✕
           </button>
         </div>
@@ -152,7 +152,7 @@ export function CreateTreatmentEstimateModal({ open, onClose, onCreated, default
         <form onSubmit={handleSubmit} className="p-6 space-y-5 text-sm">
           {/* Patient Selector */}
           <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-xs font-semibold text-ink-2 dark:text-slate-300 mb-1">
               Select Patient (or search by name/phone)
             </label>
             <input
@@ -160,10 +160,10 @@ export function CreateTreatmentEstimateModal({ open, onClose, onCreated, default
               placeholder="Type patient name or mobile..."
               value={patientSearch}
               onChange={(e) => setPatientSearch(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
             />
             {patientsData && patientsData.results.length > 0 && (
-              <div className="mt-1 max-h-32 overflow-y-auto rounded-lg border border-slate-200 bg-slate-50 p-1 dark:border-slate-700 dark:bg-slate-800">
+              <div className="mt-1 max-h-32 overflow-y-auto rounded-lg border border-border bg-page p-1 dark:border-slate-700 dark:bg-slate-800">
                 {patientsData.results.map((p) => (
                   <div
                     key={p.id}
@@ -171,8 +171,8 @@ export function CreateTreatmentEstimateModal({ open, onClose, onCreated, default
                       setPatientId(p.id)
                       setPatientSearch(`${p.full_name} (${p.mobile || p.uhid || "ID: " + p.id})`)
                     }}
-                    className={`cursor-pointer rounded px-2.5 py-1.5 text-xs hover:bg-teal-50 dark:hover:bg-teal-900/30 flex justify-between ${
-                      patientId === p.id ? "bg-teal-100 font-semibold text-teal-800 dark:bg-teal-900/50 dark:text-teal-200" : "text-slate-700 dark:text-slate-300"
+                    className={`cursor-pointer rounded px-2.5 py-1.5 text-xs hover:bg-accent-tint dark:hover:bg-teal-900/30 flex justify-between ${
+                      patientId === p.id ? "bg-accent-tint font-semibold text-accent-hover dark:bg-teal-900/50 dark:text-teal-200" : "text-ink-2 dark:text-slate-300"
                     }`}
                   >
                     <span>{p.full_name}</span>
@@ -186,7 +186,7 @@ export function CreateTreatmentEstimateModal({ open, onClose, onCreated, default
           {/* Procedure & Doctor Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-xs font-semibold text-ink-2 dark:text-slate-300 mb-1">
                 Procedure Name *
               </label>
               <input
@@ -196,7 +196,7 @@ export function CreateTreatmentEstimateModal({ open, onClose, onCreated, default
                 placeholder="e.g. Total Knee Replacement"
                 value={procedureName}
                 onChange={(e) => setProcedureName(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
               />
               <datalist id="procedure-suggestions">
                 {COMMON_PROCEDURES.map((p) => (
@@ -206,13 +206,13 @@ export function CreateTreatmentEstimateModal({ open, onClose, onCreated, default
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-xs font-semibold text-ink-2 dark:text-slate-300 mb-1">
                 Consultant / Operating Surgeon
               </label>
               <select
                 value={doctorId || ""}
                 onChange={(e) => setDoctorId(e.target.value ? Number(e.target.value) : undefined)}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
               >
                 <option value="">Select Doctor...</option>
                 {doctorList.map((doc: Doctor) => (
@@ -224,13 +224,13 @@ export function CreateTreatmentEstimateModal({ open, onClose, onCreated, default
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-xs font-semibold text-ink-2 dark:text-slate-300 mb-1">
                 Department
               </label>
               <select
                 value={departmentName}
                 onChange={(e) => setDepartmentName(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
               >
                 {SURGICAL_DEPARTMENTS.map((dept) => (
                   <option key={dept} value={dept}>
@@ -242,7 +242,7 @@ export function CreateTreatmentEstimateModal({ open, onClose, onCreated, default
 
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-xs font-semibold text-ink-2 dark:text-slate-300 mb-1">
                 Clinical Diagnosis
               </label>
               <input
@@ -250,7 +250,7 @@ export function CreateTreatmentEstimateModal({ open, onClose, onCreated, default
                 placeholder="e.g. Severe Osteoarthritis Grade IV"
                 value={diagnosis}
                 onChange={(e) => setDiagnosis(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
               />
             </div>
           </div>
@@ -258,13 +258,13 @@ export function CreateTreatmentEstimateModal({ open, onClose, onCreated, default
           {/* Room & Stay Details */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-xs font-semibold text-ink-2 dark:text-slate-300 mb-1">
                 Room Category
               </label>
               <select
                 value={roomCategory}
                 onChange={(e) => setRoomCategory(e.target.value as any)}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
               >
                 <option value="general">General Ward</option>
                 <option value="semi_private">Semi-Private (Twin Sharing)</option>
@@ -274,7 +274,7 @@ export function CreateTreatmentEstimateModal({ open, onClose, onCreated, default
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-xs font-semibold text-ink-2 dark:text-slate-300 mb-1">
                 Expected Inpatient Stay (Days)
               </label>
               <input
@@ -283,19 +283,19 @@ export function CreateTreatmentEstimateModal({ open, onClose, onCreated, default
                 max="30"
                 value={stayDays}
                 onChange={(e) => setStayDays(Math.max(1, Number(e.target.value) || 1))}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
               />
             </div>
           </div>
 
           {/* Cost Breakdown Grid */}
-          <div className="rounded-xl border border-teal-100 bg-teal-50/50 p-4 dark:border-teal-900/50 dark:bg-teal-950/20">
-            <h3 className="text-xs font-semibold text-teal-800 dark:text-teal-200 mb-3 flex items-center gap-1.5">
+          <div className="rounded-xl border border-accent/15 bg-accent-tint/50 p-4 dark:border-teal-900/50 dark:bg-teal-950/20">
+            <h3 className="text-xs font-semibold text-accent-hover dark:text-teal-200 mb-3 flex items-center gap-1.5">
               <span>💰</span> Cost Breakdown (INR)
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               <div>
-                <label className="block text-[11px] font-medium text-slate-600 dark:text-slate-400 mb-1">
+                <label className="block text-[11px] font-medium text-ink-3 dark:text-slate-400 mb-1">
                   Surgeon / Team Fee
                 </label>
                 <input
@@ -304,12 +304,12 @@ export function CreateTreatmentEstimateModal({ open, onClose, onCreated, default
                   step="500"
                   value={surgeonFee}
                   onChange={(e) => setSurgeonFee(Number(e.target.value) || 0)}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs focus:border-teal-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                  className="w-full rounded-lg border border-border bg-white px-2.5 py-1.5 text-xs focus:border-accent focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-medium text-slate-600 dark:text-slate-400 mb-1">
+                <label className="block text-[11px] font-medium text-ink-3 dark:text-slate-400 mb-1">
                   OT & Recovery
                 </label>
                 <input
@@ -318,12 +318,12 @@ export function CreateTreatmentEstimateModal({ open, onClose, onCreated, default
                   step="500"
                   value={otCharges}
                   onChange={(e) => setOtCharges(Number(e.target.value) || 0)}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs focus:border-teal-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                  className="w-full rounded-lg border border-border bg-white px-2.5 py-1.5 text-xs focus:border-accent focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-medium text-slate-600 dark:text-slate-400 mb-1">
+                <label className="block text-[11px] font-medium text-ink-3 dark:text-slate-400 mb-1">
                   Room & Nursing
                 </label>
                 <input
@@ -332,12 +332,12 @@ export function CreateTreatmentEstimateModal({ open, onClose, onCreated, default
                   step="500"
                   value={roomCharges}
                   onChange={(e) => setRoomCharges(Number(e.target.value) || 0)}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs focus:border-teal-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                  className="w-full rounded-lg border border-border bg-white px-2.5 py-1.5 text-xs focus:border-accent focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-medium text-slate-600 dark:text-slate-400 mb-1">
+                <label className="block text-[11px] font-medium text-ink-3 dark:text-slate-400 mb-1">
                   Medicines & Fluids
                 </label>
                 <input
@@ -346,12 +346,12 @@ export function CreateTreatmentEstimateModal({ open, onClose, onCreated, default
                   step="500"
                   value={medicinesEstimate}
                   onChange={(e) => setMedicinesEstimate(Number(e.target.value) || 0)}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs focus:border-teal-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                  className="w-full rounded-lg border border-border bg-white px-2.5 py-1.5 text-xs focus:border-accent focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-medium text-slate-600 dark:text-slate-400 mb-1">
+                <label className="block text-[11px] font-medium text-ink-3 dark:text-slate-400 mb-1">
                   Implants / Stents
                 </label>
                 <input
@@ -360,15 +360,15 @@ export function CreateTreatmentEstimateModal({ open, onClose, onCreated, default
                   step="500"
                   value={implantsInvestigations}
                   onChange={(e) => setImplantsInvestigations(Number(e.target.value) || 0)}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs focus:border-teal-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                  className="w-full rounded-lg border border-border bg-white px-2.5 py-1.5 text-xs focus:border-accent focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                 />
               </div>
 
-              <div className="bg-teal-100/70 dark:bg-teal-900/40 rounded-lg p-2 flex flex-col justify-center">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-teal-800 dark:text-teal-300">
+              <div className="bg-accent-tint/70 dark:bg-teal-900/40 rounded-lg p-2 flex flex-col justify-center">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-accent-hover dark:text-teal-300">
                   Total Package
                 </span>
-                <span className="text-base font-bold text-teal-900 dark:text-teal-100">
+                <span className="text-base font-bold text-accent-hover dark:text-teal-100">
                   ₹{computedTotal.toLocaleString()}
                 </span>
               </div>
@@ -378,13 +378,13 @@ export function CreateTreatmentEstimateModal({ open, onClose, onCreated, default
           {/* Payment & Insurance Pre-Auth */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-xs font-semibold text-ink-2 dark:text-slate-300 mb-1">
                 Payment Channel
               </label>
               <select
                 value={paymentMode}
                 onChange={(e) => setPaymentMode(e.target.value as any)}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs focus:border-teal-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                className="w-full rounded-lg border border-border px-3 py-2 text-xs focus:border-accent focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
               >
                 <option value="cash">Self Pay / Cash</option>
                 <option value="insurance">Private Insurance (Cashless)</option>
@@ -394,7 +394,7 @@ export function CreateTreatmentEstimateModal({ open, onClose, onCreated, default
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-xs font-semibold text-ink-2 dark:text-slate-300 mb-1">
                 TPA / Insurer Name
               </label>
               <input
@@ -402,18 +402,18 @@ export function CreateTreatmentEstimateModal({ open, onClose, onCreated, default
                 placeholder="e.g. Star Health, Medi Assist"
                 value={tpaName}
                 onChange={(e) => setTpaName(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs focus:border-teal-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                className="w-full rounded-lg border border-border px-3 py-2 text-xs focus:border-accent focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-xs font-semibold text-ink-2 dark:text-slate-300 mb-1">
                 Pre-Auth Status
               </label>
               <select
                 value={preauthStatus}
                 onChange={(e) => setPreauthStatus(e.target.value as any)}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs focus:border-teal-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                className="w-full rounded-lg border border-border px-3 py-2 text-xs focus:border-accent focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
               >
                 <option value="not_applicable">Not Applicable (Cash)</option>
                 <option value="pending_docs">Documents Pending</option>
@@ -426,7 +426,7 @@ export function CreateTreatmentEstimateModal({ open, onClose, onCreated, default
 
             {preauthStatus === "approved" && (
               <div>
-                <label className="block text-xs font-semibold text-emerald-700 dark:text-emerald-300 mb-1">
+                <label className="block text-xs font-semibold text-success-text dark:text-emerald-300 mb-1">
                   Approved Pre-Auth (₹)
                 </label>
                 <input
@@ -434,7 +434,7 @@ export function CreateTreatmentEstimateModal({ open, onClose, onCreated, default
                   placeholder="e.g. 150000"
                   value={approvedAmount || ""}
                   onChange={(e) => setApprovedAmount(e.target.value ? Number(e.target.value) : undefined)}
-                  className="w-full rounded-lg border border-emerald-300 px-3 py-2 text-xs focus:border-emerald-500 focus:outline-none dark:border-emerald-700 dark:bg-slate-800 dark:text-white"
+                  className="w-full rounded-lg border border-success/25 px-3 py-2 text-xs focus:border-success focus:outline-none dark:border-emerald-700 dark:bg-slate-800 dark:text-white"
                 />
               </div>
             )}
@@ -444,13 +444,13 @@ export function CreateTreatmentEstimateModal({ open, onClose, onCreated, default
           {/* Stage & Notes */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-xs font-semibold text-ink-2 dark:text-slate-300 mb-1">
                 Counseling Funnel Stage
               </label>
               <select
                 value={stage}
                 onChange={(e) => setStage(e.target.value as any)}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
               >
                 <option value="advised">Advised by Doctor</option>
                 <option value="counseling">Financial Counseling</option>
@@ -462,7 +462,7 @@ export function CreateTreatmentEstimateModal({ open, onClose, onCreated, default
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-xs font-semibold text-ink-2 dark:text-slate-300 mb-1">
                 Financial Counselor Notes
               </label>
               <input
@@ -470,12 +470,12 @@ export function CreateTreatmentEstimateModal({ open, onClose, onCreated, default
                 placeholder="e.g. Patient agreed for private room, waiting for spouse approval"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-accent focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
               />
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex justify-end gap-3 pt-3 border-t border-border-faint dark:border-slate-800">
             <Button type="button" variant="ghost" onClick={onClose}>
               Cancel
             </Button>

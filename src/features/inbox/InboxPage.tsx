@@ -407,12 +407,12 @@ export function InboxPage() {
             className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition ${
               activeInboxTab === "conversations"
                 ? "bg-brand text-white shadow-xs"
-                : "text-ink-3 hover:text-ink-1 hover:bg-slate-100"
+                : "text-ink-3 hover:text-ink-1 hover:bg-chip-bg"
             }`}
           >
             <span>💬</span>
             <span>Patient Conversations</span>
-            <span className={`text-[11px] px-1.5 py-0.2 rounded-full ${activeInboxTab === "conversations" ? "bg-white/20 text-white" : "bg-slate-200 text-ink-3"}`}>
+            <span className={`text-[11px] px-1.5 py-0.2 rounded-full ${activeInboxTab === "conversations" ? "bg-white/20 text-white" : "bg-border-soft text-ink-3"}`}>
               {threadsQuery.data?.count ?? 0}
             </span>
           </button>
@@ -421,13 +421,13 @@ export function InboxPage() {
             onClick={() => setActiveInboxTab("broadcasts")}
             className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition ${
               activeInboxTab === "broadcasts"
-                ? "bg-emerald-600 text-white shadow-xs"
-                : "text-ink-3 hover:text-ink-1 hover:bg-slate-100"
+                ? "bg-success text-white shadow-xs"
+                : "text-ink-3 hover:text-ink-1 hover:bg-chip-bg"
             }`}
           >
             <span>📢</span>
             <span>WhatsApp Broadcast & Outreach Engine</span>
-            <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded uppercase">
+            <span className="text-[10px] bg-success-bg text-success-text font-bold px-1.5 py-0.5 rounded uppercase">
               Campaigns
             </span>
           </button>
@@ -563,7 +563,7 @@ export function InboxPage() {
 
             <div className="border-t border-border px-3.5 py-3 flex flex-col gap-2">
               {isMissingAddress && (
-                <div className="p-2.5 rounded-control bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-medium flex items-center justify-between gap-2">
+                <div className="p-2.5 rounded-control bg-warning/10 border border-warning/30 text-warning-text dark:text-amber-300 text-xs font-medium flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <span>⚠️</span>
                     <span>
@@ -573,7 +573,7 @@ export function InboxPage() {
                   <button
                     type="button"
                     onClick={() => navigate(`/patients/${selectedThread.patient}`)}
-                    className="underline font-semibold hover:text-amber-900 dark:hover:text-amber-100 shrink-0"
+                    className="underline font-semibold hover:text-warning-text dark:hover:text-amber-100 shrink-0"
                   >
                     Update Patient Profile →
                   </button>
@@ -581,7 +581,7 @@ export function InboxPage() {
               )}
 
               {isOptedOut && (
-                <div className="p-2.5 rounded-control bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-medium flex items-center justify-between gap-2">
+                <div className="p-2.5 rounded-control bg-warning/10 border border-warning/30 text-warning-text dark:text-amber-300 text-xs font-medium flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <span>⚠️</span>
                     <span>
@@ -591,7 +591,7 @@ export function InboxPage() {
                   <Button
                     size="sm"
                     variant="secondary"
-                    className="h-6 text-[11px] px-2 py-0 border-amber-600 text-amber-700 hover:bg-amber-100 dark:text-amber-200 shrink-0"
+                    className="h-6 text-[11px] px-2 py-0 border-warning text-warning-text hover:bg-warning-bg dark:text-amber-200 shrink-0"
                     disabled={consentMutation.isPending}
                     onClick={() => {
                       if (channelConsentRecord) {
@@ -764,7 +764,7 @@ export function InboxPage() {
                 </div>
                 <div className="flex justify-between gap-2">
                   <span className="text-ink-4">Mobile</span>
-                  <span className={`font-semibold text-right ${patientMobile ? "text-ink-2" : "text-amber-600 font-bold"}`}>
+                  <span className={`font-semibold text-right ${patientMobile ? "text-ink-2" : "text-warning-text font-bold"}`}>
                     {patientMobile || "Missing"}
                   </span>
                 </div>
@@ -817,7 +817,7 @@ export function InboxPage() {
                       <Button
                         size="sm"
                         variant="secondary"
-                        className="h-[22px] px-2 py-0 text-[11px] font-semibold border-emerald-500 text-emerald-600 hover:bg-emerald-50 shrink-0"
+                        className="h-[22px] px-2 py-0 text-[11px] font-semibold border-success text-success hover:bg-success-bg shrink-0"
                         disabled={consentMutation.isPending}
                         onClick={() => consentMutation.mutate({ id: c.id, isOptedOut: false })}
                       >

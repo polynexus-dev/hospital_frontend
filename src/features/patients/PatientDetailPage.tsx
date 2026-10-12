@@ -172,7 +172,7 @@ function NomineeManagementCard({ patientId }: { patientId: number }) {
                     {nom.verified_at ? (
                       <SuccessTag>Verified</SuccessTag>
                     ) : (
-                      <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded border border-amber-300">
+                      <span className="bg-warning-bg text-warning-text text-[10px] font-bold px-2 py-0.5 rounded border border-warning/30">
                         Pending Verification
                       </span>
                     )}
@@ -206,7 +206,7 @@ function NomineeManagementCard({ patientId }: { patientId: number }) {
                     }
                   }}
                   disabled={deleteMutation.isPending}
-                  className="text-xs text-danger-text hover:bg-rose-50"
+                  className="text-xs text-danger-text hover:bg-danger-bg"
                 >
                   Remove
                 </Button>
@@ -226,7 +226,7 @@ function NomineeManagementCard({ patientId }: { patientId: number }) {
             </div>
 
             {errorMsg && (
-              <div className="p-2.5 rounded bg-rose-50 text-rose-900 text-xs font-semibold">{errorMsg}</div>
+              <div className="p-2.5 rounded bg-danger-bg text-danger-text text-xs font-semibold">{errorMsg}</div>
             )}
 
             <form
@@ -1257,28 +1257,28 @@ export function PatientDetailPage() {
               className="flex flex-col gap-4"
             >
               {/* Doctor NMC Registration Meta Container */}
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg grid grid-cols-2 gap-3 text-xs">
+              <div className="p-3 bg-page border border-border rounded-lg grid grid-cols-2 gap-3 text-xs">
                 <div>
-                  <label className="text-[10px] uppercase tracking-wider text-slate-600 font-bold block mb-1">
+                  <label className="text-[10px] uppercase tracking-wider text-ink-3 font-bold block mb-1">
                     Doctor SMC / NMC Registration No. *
                   </label>
                   <input
                     required
                     type="text"
                     placeholder="e.g. MCI-12345/2018 or SMC-88492"
-                    className="w-full h-8 px-2.5 border border-slate-300 rounded text-xs font-mono font-semibold bg-white outline-none focus:border-brand"
+                    className="w-full h-8 px-2.5 border border-border-strong rounded text-xs font-mono font-semibold bg-white outline-none focus:border-brand"
                     value={doctorSmcRegNumber}
                     onChange={(e) => setDoctorSmcRegNumber(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] uppercase tracking-wider text-slate-600 font-bold block mb-1">
+                  <label className="text-[10px] uppercase tracking-wider text-ink-3 font-bold block mb-1">
                     Doctor Qualification / Degree
                   </label>
                   <input
                     type="text"
                     placeholder="e.g. MBBS, MD (General Medicine)"
-                    className="w-full h-8 px-2.5 border border-slate-300 rounded text-xs bg-white outline-none focus:border-brand"
+                    className="w-full h-8 px-2.5 border border-border-strong rounded text-xs bg-white outline-none focus:border-brand"
                     value={doctorDegree}
                     onChange={(e) => setDoctorDegree(e.target.value)}
                   />
@@ -1437,53 +1437,53 @@ export function PatientDetailPage() {
       {/* Printable Prescription PDF Preview Modal */}
       {viewingRx && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setViewingRx(null)}>
-          <div className="bg-white text-slate-900 rounded-card p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white text-ink rounded-card p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl" onClick={(e) => e.stopPropagation()}>
             {/* Prescription Letterhead Header */}
             <div className="flex justify-between items-start pb-4 border-b-2 border-slate-800">
               <div>
-                <h2 className="text-xl font-bold tracking-tight text-slate-900">{authUser?.hospital_name || "Hospital name not set"}</h2>
+                <h2 className="text-xl font-bold tracking-tight text-ink">{authUser?.hospital_name || "Hospital name not set"}</h2>
                 {(authUser?.hospital_address || authUser?.hospital_city || authUser?.hospital_state) && (
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-ink-4">
                     {[authUser?.hospital_address, authUser?.hospital_city, authUser?.hospital_state].filter(Boolean).join(", ")}
                   </p>
                 )}
               </div>
               <div className="text-right">
                 <span className="inline-block bg-slate-900 text-white font-bold text-xs px-2.5 py-1 rounded">OPD e-PRESCRIPTION</span>
-                <p className="text-xs font-mono text-slate-500 mt-1">Rx #{viewingRx.id}</p>
-                <p className="text-xs text-slate-500">{new Date(viewingRx.created_at).toLocaleDateString()}</p>
+                <p className="text-xs font-mono text-ink-4 mt-1">Rx #{viewingRx.id}</p>
+                <p className="text-xs text-ink-4">{new Date(viewingRx.created_at).toLocaleDateString()}</p>
               </div>
             </div>
 
             {/* Patient & Doctor Meta */}
-            <div className="grid grid-cols-2 gap-4 py-3 border-b border-slate-200 text-xs text-slate-700 bg-slate-50 px-3 my-3 rounded">
+            <div className="grid grid-cols-2 gap-4 py-3 border-b border-border text-xs text-ink-2 bg-page px-3 my-3 rounded">
               <div>
-                <p><span className="font-bold text-slate-900">Patient:</span> {patient.full_name} ({patient.gender}, MRN #{patient.id})</p>
-                <p><span className="font-bold text-slate-900">Mobile:</span> {patient.mobile}</p>
+                <p><span className="font-bold text-ink">Patient:</span> {patient.full_name} ({patient.gender}, MRN #{patient.id})</p>
+                <p><span className="font-bold text-ink">Mobile:</span> {patient.mobile}</p>
               </div>
               <div>
-                <p><span className="font-bold text-slate-900">Consultant Doctor:</span> {viewingRx.doctor_name || "Dr. Ramesh Kulkarni"} ({doctorDegree})</p>
-                <p><span className="font-bold text-slate-900">SMC / NMC Reg No:</span> <span className="font-mono font-bold text-emerald-800">{doctorSmcRegNumber}</span></p>
-                <p><span className="font-bold text-slate-900">Department:</span> OPD Consult</p>
+                <p><span className="font-bold text-ink">Consultant Doctor:</span> {viewingRx.doctor_name || "Dr. Ramesh Kulkarni"} ({doctorDegree})</p>
+                <p><span className="font-bold text-ink">SMC / NMC Reg No:</span> <span className="font-mono font-bold text-success-text">{doctorSmcRegNumber}</span></p>
+                <p><span className="font-bold text-ink">Department:</span> OPD Consult</p>
               </div>
             </div>
 
             {/* Diagnosis */}
             <div className="my-4">
-              <span className="font-bold text-xs uppercase text-slate-500 tracking-wider">Clinical Diagnosis</span>
-              <p className="text-sm font-bold text-slate-900 mt-0.5">{viewingRx.diagnosis}</p>
-              {viewingRx.symptoms && <p className="text-xs text-slate-600">Complaints: {viewingRx.symptoms}</p>}
+              <span className="font-bold text-xs uppercase text-ink-4 tracking-wider">Clinical Diagnosis</span>
+              <p className="text-sm font-bold text-ink mt-0.5">{viewingRx.diagnosis}</p>
+              {viewingRx.symptoms && <p className="text-xs text-ink-3">Complaints: {viewingRx.symptoms}</p>}
             </div>
 
             {/* Rx Symbol & Medication Table */}
             <div className="my-4">
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-2xl font-serif font-bold text-emerald-700">℞</span>
-                <span className="font-bold text-xs uppercase text-slate-500 tracking-wider">Prescribed Medicines</span>
+                <span className="text-2xl font-serif font-bold text-success-text">℞</span>
+                <span className="font-bold text-xs uppercase text-ink-4 tracking-wider">Prescribed Medicines</span>
               </div>
               <table className="w-full text-xs text-left border-collapse">
                 <thead>
-                  <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-300">
+                  <tr className="bg-chip-bg text-ink-2 font-bold border-b border-border-strong">
                     <th className="py-2 px-2">#</th>
                     <th className="py-2 px-2">Medicine / Drug Name</th>
                     <th className="py-2 px-2">Dosage Pattern</th>
@@ -1492,11 +1492,11 @@ export function PatientDetailPage() {
                 </thead>
                 <tbody>
                   {viewingRx.medications.map((m, idx) => (
-                    <tr key={idx} className="border-b border-slate-200">
-                      <td className="py-2 px-2 text-slate-500">{idx + 1}</td>
-                      <td className="py-2 px-2 font-bold text-slate-900">{m.name}</td>
+                    <tr key={idx} className="border-b border-border">
+                      <td className="py-2 px-2 text-ink-4">{idx + 1}</td>
+                      <td className="py-2 px-2 font-bold text-ink">{m.name}</td>
                       <td className="py-2 px-2 font-mono">{m.dosage}</td>
-                      <td className="py-2 px-2 text-slate-600">{m.duration}</td>
+                      <td className="py-2 px-2 text-ink-3">{m.duration}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -1506,10 +1506,10 @@ export function PatientDetailPage() {
             {/* Diagnostic Lab Orders */}
             {!!viewingRx.lab_orders?.length && (
               <div className="my-4">
-                <span className="font-bold text-xs uppercase text-slate-500 tracking-wider">Diagnostic Lab Orders</span>
+                <span className="font-bold text-xs uppercase text-ink-4 tracking-wider">Diagnostic Lab Orders</span>
                 <div className="flex flex-wrap gap-2 mt-1">
                   {viewingRx.lab_orders.map((lab, idx) => (
-                    <span key={idx} className="bg-slate-200 text-slate-800 font-semibold text-xs px-2.5 py-1 rounded">
+                    <span key={idx} className="bg-border-soft text-ink font-semibold text-xs px-2.5 py-1 rounded">
                       🧪 {lab}
                     </span>
                   ))}
@@ -1520,27 +1520,27 @@ export function PatientDetailPage() {
             {/* Advice */}
             {viewingRx.notes && (
               <div className="my-4 text-xs">
-                <span className="font-bold uppercase text-slate-500 tracking-wider">Doctor Advice</span>
-                <p className="text-slate-700 mt-0.5 italic">{viewingRx.notes}</p>
+                <span className="font-bold uppercase text-ink-4 tracking-wider">Doctor Advice</span>
+                <p className="text-ink-2 mt-0.5 italic">{viewingRx.notes}</p>
               </div>
             )}
 
             {/* Doctor Signature Line */}
-            <div className="mt-8 pt-4 border-t border-slate-300 flex justify-between items-end text-xs">
-              <div className="text-slate-500 space-y-0.5">
+            <div className="mt-8 pt-4 border-t border-border-strong flex justify-between items-end text-xs">
+              <div className="text-ink-4 space-y-0.5">
                 <p>Generated via Polynexus Hospital CRM e-Rx</p>
                 <p className="font-mono">NMC State Reg: {doctorSmcRegNumber}</p>
                 <p>Digital Record Verified ✓</p>
               </div>
               <div className="text-center">
-                <div className="font-serif italic font-bold text-emerald-800 text-sm">{viewingRx.doctor_name || "Dr. Ramesh Kulkarni"}, {doctorDegree}</div>
-                <div className="text-[11px] font-mono text-slate-600 font-bold">Reg. No: {doctorSmcRegNumber}</div>
-                <p className="border-t border-slate-400 pt-0.5 text-slate-700 font-semibold mt-1">Doctor Signature / Stamp</p>
+                <div className="font-serif italic font-bold text-success-text text-sm">{viewingRx.doctor_name || "Dr. Ramesh Kulkarni"}, {doctorDegree}</div>
+                <div className="text-[11px] font-mono text-ink-3 font-bold">Reg. No: {doctorSmcRegNumber}</div>
+                <p className="border-t border-border-strong pt-0.5 text-ink-2 font-semibold mt-1">Doctor Signature / Stamp</p>
               </div>
             </div>
 
             {/* Print & Close Controls */}
-            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-200">
+            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-border">
               <Button variant="secondary" onClick={() => setViewingRx(null)}>
                 Close
               </Button>
@@ -1570,37 +1570,37 @@ export function PatientDetailPage() {
       {/* Audit Log PII Reveal Justification Modal */}
       {isAuditModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setIsAuditModalOpen(false)}>
-          <div className="w-full max-w-md p-6 space-y-4 bg-white text-slate-900 rounded-xl shadow-2xl border border-slate-200" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+          <div className="w-full max-w-md p-6 space-y-4 bg-white text-ink rounded-xl shadow-2xl border border-border" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <h2 className="text-base font-bold text-ink flex items-center gap-2">
                 <span>🛡️</span> DPDP Audit Log: Reveal Patient PII
               </h2>
               <button
                 type="button"
                 onClick={() => setIsAuditModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 text-sm font-bold"
+                className="text-slate-400 hover:text-ink-3 text-sm font-bold"
               >
                 ✕
               </button>
             </div>
 
-            <p className="text-xs text-slate-600">
+            <p className="text-xs text-ink-3">
               You are requesting to view full unmasked contact details for <strong>{patient.full_name}</strong>. Under DPDP Act Section 4 data minimization, this action is recorded in the immutable audit log.
             </p>
 
             <div>
-              <label className="block text-xs font-bold uppercase text-slate-700 mb-1">Justification Reason *</label>
+              <label className="block text-xs font-bold uppercase text-ink-2 mb-1">Justification Reason *</label>
               <textarea
                 required
                 rows={3}
                 placeholder="e.g. Front-desk patient check-in & ID verification"
-                className="w-full p-2.5 border rounded-lg bg-white text-slate-900 border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                className="w-full p-2.5 border rounded-lg bg-white text-ink border-border-strong text-xs focus:ring-2 focus:ring-success focus:outline-none"
                 value={auditReason}
                 onChange={(e) => setAuditReason(e.target.value)}
               />
             </div>
 
-            <div className="flex justify-end gap-2 pt-3 border-t border-slate-200">
+            <div className="flex justify-end gap-2 pt-3 border-t border-border">
               <Button type="button" variant="secondary" onClick={() => setIsAuditModalOpen(false)}>
                 Cancel
               </Button>

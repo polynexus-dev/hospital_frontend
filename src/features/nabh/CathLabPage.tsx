@@ -13,8 +13,8 @@ function KpiPanel() {
   const [k, setK] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
   useEffect(() => { api.get<any>("/cathlab/procedures/kpis/").then(setK).catch((e) => setError(extractApiError(e))) }, [])
-  if (error) return <div className="text-sm text-rose-700">{error}</div>
-  if (!k) return <div className="text-sm text-slate-500">Loading…</div>
+  if (error) return <div className="text-sm text-danger-text">{error}</div>
+  if (!k) return <div className="text-sm text-ink-4">Loading…</div>
   const cards: [string, string][] = [
     ["Procedures (90 days)", String(k.procedures)],
     ["Primary PCI door-to-device ≤ 90 min", k.primary_pci.within_target_percent != null ? `${k.primary_pci.within_target_percent}%` : "—"],
@@ -28,9 +28,9 @@ function KpiPanel() {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {cards.map(([l, v]) => <div key={l} className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4"><div className="text-xs text-slate-500">{l}</div><div className="text-2xl font-bold">{v}</div></div>)}
+        {cards.map(([l, v]) => <div key={l} className="rounded-xl border border-border dark:border-slate-700 bg-white dark:bg-slate-800 p-4"><div className="text-xs text-ink-4">{l}</div><div className="text-2xl font-bold">{v}</div></div>)}
       </div>
-      <div className="text-sm text-slate-600">{Object.entries(k.by_type).map(([t, n]) => `${t}: ${n}`).join(" · ") || "No completed procedures in this period."}</div>
+      <div className="text-sm text-ink-3">{Object.entries(k.by_type).map(([t, n]) => `${t}: ${n}`).join(" · ") || "No completed procedures in this period."}</div>
     </div>
   )
 }
@@ -49,7 +49,7 @@ export function CathLabPage() {
               { key: "procedure_type", label: "Type", type: "select", options: opts("cag", "ptca", "primary_pci", "ppi", "icd_crt", "ep_study", "structural", "peripheral", "other") }],
             columns: [patientCol, col("procedure_type", "Procedure"), col("urgency", "Urgency"), col("operator_name", "Operator"), { key: "status", label: "Status" },
               { key: "door_to_device_minutes", label: "Door→device", render: (r) => (r.door_to_device_minutes != null ? `${r.door_to_device_minutes} min` : "—") },
-              { key: "safety_flags", label: "Safety", render: (r) => (r.safety_flags?.length ? <span className="text-amber-700" title={r.safety_flags.join("\n")}>⚠ {r.safety_flags.length}</span> : "—") },
+              { key: "safety_flags", label: "Safety", render: (r) => (r.safety_flags?.length ? <span className="text-warning-text" title={r.safety_flags.join("\n")}>⚠ {r.safety_flags.length}</span> : "—") },
               { key: "finalized_at", label: "Report", render: (r) => (r.finalized_at ? "Final" : "Draft") }],
             fields: [patientField(), admissionField(), { key: "procedure_type", label: "Procedure", type: "select", required: true, options: [
                 { value: "cag", label: "Coronary angiography" }, { value: "ptca", label: "PTCA / elective PCI" }, { value: "primary_pci", label: "Primary PCI (STEMI)" },

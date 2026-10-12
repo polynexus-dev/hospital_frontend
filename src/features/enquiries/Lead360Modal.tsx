@@ -50,13 +50,13 @@ export function Lead360Modal({ enquiry, onClose, ownerName }: Props) {
   })
 
   const stageColors: Record<string, string> = {
-    new: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800",
-    contacted: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800",
-    scheduled: "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800",
-    visited: "bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-950/40 dark:text-violet-300 dark:border-violet-800",
-    completed: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800",
-    follow_up: "bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-950/40 dark:text-cyan-300 dark:border-cyan-800",
-    lost: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800",
+    new: "bg-brand-tint text-brand-dark border-brand-border dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800",
+    contacted: "bg-warning-bg text-warning-text border-warning/30 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800",
+    scheduled: "bg-brand-tint text-brand-dark border-brand-border dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800",
+    visited: "bg-accent-tint text-accent-hover border-accent/25 dark:bg-violet-950/40 dark:text-violet-300 dark:border-violet-800",
+    completed: "bg-success-bg text-success-text border-success/25 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800",
+    follow_up: "bg-accent-tint text-accent-hover border-accent/25 dark:bg-cyan-950/40 dark:text-cyan-300 dark:border-cyan-800",
+    lost: "bg-danger-bg text-danger-text border-danger-border dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800",
   }
 
   const slaBreached = enquiry.sla_due_at && new Date(enquiry.sla_due_at).getTime() < Date.now()
@@ -77,12 +77,12 @@ export function Lead360Modal({ enquiry, onClose, ownerName }: Props) {
                   {enquiry.stage.toUpperCase()}
                 </span>
                 {enquiry.urgency !== "normal" && (
-                  <span className="px-1.5 py-0.5 rounded text-[10.5px] font-bold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-200">
+                  <span className="px-1.5 py-0.5 rounded text-[10.5px] font-bold bg-danger-bg text-danger-text dark:bg-rose-950 dark:text-rose-200">
                     {enquiry.urgency.toUpperCase()}
                   </span>
                 )}
                 {enquiry.patient && (
-                  <span className="px-1.5 py-0.5 rounded text-[10.5px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
+                  <span className="px-1.5 py-0.5 rounded text-[10.5px] font-semibold bg-success-bg text-success-text dark:bg-emerald-950 dark:text-emerald-200">
                     ✓ Patient #{enquiry.patient}
                   </span>
                 )}
@@ -93,7 +93,7 @@ export function Lead360Modal({ enquiry, onClose, ownerName }: Props) {
                 </a>
                 {enquiry.email && <span>✉️ {enquiry.email}</span>}
                 {enquiry.consulting_doctor_name && (
-                  <span className="font-semibold text-teal-700 dark:text-teal-300">
+                  <span className="font-semibold text-accent-hover dark:text-teal-300">
                     🩺 Dr. {enquiry.consulting_doctor_name.replace(/^Dr\.?\s*/i, "")}
                   </span>
                 )}
@@ -128,13 +128,13 @@ export function Lead360Modal({ enquiry, onClose, ownerName }: Props) {
             </div>
             <div className="bg-surface p-2 rounded border border-border">
               <span className="text-[10.5px] text-ink-4 block">SLA Status</span>
-              <span className={`font-semibold text-[11.5px] ${slaBreached ? "text-danger-text" : "text-emerald-600"}`}>
+              <span className={`font-semibold text-[11.5px] ${slaBreached ? "text-danger-text" : "text-success"}`}>
                 {slaBreached ? "🚨 SLA Breached" : "✓ Within SLA"}
               </span>
             </div>
             <div className="bg-surface p-2 rounded border border-border">
               <span className="text-[10.5px] text-ink-4 block">Callback Date</span>
-              <span className="font-bold text-teal-700 dark:text-teal-300 text-[11.5px]">
+              <span className="font-bold text-accent-hover dark:text-teal-300 text-[11.5px]">
                 {enquiry.follow_up_date || "Not Scheduled"}
               </span>
             </div>
@@ -183,12 +183,12 @@ export function Lead360Modal({ enquiry, onClose, ownerName }: Props) {
             <div className="space-y-4">
               {/* ⭐ Google Review Booster Banner for Completed Leads */}
               {enquiry.stage === "completed" && (
-                <div className="bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700 rounded-lg p-3 flex items-center justify-between gap-3 flex-wrap">
+                <div className="bg-success-bg/80 dark:bg-emerald-950/40 border border-success/25 dark:border-emerald-700 rounded-lg p-3 flex items-center justify-between gap-3 flex-wrap">
                   <div>
-                    <span className="text-xs font-bold text-emerald-900 dark:text-emerald-200 block flex items-center gap-1">
+                    <span className="text-xs font-bold text-success-text dark:text-emerald-200 block flex items-center gap-1">
                       <span>⭐</span> Patient Visit Completed — Request 5-Star Google Review
                     </span>
-                    <span className="text-[11px] text-emerald-700 dark:text-emerald-400">
+                    <span className="text-[11px] text-success-text dark:text-emerald-400">
                       Happy patients are 7x more likely to leave a 5-star Google rating if asked within 24 hours
                     </span>
                   </div>
@@ -209,13 +209,13 @@ export function Lead360Modal({ enquiry, onClose, ownerName }: Props) {
               )}
 
               {/* Scheduled Callback Setter */}
-              <div className="bg-teal-50/60 dark:bg-teal-950/20 border border-teal-200 dark:border-teal-800/60 rounded-lg p-3">
+              <div className="bg-accent-tint/60 dark:bg-teal-950/20 border border-accent/25 dark:border-teal-800/60 rounded-lg p-3">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <div>
-                    <span className="text-xs font-bold text-teal-900 dark:text-teal-200 block">
+                    <span className="text-xs font-bold text-accent-hover dark:text-teal-200 block">
                       ⏰ Next Callback / Follow-up Schedule
                     </span>
-                    <span className="text-[11px] text-teal-700 dark:text-teal-400">
+                    <span className="text-[11px] text-accent-hover dark:text-teal-400">
                       Set a callback date for the tele-calling team
                     </span>
                   </div>
@@ -224,7 +224,7 @@ export function Lead360Modal({ enquiry, onClose, ownerName }: Props) {
                       type="date"
                       value={followUpDate}
                       onChange={(e) => setFollowUpDate(e.target.value)}
-                      className="h-8 px-2 border border-teal-300 dark:border-teal-700 rounded text-xs bg-surface"
+                      className="h-8 px-2 border border-accent/25 dark:border-teal-700 rounded text-xs bg-surface"
                     />
                     <Button
                       size="sm"
@@ -249,7 +249,7 @@ export function Lead360Modal({ enquiry, onClose, ownerName }: Props) {
                   <span className="font-semibold text-ink capitalize">{enquiry.source}</span>
                 </div>
                 {enquiry.lost_reason && (
-                  <div className="col-span-2 text-rose-700 bg-rose-50 dark:bg-rose-950/40 p-2 rounded border border-rose-200">
+                  <div className="col-span-2 text-danger-text bg-danger-bg dark:bg-rose-950/40 p-2 rounded border border-danger-border">
                     <span className="font-bold">Lost Reason: </span> {enquiry.lost_reason} — {enquiry.lost_notes}
                   </div>
                 )}
@@ -327,9 +327,9 @@ export function Lead360Modal({ enquiry, onClose, ownerName }: Props) {
                       <div className="space-y-2 border-l-2 border-border ml-2 pl-3">
                         {history?.assignment_changes.map((ac) => (
                           <div key={ac.id} className="relative text-xs">
-                            <div className="absolute -left-[19px] top-1 w-2.5 h-2.5 rounded-full bg-teal-500" />
+                            <div className="absolute -left-[19px] top-1 w-2.5 h-2.5 rounded-full bg-accent" />
                             <div className="font-semibold text-ink">
-                              Reassigned: <span>{ac.from_owner_name || "Unassigned"}</span> → <span className="font-bold text-teal-700 dark:text-teal-300">{ac.to_owner_name}</span>
+                              Reassigned: <span>{ac.from_owner_name || "Unassigned"}</span> → <span className="font-bold text-accent-hover dark:text-teal-300">{ac.to_owner_name}</span>
                             </div>
                             {ac.reason && <div className="text-[11px] text-ink-3 italic">Reason: {ac.reason}</div>}
                             <div className="text-[11px] text-ink-4">

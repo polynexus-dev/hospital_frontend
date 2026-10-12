@@ -64,11 +64,11 @@ export function KPIDashboard() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end gap-3 justify-between">
         <div className="flex flex-wrap gap-3 items-end">
-          <label className="text-xs font-semibold text-slate-600">From<input type="date" value={start} onChange={(e) => setStart(e.target.value)} className="block mt-1 px-3 py-2 text-sm border rounded-lg" /></label>
-          <label className="text-xs font-semibold text-slate-600">To<input type="date" value={end} onChange={(e) => setEnd(e.target.value)} className="block mt-1 px-3 py-2 text-sm border rounded-lg" /></label>
+          <label className="text-xs font-semibold text-ink-3">From<input type="date" value={start} onChange={(e) => setStart(e.target.value)} className="block mt-1 px-3 py-2 text-sm border rounded-lg" /></label>
+          <label className="text-xs font-semibold text-ink-3">To<input type="date" value={end} onChange={(e) => setEnd(e.target.value)} className="block mt-1 px-3 py-2 text-sm border rounded-lg" /></label>
           <div className="flex rounded-lg border overflow-hidden text-sm">
             {(["nabh", "dhs"] as const).map((k) => (
-              <button key={k} onClick={() => setKind(k)} className={`px-3 py-2 ${kind === k ? "bg-emerald-600 text-white" : "bg-white dark:bg-slate-800"}`}>
+              <button key={k} onClick={() => setKind(k)} className={`px-3 py-2 ${kind === k ? "bg-success text-white" : "bg-white dark:bg-slate-800"}`}>
                 {k === "nabh" ? "NABH hospital KPIs" : "Digital Health KPIs"}
               </button>
             ))}
@@ -76,32 +76,32 @@ export function KPIDashboard() {
         </div>
         <div className="flex gap-2 flex-wrap">
           {["csv", "xlsx", "json", "xml", "pdf"].map((f) => (
-            <button key={f} onClick={() => exportAs(f)} className="px-3 py-2 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-700 uppercase">{f}</button>
+            <button key={f} onClick={() => exportAs(f)} className="px-3 py-2 text-xs font-semibold rounded-lg bg-chip-bg dark:bg-slate-700 uppercase">{f}</button>
           ))}
-          <button onClick={publish} className="px-3 py-2 text-sm font-medium rounded-lg bg-emerald-600 text-white">Publish last quarter</button>
+          <button onClick={publish} className="px-3 py-2 text-sm font-medium rounded-lg bg-success text-white">Publish last quarter</button>
         </div>
       </div>
-      {notice && <div className="text-sm text-emerald-800 bg-emerald-50 rounded-lg px-3 py-2">{notice}</div>}
-      {error && <div className="text-sm text-rose-700 bg-rose-50 rounded-lg px-3 py-2">{error}</div>}
-      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-x-auto">
+      {notice && <div className="text-sm text-success-text bg-success-bg rounded-lg px-3 py-2">{notice}</div>}
+      {error && <div className="text-sm text-danger-text bg-danger-bg rounded-lg px-3 py-2">{error}</div>}
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-border dark:border-slate-700 overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-slate-50 dark:bg-slate-900/50 text-xs font-semibold text-slate-500 uppercase text-left">
+            <tr className="bg-page dark:bg-slate-900/50 text-xs font-semibold text-ink-4 uppercase text-left">
               <th className="px-4 py-3">Code</th><th className="px-4 py-3">Indicator</th><th className="px-4 py-3">Value</th><th className="px-4 py-3">Num / Den</th><th className="px-4 py-3">Source</th><th className="px-4 py-3" />
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+          <tbody className="divide-y divide-border dark:divide-slate-700">
             {loading ? (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-500">Computing…</td></tr>
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-ink-4">Computing…</td></tr>
             ) : (
               rows.map((r) => (
                 <tr key={r.code}>
-                  <td className="px-4 py-3 font-mono text-xs">{r.code}<div className="text-slate-400">{r.standard}</div></td>
-                  <td className="px-4 py-3">{r.name}{r.note && <div className="text-xs text-slate-400">{r.note}</div>}</td>
-                  <td className="px-4 py-3 font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap">{r.value === null ? "—" : `${r.value} ${r.unit}`}</td>
-                  <td className="px-4 py-3 text-slate-500 whitespace-nowrap">{r.numerator ?? "—"} / {r.denominator ?? "—"}</td>
-                  <td className="px-4 py-3"><span className={`text-xs font-semibold px-2 py-0.5 rounded ${r.source === "system" ? "bg-emerald-100 text-emerald-700" : r.source === "manual" ? "bg-sky-100 text-sky-700" : "bg-slate-100 text-slate-500"}`}>{r.source}</span></td>
-                  <td className="px-4 py-3 text-right"><button onClick={() => setManual(r)} className="text-xs font-semibold text-emerald-700">Enter audit data</button></td>
+                  <td className="px-4 py-3 font-mono text-xs">{r.code}<div className="text-ink-5">{r.standard}</div></td>
+                  <td className="px-4 py-3">{r.name}{r.note && <div className="text-xs text-ink-5">{r.note}</div>}</td>
+                  <td className="px-4 py-3 font-semibold text-ink dark:text-slate-100 whitespace-nowrap">{r.value === null ? "—" : `${r.value} ${r.unit}`}</td>
+                  <td className="px-4 py-3 text-ink-4 whitespace-nowrap">{r.numerator ?? "—"} / {r.denominator ?? "—"}</td>
+                  <td className="px-4 py-3"><span className={`text-xs font-semibold px-2 py-0.5 rounded ${r.source === "system" ? "bg-success-bg text-success-text" : r.source === "manual" ? "bg-brand-tint text-brand-dark" : "bg-chip-bg text-ink-4"}`}>{r.source}</span></td>
+                  <td className="px-4 py-3 text-right"><button onClick={() => setManual(r)} className="text-xs font-semibold text-success-text">Enter audit data</button></td>
                 </tr>
               ))
             )}
