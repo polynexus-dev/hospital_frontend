@@ -53,16 +53,35 @@ export function switchHospital(hospitalId: string, reason = "Hospital staff bran
 // --- Two-factor authentication enrollment (apps.accounts.views.UserViewSet) ---
 
 export interface TwoFactorSetup {
+  device_id?: number
+  name?: string
   secret: string
   provisioning_uri: string
 }
 
-export function setup2FA() {
-  return api.post<TwoFactorSetup>("/users/2fa/setup/")
+/** One registered authenticator app (its secret never leaves the server after setup). */
+export interface AuthenticatorDevice {
+  id: number
+  name: string
+  created_at: string
+  last_used_at: string | null
+}
+
+/** Starts adding an authenticator app. Once 2FA is on, `otp` must come from an app already registered. */
+export function setup2FA(name = "", otp = "") {
+  return api.post<TwoFactorSetup>("/users/2fa/setup/", { name, ...(otp ? { otp } : {}) })
 }
 
 export function enable2FA(otp: string) {
   return api.post<{ is_2fa_enabled: boolean }>("/users/2fa/enable/", { otp })
+}
+
+export function list2FADevices() {
+  return api.get<AuthenticatorDevice[]>("/users/2fa/devices/")
+}
+
+export function remove2FADevice(id: number, password: string) {
+  return api.post<{ is_2fa_enabled: boolean }>(`/users/2fa/devices/${id}/remove/`, { password })
 }
 
 export function disable2FA(password: string) {
