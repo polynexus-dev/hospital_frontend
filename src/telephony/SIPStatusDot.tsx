@@ -56,12 +56,12 @@ export function WebRTCHeaderBadge() {
       <div
         className={`flex items-center gap-2 h-8 px-2.5 rounded-control text-xs font-semibold border transition-all ${
           sipStatus === "online"
-            ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+            ? "bg-success-bg text-success-text border-success/30"
             : sipStatus === "busy"
-            ? "bg-amber-50 text-amber-900 border-amber-300 shadow-xs"
+            ? "bg-warning-bg text-warning-text border-warning/40 shadow-xs"
             : sipStatus === "registering"
-            ? "bg-blue-50 text-blue-800 border-blue-200"
-            : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 cursor-pointer"
+            ? "bg-accent-tint text-accent border-accent/30"
+            : "bg-chip-bg text-chip-text border-border hover:bg-border-faint cursor-pointer"
         }`}
         title={
           sipStatus === "offline"

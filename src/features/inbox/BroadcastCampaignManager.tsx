@@ -161,7 +161,7 @@ export function BroadcastCampaignManager() {
           </div>
           <Button
             variant="primary"
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-sm flex items-center gap-1.5"
+            className="font-semibold text-xs shadow-sm flex items-center gap-1.5"
             onClick={() => {
               setIsCreating(true)
               applyPreset(TEMPLATE_PRESETS[0])
@@ -318,11 +318,11 @@ export function BroadcastCampaignManager() {
                   Cancel
                 </Button>
                 <Button
-                  variant="primary"
+                  variant="action"
                   size="sm"
                   disabled={createMutation.isPending || dispatchMutation.isPending || !title || !messageBody}
                   onClick={handleLaunch}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+                  className="font-bold"
                 >
                   {createMutation.isPending || dispatchMutation.isPending ? "Broadcasting…" : "🚀 Launch & Dispatch Now"}
                 </Button>
@@ -436,8 +436,8 @@ export function BroadcastCampaignManager() {
                     {campaign.status !== "completed" && (
                       <Button
                         size="sm"
-                        variant="primary"
-                        className="ml-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs"
+                        variant="action"
+                        className="ml-2 font-semibold text-xs"
                         disabled={dispatchMutation.isPending}
                         onClick={() => dispatchMutation.mutate(campaign.id)}
                       >

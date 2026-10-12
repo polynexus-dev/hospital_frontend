@@ -194,14 +194,14 @@ export function Lead360Modal({ enquiry, onClose, ownerName }: Props) {
                   </div>
                   <Button
                     size="sm"
-                    variant="primary"
+                    variant="action"
                     onClick={() => {
                       const text = encodeURIComponent(
                         `Dear ${enquiry.name}, thank you for visiting us for ${enquiry.service_requested || "your consultation"}! We hope you had a comfortable experience. Would you mind taking 30 seconds to share your review on Google Maps to help others in our community? https://g.page/polynexus-hospital/review`
                       )
                       window.open(`https://wa.me/${enquiry.mobile.replace(/[^0-9]/g, "")}?text=${text}`, "_blank")
                     }}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white flex items-center gap-1.5 shrink-0 font-bold"
+                    className="flex items-center gap-1.5 shrink-0 font-bold"
                   >
                     <span>💬</span> Send via WhatsApp
                   </Button>

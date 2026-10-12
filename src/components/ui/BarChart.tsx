@@ -7,7 +7,7 @@ interface Bar {
 export function BarChart({
   data,
   height = 160,
-  color = "var(--color-brand)",
+  color = "var(--color-accent)",
   formatValue = (n: number) => String(n),
   gridlines = 4,
 }: {

@@ -330,7 +330,7 @@ export function ConsolePage() {
             <button
               disabled={!activeNumber}
               onClick={() => raiseCallback.mutate()}
-              className="border border-border-strong rounded-control px-2.5 py-2 text-[13px] font-semibold text-brand text-left hover:bg-brand-tint disabled:opacity-40"
+              className="border border-action rounded-control px-2.5 py-2 text-[13px] font-semibold text-action text-left hover:bg-action hover:text-white disabled:opacity-40"
             >
               {raiseCallback.isSuccess ? "Callback task raised ✓" : "Raise callback task"}
             </button>

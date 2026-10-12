@@ -548,7 +548,7 @@ export function InboxPage() {
                 <div
                   key={msg.id}
                   className={`px-3 py-2 rounded-control max-w-[70%] text-[13px] leading-relaxed ${
-                    msg.direction === "outbound" ? "ml-auto bg-brand text-white" : "mr-auto bg-page border border-border text-ink"
+                    msg.direction === "outbound" ? "ml-auto bg-bubble text-ink" : "mr-auto bg-surface border border-border text-ink"
                   }`}
                 >
                   <div className="whitespace-pre-wrap">{msg.body}</div>
@@ -736,7 +736,7 @@ export function InboxPage() {
                   placeholder={`Type your ${CHANNEL_LABELS[selectedThread.channel]} message or click ✨ AI Auto-Reply…`}
                   className="flex-1 h-9 px-3 border border-border-strong rounded-control text-[13px] outline-none focus:border-brand"
                 />
-                <Button type="submit" variant="primary" disabled={sendMutation.isPending || !composerBody.trim()}>
+                <Button type="submit" variant="action" disabled={sendMutation.isPending || !composerBody.trim()}>
                   {sendMutation.isPending ? "Sending…" : "Send"}
                 </Button>
               </form>

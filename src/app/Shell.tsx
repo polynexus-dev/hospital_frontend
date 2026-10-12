@@ -219,6 +219,11 @@ export function Shell() {
   }, [location.pathname])
 
   const isInSaasMode = isSaasUser && platformMode === "saas"
+  // Admin screens (settings that affect everyone) look different from
+  // day-to-day work: navy header with an "Admin" badge. CRM screens use
+  // teal as the primary; HMS (clinical, ERP, MIS) uses navy.
+  const isAdminScreen = isInSaasMode || ["/saas", "/admin", "/governance"].some((p) => location.pathname.startsWith(p))
+  const product = isAdminScreen ? "admin" : activeDomain === "crm" ? "crm" : "hms"
 
   const active = useMemo(() => {
     if (location.pathname.startsWith("/saas")) {
@@ -346,12 +351,12 @@ export function Shell() {
   }
 
   return (
-    <div className="flex h-screen min-h-[760px] text-ink bg-page">
-      <div className="w-[226px] shrink-0 bg-sidebar border-r border-border flex flex-col">
+    <div data-product={product} className="flex h-screen min-h-[760px] text-ink bg-page">
+      <div data-admin-header={isInSaasMode ? "" : undefined} className={`w-[226px] shrink-0 border-r border-border flex flex-col ${isInSaasMode ? "bg-admin" : "bg-sidebar"}`}>
         <div className="px-[18px] pt-[18px] pb-[14px] border-b border-border-soft flex items-center gap-[10px]">
           <div
             className={`w-8 h-8 rounded-lg text-white flex items-center justify-center font-bold text-sm shadow-xs shrink-0 ${
-              isInSaasMode ? "bg-indigo-600" : "bg-emerald-600"
+              isInSaasMode ? "bg-white/15" : "bg-brand"
             }`}
           >
             {isInSaasMode ? "⚡" : "🏥"}
@@ -377,7 +382,7 @@ export function Shell() {
                   navigate("/saas")
                 }}
                 className={`flex-1 h-7 rounded-[6px] text-[11px] font-bold flex items-center justify-center gap-1 transition-colors ${
-                  isInSaasMode ? "bg-brand text-white shadow-2xs" : "text-ink-4 hover:text-ink-2"
+                  isInSaasMode ? "bg-white text-admin shadow-2xs" : "text-ink-4 hover:text-ink-2"
                 }`}
               >
                 <span>⚡</span>
@@ -475,10 +480,18 @@ export function Shell() {
       </div>
 
       <div className="flex-1 min-w-0 flex flex-col">
-        <div className="h-14 shrink-0 bg-surface border-b border-border flex items-center gap-4 px-5">
+        <div data-admin-header={isAdminScreen ? "" : undefined} className="h-14 shrink-0 bg-surface border-b border-border flex items-center gap-4 px-5">
           <div className="text-[15px] font-semibold shrink-0 whitespace-nowrap">
             {active ? t(active.labelKey) : ""}
           </div>
+          {isAdminScreen && (
+            <span
+              title="Changes here affect everyone"
+              className="shrink-0 rounded-chip bg-admin-tint text-admin text-[10.5px] font-bold uppercase tracking-[.08em] px-2 py-0.5"
+            >
+              Admin
+            </span>
+          )}
           <div className="text-[12px] text-ink-4 border-l border-border pl-4 min-w-0 overflow-hidden whitespace-nowrap text-ellipsis">
             {active ? t(active.subKey) : ""}
           </div>
@@ -513,7 +526,7 @@ export function Shell() {
                 localStorage.setItem("platform_mode", "saas")
                 navigate("/saas")
               }}
-              className="flex items-center gap-1.5 h-8 px-3 rounded-control text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-xs transition-colors shrink-0"
+              className="flex items-center gap-1.5 h-8 px-3 rounded-control text-xs font-bold text-white bg-admin hover:bg-brand-dark shadow-xs transition-colors shrink-0"
               title="Return to SaaS Platform Control"
             >
               <span>⚡</span>
@@ -528,14 +541,14 @@ export function Shell() {
                 onClick={() => setIsBranchOpen(!isBranchOpen)}
                 className={`flex items-center gap-2 h-8 px-3 border rounded-control text-xs font-semibold transition-all shadow-2xs cursor-pointer ${
                   !user?.hospital
-                    ? "border-amber-500 bg-amber-50 text-amber-900 hover:bg-amber-100 font-bold animate-pulse"
-                    : "border-emerald-500/40 bg-emerald-50/50 text-emerald-800 hover:bg-emerald-100"
+                    ? "border-warning bg-warning-bg text-warning-text hover:bg-warning-bg font-bold animate-pulse"
+                    : "border-brand-border bg-surface text-ink-2 hover:bg-page"
                 }`}
               >
                 {!user?.hospital ? (
                   <span>⚠️</span>
                 ) : (
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
                 )}
                 <span className="max-w-[160px] truncate">
                   {!user?.hospital
@@ -560,7 +573,7 @@ export function Shell() {
                           onClick={() => handleSwitchBranch(h.id)}
                           className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between transition-colors cursor-pointer ${
                             isSelected
-                              ? "bg-emerald-50 text-emerald-700 font-bold"
+                              ? "bg-accent-tint text-accent font-bold"
                               : "text-ink hover:bg-page"
                           }`}
                         >
@@ -569,7 +582,7 @@ export function Shell() {
                             <span className="truncate">{h.name}</span>
                             {h.city && <span className="text-[10px] opacity-60">({h.city})</span>}
                           </div>
-                          {isSelected && <span className="text-emerald-600 font-bold text-sm">✓</span>}
+                          {isSelected && <span className="text-accent font-bold text-sm">✓</span>}
                         </button>
                       )
                     })}
@@ -585,7 +598,7 @@ export function Shell() {
             title="Toggle Compact View Density (Alt+C)"
             className={`h-8 px-2.5 border rounded-control text-xs font-semibold flex items-center gap-1.5 transition-colors ${
               isCompactMode
-                ? "bg-brand text-white border-brand shadow-xs"
+                ? "bg-brand-tint text-brand border-brand shadow-xs"
                 : "border-border text-ink-3 hover:bg-page"
             }`}
           >
@@ -885,7 +898,7 @@ export function Shell() {
             {accessError && <p className="mt-2 text-xs text-danger-text">{accessError}</p>}
             <div className="mt-5 flex justify-end gap-2">
               <button onClick={() => setAccessHospitalId(null)} disabled={isEnteringHospital} className="h-9 px-3 rounded-control border border-border text-xs font-semibold text-ink-3">Cancel</button>
-              <button onClick={enterHospitalWorkspace} disabled={isEnteringHospital} className="h-9 px-3 rounded-control bg-indigo-600 text-white text-xs font-bold disabled:opacity-60">{isEnteringHospital ? "Entering…" : "Record & enter hospital"}</button>
+              <button onClick={enterHospitalWorkspace} disabled={isEnteringHospital} className="h-9 px-3 rounded-control bg-admin text-white text-xs font-bold disabled:opacity-60">{isEnteringHospital ? "Entering…" : "Record & enter hospital"}</button>
             </div>
           </div>
         </div>

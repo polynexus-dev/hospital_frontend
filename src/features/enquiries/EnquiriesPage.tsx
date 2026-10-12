@@ -421,7 +421,7 @@ function ContactedStageModal({ enquiry, onClose }: { enquiry: Enquiry; onClose: 
       </div>
       <div className="flex gap-2 mt-5 pt-3 border-t border-border justify-end">
         <Button variant="secondary" onClick={onClose} disabled={scheduleMutation.isPending}>Cancel</Button>
-        <Button variant="primary" onClick={() => scheduleMutation.mutate()} disabled={scheduleMutation.isPending || !selectedSlotId}>
+        <Button variant="action" onClick={() => scheduleMutation.mutate()} disabled={scheduleMutation.isPending || !selectedSlotId}>
           {scheduleMutation.isPending ? "Scheduling…" : "Confirm OPD Booking"}
         </Button>
       </div>
@@ -718,7 +718,7 @@ function FollowUpStageModal({ enquiry, onClose }: { enquiry: Enquiry; onClose: (
       </div>
       <div className="flex gap-2 mt-5 pt-3 border-t border-border justify-end">
         <Button variant="secondary" onClick={onClose} disabled={rescheduleMutation.isPending}>Cancel</Button>
-        <Button variant="primary" onClick={() => rescheduleMutation.mutate()} disabled={rescheduleMutation.isPending || !selectedSlotId || !enquiry.patient}>
+        <Button variant="action" onClick={() => rescheduleMutation.mutate()} disabled={rescheduleMutation.isPending || !selectedSlotId || !enquiry.patient}>
           {rescheduleMutation.isPending ? "Scheduling…" : "Schedule Consultation"}
         </Button>
       </div>

@@ -1,4 +1,4 @@
-export function ProgressBar({ pct, color = "var(--color-brand)", height = 6 }: { pct: number; color?: string; height?: number }) {
+export function ProgressBar({ pct, color = "var(--color-accent)", height = 6 }: { pct: number; color?: string; height?: number }) {
   return (
     <div className="bg-page rounded-tag overflow-hidden" style={{ height }}>
       <div

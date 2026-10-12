@@ -6,49 +6,65 @@
   --font-sans: "Source Sans 3", "Noto Sans Devanagari", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 
-  /* Brand */
-  --color-brand: #1d4e89;
-  --color-brand-hover: #17406f;
-  --color-brand-dark: #133658;
-  --color-brand-tint: #eef4fa;
-  --color-brand-tint-strong: #e9eff6;
-  --color-brand-border: #dbe6f2;
+  /* Brand — HMS (hospital management, ERP, MIS) is navy. CRM screens and
+     admin screens re-point these tokens below ([data-product]). */
+  --color-brand: #12355b;
+  --color-brand-hover: #0e2a48;
+  --color-brand-dark: #0b2340;
+  --color-brand-tint: #e6eef6;
+  --color-brand-tint-strong: #dce6f0;
+  --color-brand-border: #c9d6e3;
 
-  /* Surfaces */
-  --color-page: #f4f5f7;
-  --color-sidebar: #fbfbfc;
+  /* Clinical teal: charts, toggles, selected states — one meaning in both products */
+  --color-accent: #0e7c7b;
+  --color-accent-hover: #0b6564;
+  --color-accent-tint: #eff8f7;
+
+  /* Coral: CRM patient actions only (Book, Call back, Send). White text needs this darker coral. */
+  --color-action: #b4432a;
+  --color-action-hover: #963722;
+
+  /* CRM chat bubbles and cards (dark text on it, not teal) */
+  --color-bubble: #e3f3f2;
+
+  /* Admin screens */
+  --color-admin: #12355b;
+  --color-admin-tint: #e6eef6;
+
+  /* Shared neutrals */
+  --color-page: #f6f8f9;
+  --color-sidebar: #fbfcfd;
   --color-surface: #ffffff;
 
-  /* Borders */
-  --color-border: #e3e6ea;
-  --color-border-soft: #eceff2;
-  --color-border-faint: #f1f3f5;
-  --color-border-strong: #d8dde2;
+  --color-border: #d9e1e7;
+  --color-border-soft: #e4eaee;
+  --color-border-faint: #eef2f5;
+  --color-border-strong: #c5d0d9;
 
-  /* Text */
-  --color-ink: #16191d;
-  --color-ink-2: #3d4650;
-  --color-ink-3: #55606b;
-  --color-ink-4: #7a838d;
-  --color-ink-5: #9aa2aa;
-  --color-ink-6: #8a929b;
+  --color-ink: #1e293b;
+  --color-ink-2: #334155;
+  --color-ink-3: #46566a;
+  --color-ink-4: #5b6b7a;
+  --color-ink-5: #64748b;
+  --color-ink-6: #64748b;
 
-  /* Status */
-  --color-success: #1c7a55;
-  --color-success-text: #1c6a4b;
-  --color-success-bg: #e9f2ec;
+  /* Status — always paired with an icon or text. Red is for real alerts only.
+     The plain colour is for dots, icons and borders; -text is the AA shade for words. */
+  --color-success: #2e7d5b;
+  --color-success-text: #24684b;
+  --color-success-bg: #eaf4ef;
 
-  --color-warning: #c58a1a;
-  --color-warning-text: #8a6516;
-  --color-warning-bg: #f6f2e9;
+  --color-warning: #b7791f;
+  --color-warning-text: #8a5a12;
+  --color-warning-bg: #fbf3e4;
 
-  --color-danger: #b3261e;
-  --color-danger-text: #a8332a;
-  --color-danger-bg: #fdf3f2;
-  --color-danger-border: #f2d9d6;
+  --color-danger: #b42318;
+  --color-danger-text: #b42318;
+  --color-danger-bg: #fdecea;
+  --color-danger-border: #f4cfcb;
 
-  --color-chip-bg: #f0f2f5;
-  --color-chip-text: #4a545e;
+  --color-chip-bg: #eef2f5;
+  --color-chip-text: #46566a;
 
   --radius-card: 6px;
   --radius-control: 5px;
@@ -90,13 +106,50 @@ body {
   box-sizing: border-box;
 }
 
+/* CRM (patient engagement): teal is the primary. Coral stays for actions. */
+[data-product="crm"] {
+  --color-brand: #0e7c7b;
+  --color-brand-hover: #0b6564;
+  --color-brand-dark: #0a5857;
+  --color-brand-tint: #eff8f7; /* teal text on it is 4.6:1; #e3f3f2 is for bubbles */
+  --color-brand-tint-strong: #e3f3f2;
+  --color-brand-border: #bfe0de;
+}
+
+/* Toggles, checkboxes and radios: teal for "on" in every product. */
+input[type="checkbox"],
+input[type="radio"],
+input[type="range"] {
+  accent-color: var(--color-accent);
+}
+
+/* Admin header: navy with white text. Re-pointing the tokens lets every
+   control inside it (search, buttons, language switch) stay legible. */
+[data-admin-header] {
+  --color-surface: #12355b;
+  --color-page: #0e2a48;
+  --color-ink: #ffffff;
+  --color-ink-2: #f1f5f9;
+  --color-ink-3: #e6eef6;
+  --color-ink-4: #c3d2e2;
+  --color-ink-5: #c3d2e2;
+  --color-ink-6: #c3d2e2;
+  --color-border: #2c4f78;
+  --color-border-soft: #2c4f78;
+  --color-border-strong: #3b6290;
+  --color-brand: #ffffff;
+  --color-brand-tint: #1d4a78;
+  --color-brand-tint-strong: #1d4a78;
+  color: #ffffff;
+}
+
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #d5dade;
+  background: #c5d0d9;
   border-radius: 6px;
   border: 3px solid var(--color-page);
 }

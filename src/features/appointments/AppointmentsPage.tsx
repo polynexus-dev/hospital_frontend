@@ -343,7 +343,7 @@ export function AppointmentsPage() {
             <Button variant="secondary" size="sm" onClick={() => openBlockModal()}>
               Block doctor leave
             </Button>
-            <Button variant="primary" size="sm" onClick={() => openBooking()}>
+            <Button variant="action" size="sm" onClick={() => openBooking()}>
               Book slot
             </Button>
           </CardHeader>
@@ -667,7 +667,7 @@ export function AppointmentsPage() {
                 <Button type="button" variant="secondary" onClick={closeBooking}>
                   Cancel
                 </Button>
-                <Button type="submit" variant="primary" disabled={bookMutation.isPending || !bookSlotId || !bookPatientId}>
+                <Button type="submit" variant="action" disabled={bookMutation.isPending || !bookSlotId || !bookPatientId}>
                   {bookMutation.isPending ? "Booking…" : "Confirm booking"}
                 </Button>
               </div>

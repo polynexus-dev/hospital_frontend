@@ -1,6 +1,10 @@
 import type { ButtonHTMLAttributes } from "react"
 
-type Variant = "primary" | "secondary" | "danger" | "ghost"
+// primary: the product's colour (navy in HMS and admin, teal in CRM) — Save/Apply.
+// action: coral, for patient-facing CRM actions only (Book, Call back, Send);
+//   never on admin screens, so "Save" never competes with "Book".
+// danger: real destructive actions, always behind a confirmation step.
+type Variant = "primary" | "action" | "secondary" | "danger" | "ghost"
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant
@@ -10,7 +14,8 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 const variantClasses: Record<Variant, string> = {
   primary: "bg-brand text-white border border-brand hover:bg-brand-hover",
   secondary: "bg-surface text-ink-3 border border-border-strong hover:bg-page",
-  danger: "bg-danger text-white border border-danger hover:bg-[#971f19]",
+  action: "bg-action text-white border border-action hover:bg-action-hover",
+  danger: "bg-danger text-white border border-danger hover:bg-[#931c13]",
   ghost: "bg-transparent text-brand border border-border-strong hover:bg-brand-tint hover:border-brand",
 }
 
