@@ -196,13 +196,7 @@ export function PatientsListPage() {
           </Button>
           <Button
             variant="primary"
-            onClick={() => {
-              setMutationError(null)
-              if (!selectedBranch && availableBranches.length > 0) {
-                setSelectedBranch(availableBranches[0].id)
-              }
-              setIsModalOpen(true)
-            }}
+            onClick={() => navigate("/opd-desk?mode=register")}
           >
             + New Patient
           </Button>

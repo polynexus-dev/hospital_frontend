@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { MemoryRouter } from "react-router-dom"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { OPDRegistrationPage } from "./OPDRegistrationPage"
 
@@ -32,9 +33,9 @@ vi.mock("../../api/frontdesk", () => ({
   })),
 }))
 
-function renderPage() {
+function renderPage(url = "/opd-desk") {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return render(<QueryClientProvider client={client}><OPDRegistrationPage /></QueryClientProvider>)
+  return render(<MemoryRouter initialEntries={[url]}><QueryClientProvider client={client}><OPDRegistrationPage /></QueryClientProvider></MemoryRouter>)
 }
 
 describe("OPDRegistrationPage", () => {
@@ -74,5 +75,22 @@ describe("OPDRegistrationPage", () => {
     await waitFor(() => expect(screen.getByText(/credit \(not for this payer\)/i)).toBeInTheDocument())
     await user.click(screen.getByRole("radio", { name: "Corporate" }))
     await waitFor(() => expect(screen.getByLabelText(/^credit$/i)).not.toBeDisabled())
+  })
+
+  it("New Patient opens in register-only mode: no visit, no doctor needed", async () => {
+    const { registerVisit, previewVisit } = await import("../../api/frontdesk")
+    vi.mocked(previewVisit).mockResolvedValueOnce({
+      visit_type: null as any, visit_type_label: "Registration only", reason: "", last_paid_visit: null, charges: [], total: "0", warnings: [], advance_balance: "0",
+      policy: { discount_limit_percent: "10", credit_payer_types: [], round_down_to_rupee: true, default_rate_category: "general" },
+    })
+    const user = userEvent.setup()
+    renderPage("/opd-desk?mode=register")
+    expect(screen.getByLabelText(/register only/i)).toBeChecked()
+    expect(screen.queryByLabelText(/^doctor/i)).not.toBeInTheDocument()
+    await user.type(screen.getByLabelText(/^first name/i), "Kiran")
+    await user.type(screen.getByLabelText("Mobile number"), "9876500077")
+    await user.click(screen.getByRole("button", { name: /register patient/i }))
+    await waitFor(() => expect(registerVisit).toHaveBeenCalled())
+    expect(vi.mocked(registerVisit).mock.calls[0][0]).toMatchObject({ register_only: true, patient: { first_name: "Kiran" } })
   })
 })

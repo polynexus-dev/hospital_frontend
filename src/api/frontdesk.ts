@@ -42,12 +42,12 @@ export interface PinLookup {
 
 export interface RegistrationResult {
   patient: { id: number; uhid: string; full_name: string }
-  visit: { id: number; visit_number: string; token: number | null; visit_type_label: string; doctor_name: string; department_name: string | null }
-  bill: { id: number; bill_number: string; status: string; total: string; discount: string; round_off: string; net: string }
+  visit: { id: number; visit_number: string; token: number | null; visit_type_label: string; doctor_name: string; department_name: string | null } | null
+  bill: { id: number; bill_number: string; status: string; total: string; discount: string; round_off: string; net: string } | null
   assessment: string
   warnings: string[]
   awaiting_discount_approval: number | null
-  links: { receipt: string; card: string; sticker: string }
+  links: { receipt: string | null; card: string; sticker: string }
 }
 
 export interface Option {

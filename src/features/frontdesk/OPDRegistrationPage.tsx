@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
+import { useSearchParams } from "react-router-dom"
 import { Card } from "../../components/ui/Card"
 import { Button } from "../../components/ui/Button"
 import { Pill } from "../../components/ui/Pill"
@@ -50,6 +51,8 @@ async function openPdf(path: string) {
 }
 
 export function OPDRegistrationPage() {
+  const [params] = useSearchParams()
+  const [registerOnly, setRegisterOnly] = useState(params.get("mode") === "register")
   const [existing, setExisting] = useState<Row | null>(null)
   const [patient, setPatient] = useState(blankPatient)
   const [useAge, setUseAge] = useState(false)
@@ -99,12 +102,11 @@ export function OPDRegistrationPage() {
 
   // --- live preview: new/follow-up and the charges
   const preview = useQuery({
-    queryKey: ["fd-preview", visit.doctor, existing?.id, visit.rate_category, packages.join(","), visit.visit_type],
-    queryFn: () => previewVisit({
-      doctor: String(visit.doctor), patient: existing ? String(existing.id) : "", rate_category: visit.rate_category,
-      packages: packages.join(","), visit_type: visit.visit_type,
-    }),
-    enabled: !!visit.doctor,
+    queryKey: ["fd-preview", registerOnly, visit.doctor, existing?.id, visit.rate_category, packages.join(","), visit.visit_type],
+    queryFn: () => previewVisit(registerOnly
+      ? { register_only: "1", patient: existing ? String(existing.id) : "", rate_category: visit.rate_category }
+      : { doctor: String(visit.doctor), patient: existing ? String(existing.id) : "", rate_category: visit.rate_category, packages: packages.join(","), visit_type: visit.visit_type }),
+    enabled: registerOnly || !!visit.doctor,
   })
   const advance = useQuery({ queryKey: ["fd-advance", existing?.id], queryFn: () => advanceBalance(existing!.id), enabled: !!existing })
 
@@ -180,11 +182,12 @@ export function OPDRegistrationPage() {
     if (p.nationality === "IN") p.passport_number = ""
     const v: Row = Object.fromEntries(Object.entries(visit).filter(([, val]) => val !== ""))
     const body: Row = {
+      ...(registerOnly ? { register_only: true } : {}),
       ...(existing ? { patient_id: existing.id } : { patient: p }),
       confirm_not_duplicate: confirmNotDuplicate,
       abha_number: abha,
       consents: Object.entries(consents).filter(([, on]) => on).map(([notice]) => ({ notice: Number(notice), status: "granted", method: consentMethod })),
-      visit: v,
+      visit: registerOnly ? { rate_category: visit.rate_category } : v,
       billing: {
         packages,
         ...(discountAmount > 0 ? { [discount.mode === "percent" ? "discount_percent" : "discount_amount"]: discount.value, discount_reason: discount.reason } : {}),
@@ -212,7 +215,7 @@ export function OPDRegistrationPage() {
     } finally {
       setSaving(false)
     }
-  }, [patient, visit, existing, abha, consents, consentMethod, packages, discount, discountAmount, needsApprover, settlement, payments, sendForApproval, useAge])
+  }, [patient, visit, existing, abha, consents, consentMethod, packages, discount, discountAmount, needsApprover, settlement, payments, sendForApproval, useAge, registerOnly])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -232,22 +235,26 @@ export function OPDRegistrationPage() {
           <div>
             <div className="text-[12px] text-ink-4">Registered</div>
             <div className="text-[20px] font-bold">{result.patient.full_name}</div>
-            <div className="text-[13px] text-ink-3">UHID <span className="font-mono font-semibold">{result.patient.uhid}</span> · {result.visit.visit_number} · {result.visit.visit_type_label}</div>
-            <div className="text-[13px] text-ink-3">Dr. {result.visit.doctor_name}{result.visit.department_name ? ` · ${result.visit.department_name}` : ""}</div>
+            <div className="text-[13px] text-ink-3">UHID <span className="font-mono font-semibold">{result.patient.uhid}</span>{result.visit ? ` · ${result.visit.visit_number} · ${result.visit.visit_type_label}` : " · registered without a visit"}</div>
+            {result.visit && <div className="text-[13px] text-ink-3">Dr. {result.visit.doctor_name}{result.visit.department_name ? ` · ${result.visit.department_name}` : ""}</div>}
           </div>
-          <div className="text-center rounded-card bg-accent-tint px-6 py-3">
-            <div className="text-[11px] uppercase tracking-wider text-accent font-semibold">Token</div>
-            <div className="text-[36px] font-bold text-accent leading-none">{result.visit.token ?? "—"}</div>
+          {result.visit && (
+            <div className="text-center rounded-card bg-accent-tint px-6 py-3">
+              <div className="text-[11px] uppercase tracking-wider text-accent font-semibold">Token</div>
+              <div className="text-[36px] font-bold text-accent leading-none">{result.visit.token ?? "—"}</div>
+            </div>
+          )}
+        </div>
+        {result.bill && (
+          <div className="mt-4 text-[13px]">
+            Bill <span className="font-mono">{result.bill.bill_number}</span>: net {money(result.bill.net)} ·{" "}
+            {result.awaiting_discount_approval ? <Pill tone="warn">⏳ Discount awaiting approval: take payment after it's approved</Pill>
+              : result.bill.status === "paid" ? <Pill tone="ok">✓ Paid</Pill> : <Pill tone="warn">Billed on credit</Pill>}
           </div>
-        </div>
-        <div className="mt-4 text-[13px]">
-          Bill <span className="font-mono">{result.bill.bill_number}</span>: net {money(result.bill.net)} ·{" "}
-          {result.awaiting_discount_approval ? <Pill tone="warn">⏳ Discount awaiting approval: take payment after it's approved</Pill>
-            : result.bill.status === "paid" ? <Pill tone="ok">✓ Paid</Pill> : <Pill tone="warn">Billed on credit</Pill>}
-        </div>
+        )}
         {result.warnings.map((w) => <div key={w} className="mt-2 text-[12.5px] text-warning-text">⚠ {w}</div>)}
         <div className="mt-4 flex flex-wrap gap-2">
-          <Button variant="primary" onClick={() => openPdf(result.links.receipt)}>Print receipt</Button>
+          {result.links.receipt && <Button variant="primary" onClick={() => openPdf(result.links.receipt!)}>Print receipt</Button>}
           <Button variant="secondary" onClick={() => openPdf(result.links.card)}>Print registration card</Button>
           <Button variant="secondary" onClick={() => openPdf(result.links.sticker + "?copies=3")}>Print 3 stickers</Button>
           <Button variant="secondary" onClick={reset}>New registration (Ctrl+N)</Button>
@@ -281,6 +288,9 @@ export function OPDRegistrationPage() {
               <Button size="sm" variant="ghost" onClick={() => setExisting(null)}>Register someone new instead</Button>
             </div>
           ) : <Pill tone="neutral">New patient</Pill>}
+          <label className="flex items-center gap-1.5 text-[12.5px]">
+            <input type="checkbox" checked={registerOnly} onChange={(e) => setRegisterOnly(e.target.checked)} /> Register only (no visit)
+          </label>
         </div>
       </Card>
 
@@ -362,7 +372,7 @@ export function OPDRegistrationPage() {
       )}
 
       {/* Visit and payer */}
-      <Card padded>
+      {!registerOnly && <Card padded>
         <div className="text-[13px] font-semibold mb-2">Visit</div>
         <div className="grid grid-cols-2 md:grid-cols-6 gap-2.5">
           <label className="block md:col-span-2"><span className={label}>Department</span><select className={input} value={visit.department} onChange={(e) => { setV("department", e.target.value); setV("doctor", "") }}><option value="">All</option>{(departments.data ?? []).map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}</select></label>
@@ -389,10 +399,10 @@ export function OPDRegistrationPage() {
           <label className="block md:col-span-2"><span className={label}>Referred by</span><select className={input} value={visit.referred_by} onChange={(e) => setV("referred_by", e.target.value)}><option value="">Self / walk-in</option>{(referrers.data ?? []).map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}</select></label>
           <label className="block md:col-span-2"><span className={label}>Referral note</span><input className={input} value={visit.referral_note} onChange={(e) => setV("referral_note", e.target.value)} /></label>
         </div>
-      </Card>
+      </Card>}
 
       {/* Billing */}
-      <Card padded>
+      {(!registerOnly || gross > 0) && <Card padded>
         <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
           <div className="text-[13px] font-semibold">Billing</div>
           {existing && advance.data && Number(advance.data.balance) > 0 && <Pill tone="info">Advance balance {money(advance.data.balance)}</Pill>}
@@ -452,7 +462,7 @@ export function OPDRegistrationPage() {
             {settlement === "receipt" && !sendForApproval && Math.abs(paid - net) > 0.009 && <div className="text-[12px] text-danger-text text-right">Payments {money(paid)} ≠ net</div>}
           </div>
         </div>
-      </Card>
+      </Card>}
 
       {/* Save bar */}
       <div className="fixed bottom-0 left-[226px] right-0 z-10 bg-surface border-t border-border px-5 py-2.5 flex items-center justify-between gap-3">
@@ -460,8 +470,8 @@ export function OPDRegistrationPage() {
         <div className="flex gap-2">
           {error.startsWith("This person is already registered") && <Button variant="secondary" disabled={saving} onClick={() => save(true)}>Save as a different person</Button>}
           <Button variant="secondary" onClick={reset}>Clear (Ctrl+N)</Button>
-          <Button variant="action" disabled={saving || !visit.doctor || (!existing && (!patient.first_name || !patient.mobile))} onClick={() => save()}>
-            {saving ? "Saving…" : sendForApproval ? "Register & send discount for approval" : settlement === "credit" ? "Register & bill on credit (Ctrl+S)" : `Register & collect ${money(net)} (Ctrl+S)`}
+          <Button variant="action" disabled={saving || (!registerOnly && !visit.doctor) || (registerOnly && !!existing) || (!existing && (!patient.first_name || !patient.mobile))} onClick={() => save()}>
+            {saving ? "Saving…" : registerOnly ? (gross > 0 ? `Register & collect ${money(net)} (Ctrl+S)` : "Register patient (Ctrl+S)") : sendForApproval ? "Register & send discount for approval" : settlement === "credit" ? "Register & bill on credit (Ctrl+S)" : `Register & collect ${money(net)} (Ctrl+S)`}
           </Button>
         </div>
       </div>
