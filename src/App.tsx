@@ -20,6 +20,7 @@ const PatientsListPage = lazy(() => import("./features/patients/PatientsListPage
 const PatientDetailPage = lazy(() => import("./features/patients/PatientDetailPage").then((m) => ({ default: m.PatientDetailPage })))
 const AppointmentsPage = lazy(() => import("./features/appointments/AppointmentsPage").then((m) => ({ default: m.AppointmentsPage })))
 const InboxPage = lazy(() => import("./features/inbox/InboxPage").then((m) => ({ default: m.InboxPage })))
+const DoctorsPage = lazy(() => import("./features/doctors/DoctorsPage").then((m) => ({ default: m.DoctorsPage })))
 const ReferralsPage = lazy(() => import("./features/referrals/ReferralsPage").then((m) => ({ default: m.ReferralsPage })))
 const PackagesPage = lazy(() => import("./features/packages/PackagesPage").then((m) => ({ default: m.PackagesPage })))
 const TPAPage = lazy(() => import("./features/tpa/TPAPage").then((m) => ({ default: m.TPAPage })))
@@ -105,6 +106,7 @@ function App() {
           <Route path="/patients/:id" element={<Suspense fallback={<LoadingState />}><PatientDetailPage /></Suspense>} />
           <Route path="/appointments" element={<Suspense fallback={<LoadingState />}><AppointmentsPage /></Suspense>} />
           <Route path="/inbox" element={<Suspense fallback={<LoadingState />}><InboxPage /></Suspense>} />
+          <Route path="/doctors" element={<Suspense fallback={<LoadingState />}><DoctorsPage /></Suspense>} />
           <Route path="/referrals" element={<Suspense fallback={<LoadingState />}><ReferralsPage /></Suspense>} />
           <Route path="/packages" element={<Suspense fallback={<LoadingState />}><PackagesPage /></Suspense>} />
           <Route path="/tpa" element={<Suspense fallback={<LoadingState />}><TPAPage /></Suspense>} />

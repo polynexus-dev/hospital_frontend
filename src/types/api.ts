@@ -331,6 +331,17 @@ export interface Slot {
   is_booked: boolean
 }
 
+export interface SlotTemplate {
+  id: number
+  doctor: number
+  doctor_name?: string
+  weekday: number
+  start_time: string
+  end_time: string
+  slot_duration_minutes: number
+  is_active: boolean
+}
+
 export type AppointmentStatus =
   | "booked"
   | "confirmed"

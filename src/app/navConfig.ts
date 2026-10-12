@@ -87,6 +87,7 @@ export const nabhOpsNav: NavItem[] = [
 ]
 
 export const growthNav: NavItem[] = [
+  { key: "doctors", path: "/doctors", labelKey: "nav.doctors", subKey: "screenSub.doctors" },
   { key: "referrals", moduleKey: "referrals", path: "/referrals", labelKey: "nav.referrals", subKey: "screenSub.referrals" },
   { key: "packages", moduleKey: "packages", path: "/packages", labelKey: "nav.packages", subKey: "screenSub.packages" },
   { key: "tpa", moduleKey: "tpa", path: "/tpa", labelKey: "nav.tpa", subKey: "screenSub.tpa" },

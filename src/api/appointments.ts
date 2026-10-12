@@ -1,8 +1,11 @@
 import { api } from "./client"
 import type { Appointment, AppointmentStatus, Doctor, DoctorQueue, Paginated, Slot, Waitlist } from "../types/api"
 
-export function listDoctors() {
-  return api.get<Paginated<Doctor>>("/doctors/")
+export function listDoctors(params: Record<string, string | number> = { page_size: 100 }) {
+  const qs = new URLSearchParams(
+    Object.entries(params).reduce((acc, [k, v]) => ({ ...acc, [k]: String(v) }), {}),
+  ).toString()
+  return api.get<Paginated<Doctor>>(`/doctors/${qs ? `?${qs}` : ""}`)
 }
 
 export function listSlots(params: Record<string, string> = {}) {

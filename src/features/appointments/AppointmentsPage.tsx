@@ -65,22 +65,31 @@ const LEGEND: { label: string; className: string }[] = [
   { label: "Blocked", className: "bg-[#f0f2f5] border-[#dfe3e7]" },
 ]
 
-function todayIso() {
-  return new Date().toISOString().slice(0, 10)
+function toLocalIso(date: Date): string {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, "0")
+  const d = String(date.getDate()).padStart(2, "0")
+  return `${y}-${m}-${d}`
+}
+
+function todayIso(): string {
+  return toLocalIso(new Date())
 }
 
 function shiftDate(iso: string, deltaDays: number): string {
-  const d = new Date(`${iso}T00:00:00`)
-  d.setDate(d.getDate() + deltaDays)
-  return d.toISOString().slice(0, 10)
+  const [y, m, d] = iso.split("-").map(Number)
+  const date = new Date(y, m - 1, d)
+  date.setDate(date.getDate() + deltaDays)
+  return toLocalIso(date)
 }
 
 function formatDisplayDate(iso: string): string {
-  const d = new Date(`${iso}T00:00:00`)
-  const weekday = d.toLocaleDateString("en-US", { weekday: "short" })
-  const day = String(d.getDate()).padStart(2, "0")
-  const month = d.toLocaleDateString("en-US", { month: "short" })
-  return `${weekday} ${day} ${month} ${d.getFullYear()}`
+  const [y, m, d] = iso.split("-").map(Number)
+  const date = new Date(y, m - 1, d)
+  const weekday = date.toLocaleDateString("en-US", { weekday: "short" })
+  const day = String(date.getDate()).padStart(2, "0")
+  const month = date.toLocaleDateString("en-US", { month: "short" })
+  return `${weekday} ${day} ${month} ${date.getFullYear()}`
 }
 
 function formatTime(t: string): string {
@@ -135,11 +144,11 @@ export function AppointmentsPage() {
   const patientsQuery = useQuery({ queryKey: ["patients-dropdown"], queryFn: () => listPatients() })
   const slotsQuery = useQuery({
     queryKey: ["slots", "day", selectedDate],
-    queryFn: () => listSlots({ date: selectedDate }),
+    queryFn: () => listSlots({ date: selectedDate, page_size: "500" }),
   })
   const apptsQuery = useQuery({
     queryKey: ["appointments", "day", selectedDate],
-    queryFn: () => listAppointments({ slot__date: selectedDate }),
+    queryFn: () => listAppointments({ slot__date: selectedDate, page_size: "500" }),
   })
   const waitlistQuery = useQuery({ queryKey: ["waitlist"], queryFn: () => listWaitlist() })
   const reminderQuery = useQuery({ queryKey: ["reports", "reminder-delivery"], queryFn: () => reminderDelivery() })
@@ -300,21 +309,33 @@ export function AppointmentsPage() {
       <div className="grid grid-cols-[minmax(600px,1fr)_288px] gap-3.5 items-start">
         <Card>
           <CardHeader className="flex-wrap">
-            <div className="flex border border-border-strong rounded-control overflow-hidden">
+            <div className="flex items-center border border-border-strong rounded-control overflow-hidden bg-surface shadow-2xs">
               <button
                 type="button"
+                title="Previous Day"
                 onClick={() => setSelectedDate((d) => shiftDate(d, -1))}
-                className="w-7 h-[30px] flex items-center justify-center text-ink-3 hover:bg-page border-r border-border-strong"
+                className="w-8 h-[30px] flex items-center justify-center text-ink-3 hover:bg-page hover:text-brand border-r border-border-strong text-base transition-colors"
               >
                 ‹
               </button>
-              <div className="px-3 h-[30px] flex items-center text-[12.5px] font-semibold whitespace-nowrap">
-                {formatDisplayDate(selectedDate)}
-              </div>
+              <label className="relative px-3 h-[30px] flex items-center gap-1.5 text-[12.5px] font-semibold cursor-pointer hover:bg-page transition-colors select-none">
+                <span>{formatDisplayDate(selectedDate)}</span>
+                <span className="text-[11px] text-ink-4">📅</span>
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => {
+                    if (e.target.value) setSelectedDate(e.target.value)
+                  }}
+                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                  title="Click to jump forward or pick date"
+                />
+              </label>
               <button
                 type="button"
+                title="Next Day (Forward)"
                 onClick={() => setSelectedDate((d) => shiftDate(d, 1))}
-                className="w-7 h-[30px] flex items-center justify-center text-ink-3 hover:bg-page border-l border-border-strong"
+                className="w-8 h-[30px] flex items-center justify-center text-ink-3 hover:bg-page hover:text-brand border-l border-border-strong text-base transition-colors"
               >
                 ›
               </button>
