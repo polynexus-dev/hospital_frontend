@@ -11,6 +11,7 @@ import { getPatient, getPatientTimeline, listPatientDocuments, updatePatient, up
 import { listAppointments, listDoctors } from "../../api/appointments"
 import { createConsent, listConsent, listMessages, setConsent } from "../../api/communications"
 import { listHisBilling } from "../../api/integrations"
+import { DpdpConsentCard } from "./DpdpConsentCard"
 import { createPrescription, downloadPrescriptionPdf, listPrescriptions } from "../../api/prescriptions"
 import { listEnquiries } from "../../api/enquiries"
 import { createNominee, deleteNominee, listNominees, verifyNominee } from "../../api/privacy"
@@ -1107,8 +1108,9 @@ export function PatientDetailPage() {
 
       {activeTab === "consents" && (
         <>
+          <DpdpConsentCard patientId={Number(patientId)} />
           <Card padded>
-          <Eyebrow>Consent & opt-outs</Eyebrow>
+          <Eyebrow>Messaging opt-outs by channel</Eyebrow>
           {isConsentLoading ? (
             <LoadingState />
           ) : (

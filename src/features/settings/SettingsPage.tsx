@@ -4,6 +4,7 @@ import { useAuthStore } from "../../store/auth"
 import { TwoFactorAuthCard } from "./TwoFactorAuthCard"
 import { LicenseCard } from "./LicenseCard"
 import { SubscriptionCard } from "./SubscriptionCard"
+import { ReportIncidentCard } from "./ReportIncidentCard"
 
 function Field({ label, value }: { label: string; value: string }) {
   return (
@@ -57,6 +58,7 @@ export function SettingsPage() {
       </div>
 
       <TwoFactorAuthCard />
+      {user?.hospital && <ReportIncidentCard />}
 
       <SubscriptionCard />
 

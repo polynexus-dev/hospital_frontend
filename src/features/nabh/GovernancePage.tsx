@@ -118,7 +118,7 @@ export function GovernancePage() {
   return (
     <ModuleHub
       title="IT Governance & Security"
-      subtitle="NABH DOM / DAC — password & lockout policy, screen lock, security events, audit rules & rollback, backups, accreditations, help"
+      subtitle="NABH DOM / DAC, CERT-In, DPDP — password & lockout policy, security events, incidents & breaches, audit rules & rollback, consent notices, backups, accreditations, help"
       tabs={[
         { key: "policy", label: "Security policy", render: () => <SecurityPolicyForm /> },
         { key: "sso", label: "Single sign-on", render: () => <SSOSettings /> },
@@ -146,6 +146,63 @@ export function GovernancePage() {
           },
         },
         {
+          key: "incidents",
+          label: "Incidents & breaches",
+          resource: {
+            title: "Security incidents and personal-data breaches", endpoint: "/governance/incidents/", createLabel: "Report incident",
+            description:
+              "Deadlines run from when the hospital became aware: CERT-In report within 6 hours; if personal data is affected, intimate the Data Protection Board without delay, and send the detailed report and tell affected patients within 72 hours. Missed deadlines raise a critical alert. Confirm deadlines with your legal adviser.",
+            filters: [{ key: "status", label: "Status", type: "select", options: opts("open", "contained", "resolved", "closed") }, { key: "severity", label: "Severity", type: "select", options: opts("low", "medium", "high", "critical") }],
+            columns: [
+              col("id", "#"), col("detected_at", "Detected"), col("title", "Incident"), col("category", "Category"), col("severity", "Severity"), col("status", "Status"),
+              { key: "cert_in_due_at", label: "CERT-In due", render: (r) => (r.cert_in_reported_at ? `Reported ${new Date(r.cert_in_reported_at).toLocaleString()}` : r.cert_in_due_at ? new Date(r.cert_in_due_at).toLocaleString() : "—") },
+              { key: "overdue", label: "Overdue", render: (r) => (r.overdue?.length ? <span className="font-semibold text-danger-text">⚠ {r.overdue.join(", ").replaceAll("_", " ")}</span> : <span className="text-ink-4">—</span>) },
+              { key: "pending_reports", label: "Still to report", render: (r) => (r.pending_reports?.length ? r.pending_reports.join(", ").replaceAll("_", " ") : "None") },
+            ],
+            fields: [
+              { key: "title", label: "What happened (short)", required: true },
+              { key: "description", label: "Details", type: "textarea", required: true },
+              { key: "category", label: "Category", type: "select", required: true, options: opts("unauthorised_access", "data_breach", "ransomware", "phishing", "lost_device", "data_loss", "outage", "other") },
+              { key: "severity", label: "Severity", type: "select", options: opts("low", "medium", "high", "critical"), defaultValue: "medium" },
+              { key: "detected_at", label: "When you became aware", type: "datetime" },
+              { key: "personal_data_affected", label: "Patient or staff personal data may be affected", type: "boolean" },
+              { key: "records_affected", label: "Records affected (estimate)", type: "number" },
+              { key: "data_categories", label: "Kinds of data (e.g. names, phone numbers, diagnoses)" },
+              { key: "cert_in_reportable", label: "Reportable to CERT-In", type: "boolean", defaultValue: true },
+            ],
+            actions: [
+              { label: "Record details", path: "", method: "patch", prompt: [
+                { key: "containment_actions", label: "Containment actions", type: "textarea" }, { key: "root_cause", label: "Root cause", type: "textarea" }, { key: "remediation", label: "Remediation", type: "textarea" },
+              ], show: (r) => r.status !== "closed" },
+              { label: "Contained", path: "contain/", method: "post", show: (r) => r.status === "open" },
+              { label: "CERT-In reported", path: "cert-in-reported/", method: "post", prompt: [{ key: "reference", label: "CERT-In reference / acknowledgement" }], show: (r) => r.cert_in_reportable && !r.cert_in_reported_at },
+              { label: "Board intimated", path: "dpb-intimated/", method: "post", confirm: "Record that the Data Protection Board has been intimated now?", show: (r) => r.personal_data_affected && !r.dpb_intimated_at },
+              { label: "Board report sent", path: "dpb-report-submitted/", method: "post", confirm: "Record that the detailed report was sent to the Board now?", show: (r) => r.personal_data_affected && !r.dpb_report_submitted_at },
+              { label: "Patients told", path: "patients-notified/", method: "post", confirm: "Record that affected patients have been notified now?", show: (r) => r.personal_data_affected && !r.patients_notified_at },
+              { label: "Resolved", path: "resolve/", method: "post", show: (r) => r.status === "open" || r.status === "contained" },
+              { label: "Close", path: "close/", method: "post", tone: "primary", confirm: "Close this incident? Every report and the root cause must be recorded.", show: (r) => r.status === "resolved" },
+            ],
+          },
+        },
+        {
+          key: "consent-notices",
+          label: "Consent notices",
+          resource: {
+            title: "DPDP consent notices", endpoint: "/privacy/consent-notices/", createLabel: "Publish notice",
+            description:
+              "One notice per purpose and language: what data is collected, why, how long it is kept, and how to withdraw or complain. Published wording can't be edited; publishing again creates a new version and retires the old one, and patients who agreed to an older version are shown as needing to re-consent.",
+            filters: [{ key: "is_active", label: "Current only", type: "boolean" }],
+            columns: [col("purpose_label", "Purpose"), col("language", "Language"), col("version", "Version"), col("title", "Title"), col("is_active", "Current"), col("consents_count", "Consents"), col("created_at", "Published")],
+            fields: [
+              { key: "purpose", label: "Purpose", type: "select", required: true, options: opts("treatment", "billing_insurance", "reminders", "marketing", "research", "abdm_sharing", "telemedicine") },
+              { key: "language", label: "Language", type: "select", options: opts("en", "hi", "mr"), defaultValue: "en" },
+              { key: "title", label: "Title", required: true },
+              { key: "body", label: "Notice text", type: "textarea", required: true, help: "Plain language: the data, the purpose, how long it is kept, how to withdraw, and how to complain to the hospital and the Data Protection Board." },
+            ],
+            actions: [{ label: "Retire", path: "", method: "patch", tone: "danger", confirm: "Retire this notice? Patients won't be asked for this purpose until a new version is published.", prompt: [{ key: "is_active", label: "Keep as current version", type: "boolean", defaultValue: false }], show: (r) => r.is_active }],
+          },
+        },
+        {
           key: "rules",
           label: "Audit rules",
           resource: {
@@ -154,7 +211,7 @@ export function GovernancePage() {
             columns: [col("name", "Rule"), col("model_name", "Model"), col("actions", "Actions"), col("capture_reads", "Log reads"), col("retention_days", "Retain (days)"), col("is_active", "Active")],
             fields: [{ key: "name", label: "Name", required: true }, { key: "model_name", label: "Model (* = all)", defaultValue: "*" },
               { key: "actions", label: "Actions (JSON)", type: "json", placeholder: '["create", "update", "delete"]' }, { key: "capture_reads", label: "Also log reads", type: "boolean" },
-              { key: "retention_days", label: "Retention (days)", type: "number", defaultValue: 2555 }, { key: "is_active", label: "Active", type: "boolean", defaultValue: true }],
+              { key: "retention_days", label: "Retention (days, minimum 180)", type: "number", defaultValue: 2555 }, { key: "is_active", label: "Active", type: "boolean", defaultValue: true }],
           },
         },
         {

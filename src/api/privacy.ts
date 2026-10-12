@@ -69,3 +69,54 @@ export function verifyNominee(id: number) {
 export function deleteNominee(id: number) {
   return api.delete<void>(`/privacy/nominees/${id}/`)
 }
+
+// --- DPDP consent register --------------------------------------------------
+
+export interface ConsentNotice {
+  id: number
+  purpose: string
+  purpose_label: string
+  language: string
+  version: number
+  title: string
+  body: string
+  is_active: boolean
+  created_at: string
+}
+
+export interface PatientConsent {
+  id: number
+  patient: number
+  notice: number
+  notice_version: number
+  purpose: string
+  purpose_label: string
+  status: "granted" | "declined" | "withdrawn"
+  method: "written" | "digital" | "verbal" | "portal"
+  given_by: "self" | "guardian" | "nominee"
+  guardian_name: string
+  captured_by_name: string | null
+  created_at: string
+  withdrawn_at: string | null
+  withdrawal_reason: string
+}
+
+export interface ConsentSummaryRow {
+  purpose: string
+  purpose_label: string
+  consent: PatientConsent | null
+  current_notice: ConsentNotice | null
+  outdated: boolean
+}
+
+export function getConsentSummary(patientId: number | string, language = "en") {
+  return api.get<ConsentSummaryRow[]>(`/privacy/consents/summary/?patient=${patientId}&language=${language}`)
+}
+
+export function recordConsent(data: { patient: number; notice: number; status: "granted" | "declined"; method: string; given_by: string; guardian_name?: string }) {
+  return api.post<PatientConsent>("/privacy/consents/", data)
+}
+
+export function withdrawConsent(id: number, reason: string) {
+  return api.post<PatientConsent>(`/privacy/consents/${id}/withdraw/`, { reason })
+}
