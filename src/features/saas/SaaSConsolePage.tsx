@@ -1131,7 +1131,7 @@ export function SaaSConsolePage() {
         </Card>
       )}
 
-      {activeTab === "licences" && <LicencesTab />}
+      {activeTab === "licences" && <LicencesTab hospitals={hospitals.data?.results ?? []} onIssueLicence={setLicenseHospital} />}
 
       {activeTab === "tickets" && (
         <Card>

@@ -8,7 +8,7 @@ import type { Tone } from "../../components/ui/tone"
 import { ApiError, triggerBlobDownload } from "../../api/client"
 import { downloadLicense, downloadRevocationList, listAllLicenses, revokeLicense, uploadUsageReport } from "../../api/saas"
 import { useAuthStore } from "../../store/auth"
-import type { OnPremiseLicense } from "../../types/api"
+import type { OnPremiseLicense, SaaSHospital } from "../../types/api"
 import { LicenceRequestsPanel, LicenceTeamPanel } from "./LicenceControls"
 
 const STATUS_FILTERS = [
@@ -36,14 +36,47 @@ const date = (iso: string) => new Date(iso).toLocaleDateString("en-IN", { day: "
 /** SaaS console → Licences: requests awaiting approval, every on-premise
  *  licence (renewals due first, with who issued it and real usage from the
  *  reports hospitals send in), and — for SaaS Owners — the licence team. */
-export function LicencesTab() {
+export function LicencesTab({ hospitals, onIssueLicence }: { hospitals: SaaSHospital[]; onIssueLicence: (h: SaaSHospital) => void }) {
   const licenceRole = useAuthStore((s) => s.user?.licence_role)
   return (
     <div className="space-y-4">
+      {licenceRole && <IssueLicenceBar hospitals={hospitals} onIssue={onIssueLicence} isOwner={licenceRole === "approver"} />}
       {licenceRole && <LicenceRequestsPanel />}
       <LicenceRegister canManage={!!licenceRole} isOwner={licenceRole === "approver"} />
       {licenceRole === "approver" && <LicenceTeamPanel />}
     </div>
+  )
+}
+
+/** Where a new licence starts: pick the hospital, then the generator opens. */
+function IssueLicenceBar({ hospitals, onIssue, isOwner }: { hospitals: SaaSHospital[]; onIssue: (h: SaaSHospital) => void; isOwner: boolean }) {
+  const [hospitalId, setHospitalId] = useState("")
+  const chosen = hospitals.find((h) => String(h.id) === hospitalId)
+  return (
+    <Card>
+      <div className="p-3.5 flex flex-wrap items-center gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="text-[13px] font-semibold">Issue a licence</div>
+          <div className="text-[12px] text-ink-4">
+            Pick the hospital, then enter the Deployment ID and fingerprint from its REQUEST-LICENCE.txt.
+            {isOwner ? " As a SaaS Owner, it's signed at once." : " A SaaS Owner approves it before it's signed."}
+          </div>
+        </div>
+        <select
+          aria-label="Hospital to licence"
+          value={hospitalId}
+          onChange={(e) => setHospitalId(e.target.value)}
+          className="min-w-56 rounded-control border border-border bg-page px-3 py-1.5 text-[13px]"
+        >
+          <option value="">Choose hospital…</option>
+          {hospitals.map((h) => <option key={h.id} value={String(h.id)}>{h.name}</option>)}
+        </select>
+        <Button size="sm" variant="primary" disabled={!chosen} onClick={() => chosen && onIssue(chosen)}>
+          Issue licence
+        </Button>
+      </div>
+      {hospitals.length === 0 && <div className="px-3.5 pb-3 text-[12px] text-ink-4">No hospitals yet. Onboard one first (+ Onboard Hospital).</div>}
+    </Card>
   )
 }
 
