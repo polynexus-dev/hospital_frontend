@@ -22,6 +22,7 @@ import type { User } from "../../types/api"
 import { CreateTreatmentEstimateModal } from "./CreateTreatmentEstimateModal"
 import { InboundWebhookModal } from "./InboundWebhookModal"
 import { WebsiteWidgetModal } from "./WebsiteWidgetModal"
+import { AdLeadsModal } from "./AdLeadsModal"
 import { Lead360Modal } from "./Lead360Modal"
 import { SurgicalPipelineTab } from "./SurgicalPipelineTab"
 import { PrintableOPDSlipModal } from "./PrintableOPDSlipModal"
@@ -904,6 +905,7 @@ export function EnquiriesPage() {
   const [showNew, setShowNew] = useState(false)
   const [showWebhookModal, setShowWebhookModal] = useState(false)
   const [showWebsiteForm, setShowWebsiteForm] = useState(false)
+  const [showAdLeads, setShowAdLeads] = useState(false)
   const [showEstimateModal, setShowEstimateModal] = useState(false)
 
   const [searchQuery, setSearchQuery] = useState("")
@@ -1039,6 +1041,14 @@ export function EnquiriesPage() {
           </Button>
           <Button
             size="sm"
+            variant="ghost"
+            onClick={() => setShowAdLeads(true)}
+            className="border border-border dark:border-slate-800 text-accent-hover dark:text-teal-400"
+          >
+            📣 Ad lead forms
+          </Button>
+          <Button
+            size="sm"
             variant="secondary"
             onClick={() => setShowEstimateModal(true)}
           >
@@ -1164,6 +1174,7 @@ export function EnquiriesPage() {
 
       {showNew && <NewEnquiryForm onClose={() => setShowNew(false)} />}
       <WebsiteWidgetModal open={showWebsiteForm} onClose={() => setShowWebsiteForm(false)} />
+      <AdLeadsModal open={showAdLeads} onClose={() => setShowAdLeads(false)} />
       <InboundWebhookModal
         open={showWebhookModal}
         onClose={() => setShowWebhookModal(false)}
