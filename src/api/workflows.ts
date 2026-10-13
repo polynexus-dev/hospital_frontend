@@ -14,7 +14,7 @@ export interface Workflow {
   id: number
   name: string
   description: string
-  trigger_type: "missed_call" | "enquiry_stage_changed" | "appointment_no_show" | "nps_detractor" | "patient_recall_due"
+  trigger_type: "missed_call" | "enquiry_created" | "enquiry_stage_changed" | "appointment_no_show" | "nps_detractor" | "patient_recall_due"
   is_active: boolean
   steps: WorkflowStep[]
   created_at: string
@@ -26,7 +26,8 @@ export interface WorkflowRun {
   workflow: number
   workflow_name: string
   trigger_event: string
-  status: "success" | "failed" | "running"
+  status: "success" | "failed" | "running" | "waiting" | "stopped"
+  resume_at?: string | null
   context: Record<string, any>
   log_output: Array<{
     step_order: number

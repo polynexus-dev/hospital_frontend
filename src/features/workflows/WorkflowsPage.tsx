@@ -17,6 +17,9 @@ import {
 } from "../../api/workflows"
 import type { TaskPriority } from "../../types/api"
 
+import { StepConfigEditor } from "./StepConfigEditor"
+import { WorkflowTemplates } from "./WorkflowTemplates"
+import { extractApiError } from "../../api/client"
 export function WorkflowsPage() {
   const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState<"builder" | "history" | "tasks">("builder")
@@ -86,40 +89,11 @@ export function WorkflowsPage() {
 
   const handleAddDefaultWorkflow = () => {
     setEditingWorkflow({
-      name: "Missed Call Service Recovery Automation",
-      description: "Auto-creates callback task and sends WhatsApp template when an inbound call is missed",
-      trigger_type: "missed_call",
-      is_active: true,
-      steps: [
-        {
-          order: 1,
-          step_type: "trigger",
-          action_type: "create_task",
-          title: "Inbound Call Missed / Unanswered",
-          config: { trigger: "missed_call" },
-        },
-        {
-          order: 2,
-          step_type: "condition",
-          action_type: "create_task",
-          title: "Filter: If New Lead or Detractor",
-          config: { condition: "score <= 6" },
-        },
-        {
-          order: 3,
-          step_type: "action",
-          action_type: "create_task",
-          title: "Create Priority Callback Task",
-          config: { title: "Chase Missed Call & Book OPD Slot" },
-        },
-        {
-          order: 4,
-          step_type: "action",
-          action_type: "send_whatsapp",
-          title: "Send WhatsApp Pre-Visit Registration Link",
-          config: { template: "registration_invite" },
-        },
-      ],
+      name: "",
+      description: "",
+      trigger_type: "enquiry_created",
+      is_active: false,
+      steps: [{ order: 1, step_type: "trigger", action_type: "create_task", title: "When it happens", config: {} }],
     })
   }
 
@@ -131,7 +105,12 @@ export function WorkflowsPage() {
       step_type: stepType,
       action_type: actionType,
       title,
-      config: actionType === "wait_delay" ? { delay_minutes: 15 } : {},
+      config:
+        stepType === "condition" ? { field: "stage", op: "eq", value: "new" }
+        : actionType === "wait_delay" ? { delay_minutes: 1440 }
+        : actionType === "send_whatsapp" || actionType === "send_sms" ? { purpose: "enquiry_follow_up", fallback_sms: true }
+        : actionType === "create_task" ? { title: "Follow up enquiry #{enquiry_id}", assign_to: "owner", priority: "normal", due_in_minutes: 60 }
+        : {},
     }
     setEditingWorkflow({ ...editingWorkflow, steps: [...currentSteps, newStep] })
   }
@@ -242,6 +221,7 @@ export function WorkflowsPage() {
                     value={editingWorkflow.trigger_type || "missed_call"}
                     onChange={(e) => setEditingWorkflow({ ...editingWorkflow, trigger_type: e.target.value as any })}
                   >
+                    <option value="enquiry_created">🆕 New enquiry</option>
                     <option value="missed_call">📞 Missed Call / Unanswered Call</option>
                     <option value="enquiry_stage_changed">📈 Enquiry Stage Changed</option>
                     <option value="appointment_no_show">⏰ Appointment No-Show</option>
@@ -328,7 +308,24 @@ export function WorkflowsPage() {
                                   • {step.action_type.replace("_", " ").toUpperCase()}
                                 </span>
                               </div>
-                              <h4 className="font-bold text-sm text-ink">{step.title}</h4>
+                              <input
+                                aria-label="Step name"
+                                className="font-bold text-sm text-ink bg-transparent border-b border-transparent hover:border-border-strong focus:border-success focus:outline-none"
+                                value={step.title}
+                                onChange={(e) => {
+                                  const steps = [...(editingWorkflow.steps || [])]
+                                  steps[idx] = { ...step, title: e.target.value }
+                                  setEditingWorkflow({ ...editingWorkflow, steps })
+                                }}
+                              />
+                              <StepConfigEditor
+                                step={step}
+                                onChange={(config) => {
+                                  const steps = [...(editingWorkflow.steps || [])]
+                                  steps[idx] = { ...step, config }
+                                  setEditingWorkflow({ ...editingWorkflow, steps })
+                                }}
+                              />
                             </div>
 
                             {step.step_type !== "trigger" && (
@@ -355,35 +352,52 @@ export function WorkflowsPage() {
                   <span className="text-xs font-bold text-ink-2 uppercase tracking-wide">Add Node:</span>
                   <button
                     type="button"
-                    onClick={() => handleAddStep("condition", "create_task", "Filter: Condition Score <= 6")}
+                    onClick={() => handleAddStep("condition", "create_task", "Only if…")}
                     className="px-3 py-1.5 text-xs font-bold rounded-lg bg-warning-bg hover:bg-warning/30 text-warning-text border border-warning/30 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
                   >
                     <span>➕</span> Condition Node
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleAddStep("action", "create_task", "Action: Create Priority Task")}
+                    onClick={() => handleAddStep("action", "create_task", "Create a task")}
                     className="px-3 py-1.5 text-xs font-bold rounded-lg bg-success-bg hover:bg-success/25 text-success-text border border-success/25 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
                   >
                     <span>⚡</span> Create Task Action
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleAddStep("action", "send_whatsapp", "Action: Send WhatsApp Notification")}
+                    onClick={() => handleAddStep("action", "send_whatsapp", "Send a WhatsApp message")}
                     className="px-3 py-1.5 text-xs font-bold rounded-lg bg-accent-tint hover:bg-accent/25 text-accent-hover border border-accent/25 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
                   >
                     <span>💬</span> Send WhatsApp Action
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleAddStep("action", "wait_delay", "Action: Wait 15 Minutes")}
+                    onClick={() => handleAddStep("action", "wait_delay", "Wait")}
                     className="px-3 py-1.5 text-xs font-bold rounded-lg bg-brand-tint hover:bg-brand-border text-brand-dark border border-brand-border transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
                   >
                     <span>⏱️</span> Wait Delay Timer
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => handleAddStep("action", "send_sms", "Send an SMS")}
+                    className="px-3 py-1.5 text-xs font-bold rounded-lg bg-accent-tint hover:bg-accent/25 text-accent-hover border border-accent/25 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                  >
+                    <span>✉️</span> Send SMS
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleAddStep("action", "escalate", "Escalate to a manager")}
+                    className="px-3 py-1.5 text-xs font-bold rounded-lg bg-danger-bg hover:bg-danger-bg text-danger-text border border-danger-border transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                  >
+                    <span>🚨</span> Escalate
+                  </button>
                 </div>
               </div>
 
+              {saveWorkflowMutation.isError && (
+                <div className="text-xs text-danger-text">{extractApiError(saveWorkflowMutation.error)}</div>
+              )}
               {/* Drawer Actions */}
               <div className="flex justify-end gap-3 pt-4 border-t border-border">
                 <button
@@ -405,6 +419,8 @@ export function WorkflowsPage() {
             </div>
           )}
 
+          {!editingWorkflow && <WorkflowTemplates onInstalled={(wf) => setEditingWorkflow(wf)} />}
+
           {/* Active Workflows Cards */}
           {isWorkflowsLoading ? (
             <LoadingState />
@@ -412,7 +428,7 @@ export function WorkflowsPage() {
             <Card className="p-8 text-center space-y-3">
               <p className="text-sm text-ink-4 font-medium">No custom workflows created yet.</p>
               <Button variant="primary" onClick={handleAddDefaultWorkflow}>
-                + Create Demo Workflow Chain
+                + Create a workflow
               </Button>
             </Card>
           ) : (
@@ -514,7 +530,7 @@ export function WorkflowsPage() {
                         <td className="px-6 py-4 font-semibold text-ink">{r.workflow_name || `Workflow #${r.workflow}`}</td>
                         <td className="px-6 py-4 text-ink-3">{r.trigger_event}</td>
                         <td className="px-6 py-4">
-                          {r.status === "success" ? <SuccessTag>SUCCESS</SuccessTag> : <NeutralTag>{r.status}</NeutralTag>}
+                          {r.status === "success" ? <SuccessTag>SUCCESS</SuccessTag> : <NeutralTag>{r.status === "waiting" && r.resume_at ? `waiting until ${new Date(r.resume_at).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}` : r.status === "stopped" ? "stopped by a condition" : r.status}</NeutralTag>}
                         </td>
                         <td className="px-6 py-4 text-xs text-ink-4">{new Date(r.executed_at).toLocaleString()}</td>
                       </tr>
