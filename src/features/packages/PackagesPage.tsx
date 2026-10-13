@@ -14,8 +14,7 @@ import {
   createCampaign,
   createCampRegistration,
   type CorporateClient,
-  type Campaign,
-} from "../../api/packages"
+  type Campaign, type PackageCategory } from "../../api/packages"
 
 const INR = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })
 const PCT = (n: number) => `${n >= 0 ? "+" : ""}${n.toFixed(0)}%`
@@ -87,10 +86,13 @@ function NewHealthPackageModal({ onClose }: { onClose: () => void }) {
   const queryClient = useQueryClient()
   const [name, setName] = useState("")
   const [code, setCode] = useState("")
-  const [category, setCategory] = useState<"cardiac" | "full_body" | "ortho" | "maternity">("full_body")
+  const [category, setCategory] = useState<PackageCategory>("full_body")
   const [price, setPrice] = useState("")
   const [description, setDescription] = useState("")
   const [testsRaw, setTestsRaw] = useState("CBC, Lipid Profile, Blood Sugar Fasting, ECG, Chest X-Ray")
+  const [excludedRaw, setExcludedRaw] = useState("")
+  const [stayDays, setStayDays] = useState("")
+  const isIpd = category === "surgical" || category === "medical" || category === "day_care"
 
   const create = useMutation({
     mutationFn: () => {
@@ -102,6 +104,8 @@ function NewHealthPackageModal({ onClose }: { onClose: () => void }) {
         price: Number(price) || 0,
         description,
         included_tests: tests,
+        excluded_services: excludedRaw.split(",").map((s) => s.trim()).filter(Boolean),
+        length_of_stay_days: isIpd && stayDays ? Number(stayDays) : null,
         is_active: true,
       })
     },
@@ -142,13 +146,16 @@ function NewHealthPackageModal({ onClose }: { onClose: () => void }) {
               <label className="text-[11px] text-ink-4 block mb-1">Category</label>
               <select
                 value={category}
-                onChange={(e) => setCategory(e.target.value as any)}
+                onChange={(e) => setCategory(e.target.value as PackageCategory)}
                 className="w-full h-8 px-2.5 border border-border-strong rounded bg-page outline-none focus:border-brand"
               >
                 <option value="full_body">Comprehensive Full Body</option>
                 <option value="cardiac">Cardiac Health</option>
                 <option value="ortho">Bone & Joint</option>
                 <option value="maternity">Maternity & Women Care</option>
+                <option value="surgical">Surgical (IPD) package</option>
+                <option value="medical">Medical management (IPD)</option>
+                <option value="day_care">Day-care procedure</option>
               </select>
             </div>
           </div>
@@ -163,7 +170,7 @@ function NewHealthPackageModal({ onClose }: { onClose: () => void }) {
             />
           </div>
           <div>
-            <label className="text-[11px] text-ink-4 block mb-1">Included Diagnostic Tests (comma-separated)</label>
+            <label className="text-[11px] text-ink-4 block mb-1">{isIpd ? "Included services" : "Included Diagnostic Tests"} (comma-separated)</label>
             <textarea
               rows={2}
               placeholder="CBC, Lipid Profile, Blood Sugar, ECG, etc."
@@ -172,6 +179,31 @@ function NewHealthPackageModal({ onClose }: { onClose: () => void }) {
               className="w-full p-2 border border-border-strong rounded bg-page outline-none focus:border-brand"
             />
           </div>
+          <div>
+            <label htmlFor="pkg-excluded" className="text-[11px] text-ink-4 block mb-1">Not included — billed separately (comma-separated)</label>
+            <textarea
+              id="pkg-excluded"
+              rows={2}
+              placeholder="e.g. Implants, Blood products, Extra ICU days, Pharmacy beyond package"
+              value={excludedRaw}
+              onChange={(e) => setExcludedRaw(e.target.value)}
+              className="w-full p-2 border border-border-strong rounded bg-page outline-none focus:border-brand"
+            />
+          </div>
+          {isIpd && (
+            <div>
+              <label htmlFor="pkg-stay" className="text-[11px] text-ink-4 block mb-1">Room days included</label>
+              <input
+                id="pkg-stay"
+                type="number"
+                min={0}
+                placeholder="e.g. 3"
+                value={stayDays}
+                onChange={(e) => setStayDays(e.target.value)}
+                className="w-full h-8 px-2.5 border border-border-strong rounded bg-page outline-none focus:border-brand font-mono"
+              />
+            </div>
+          )}
           <div>
             <label className="text-[11px] text-ink-4 block mb-1">Short Description</label>
             <textarea
@@ -550,7 +582,7 @@ export function PackagesPage() {
                   <p className="text-xs text-ink-4 dark:text-slate-400">{pkg.description}</p>
 
                   <div className="space-y-1">
-                    <span className="text-xs font-semibold text-slate-400">Included Diagnostic Tests:</span>
+                    <span className="text-xs font-semibold text-slate-400">Included{pkg.length_of_stay_days ? ` (${pkg.length_of_stay_days} room days)` : ""}:</span>
                     <div className="flex flex-wrap gap-1.5 pt-1">
                       {(pkg.included_tests || []).map((t, idx) => (
                         <span key={idx} className="px-2 py-0.5 text-xs bg-chip-bg dark:bg-slate-800 rounded font-medium text-ink-2 dark:text-slate-300">
@@ -559,6 +591,18 @@ export function PackagesPage() {
                       ))}
                     </div>
                   </div>
+                  {(pkg.excluded_services || []).length > 0 && (
+                    <div className="space-y-1">
+                      <span className="text-xs font-semibold text-slate-400">Not included:</span>
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {pkg.excluded_services.map((t, idx) => (
+                          <span key={idx} className="px-2 py-0.5 text-xs bg-danger-bg rounded font-medium text-danger-text">
+                            ✕ {t}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </Card>
               ))}
             </div>

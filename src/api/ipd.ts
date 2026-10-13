@@ -18,6 +18,10 @@ export interface Admission {
   admission_diagnosis: string
   admitted_at: string
   discharged_at: string | null
+  package?: number | null
+  package_name?: string | null
+  package_included?: string[] | null
+  package_excluded?: string[] | null
 }
 
 export interface DoctorProgressNote {
@@ -70,6 +74,7 @@ export function admitPatient(payload: {
   admission_type?: "planned" | "emergency"
   admission_diagnosis?: string
   source_encounter?: number
+  package?: number | null
 }) {
   return api.post<Admission>("/ipd/admissions/", payload)
 }

@@ -129,6 +129,8 @@ export function AppointmentsPage() {
   const [bookDoctorId, setBookDoctorId] = useState<number>(0)
   const [bookSlotId, setBookSlotId] = useState<number>(0)
   const [bookReason, setBookReason] = useState("")
+  const [bookSource, setBookSource] = useState("crm")
+  const [bookExternalRef, setBookExternalRef] = useState("")
 
   // Block-leave modal state
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false)
@@ -272,6 +274,8 @@ export function AppointmentsPage() {
     setBookSlotId(slotId)
     setBookPatientId(0)
     setBookReason("")
+    setBookSource("crm")
+    setBookExternalRef("")
     setIsBookModalOpen(true)
   }
 
@@ -294,7 +298,10 @@ export function AppointmentsPage() {
   const handleBookSubmit = (e: FormEvent) => {
     e.preventDefault()
     if (!bookPatientId || !bookSlotId) return
-    bookMutation.mutate({ patient: bookPatientId, slot: bookSlotId, source: "crm", reason: bookReason })
+    bookMutation.mutate({
+      patient: bookPatientId, slot: bookSlotId, source: bookSource, reason: bookReason,
+      external_reference: bookSource === "external" ? bookExternalRef.trim() : "",
+    })
   }
 
   const selectedAppt = selectedApptId ? (appointments.find((a) => a.id === selectedApptId) ?? null) : null
@@ -684,6 +691,44 @@ export function AppointmentsPage() {
                 />
               </div>
 
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label htmlFor="book-source" className="block text-[11px] font-semibold uppercase tracking-[.04em] text-ink-4 mb-1">
+                    Booked via
+                  </label>
+                  <select
+                    id="book-source"
+                    className="w-full h-9 px-3 border border-border-strong rounded-control text-[13px]"
+                    value={bookSource}
+                    onChange={(e) => setBookSource(e.target.value)}
+                  >
+                    <option value="crm">Front desk</option>
+                    <option value="telephone">Telephone / IVR</option>
+                    <option value="walk_in">Walk-in</option>
+                    <option value="whatsapp">WhatsApp</option>
+                    <option value="website">Website</option>
+                    <option value="external">Outside app / partner (Practo, ABDM…)</option>
+                  </select>
+                </div>
+                {bookSource === "external" && (
+                  <div>
+                    <label htmlFor="book-external-ref" className="block text-[11px] font-semibold uppercase tracking-[.04em] text-ink-4 mb-1">
+                      Their booking ID
+                    </label>
+                    <input
+                      id="book-external-ref"
+                      type="text"
+                      required
+                      maxLength={100}
+                      placeholder="e.g. PRACTO-88412"
+                      className="w-full h-9 px-3 border border-border-strong rounded-control text-[13px]"
+                      value={bookExternalRef}
+                      onChange={(e) => setBookExternalRef(e.target.value)}
+                    />
+                  </div>
+                )}
+              </div>
+
               <div className="flex justify-end gap-2 pt-2">
                 <Button type="button" variant="secondary" onClick={closeBooking}>
                   Cancel
@@ -778,6 +823,7 @@ export function AppointmentsPage() {
             </div>
             <div className="flex flex-wrap gap-1.5 mb-4">
               <NeutralTag>{selectedAppt.source}</NeutralTag>
+              {selectedAppt.external_reference && <NeutralTag>Ref {selectedAppt.external_reference}</NeutralTag>}
               {selectedAppt.reason && <NeutralTag>{selectedAppt.reason}</NeutralTag>}
             </div>
 

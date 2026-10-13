@@ -1,14 +1,18 @@
 import { api } from "./client"
 import type { Paginated } from "../types/api"
 
+export type PackageCategory = "cardiac" | "full_body" | "ortho" | "maternity" | "surgical" | "medical" | "day_care"
+
 export interface HealthPackage {
   id: number
   name: string
   code: string
-  category: "cardiac" | "full_body" | "ortho" | "maternity"
+  category: PackageCategory
   price: number
   description: string
   included_tests: string[]
+  excluded_services: string[]
+  length_of_stay_days: number | null
   is_active: boolean
 }
 

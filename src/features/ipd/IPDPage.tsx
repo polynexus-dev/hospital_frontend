@@ -10,6 +10,7 @@ import { listBeds, listRooms, listWards, updateBedStatus, type Bed, type BedStat
 import { admitPatient, listAdmissions } from "../../api/ipd"
 import { listDoctors } from "../../api/appointments"
 import { listPatients } from "../../api/patients"
+import { listHealthPackages } from "../../api/packages"
 import { AdmissionDetailPanel } from "./AdmissionDetailPanel"
 
 const BED_STATUS_TONE: Record<BedStatus, Tone> = {
@@ -30,7 +31,7 @@ export function IPDPage() {
   const queryClient = useQueryClient()
   const [selectedAdmissionId, setSelectedAdmissionId] = useState<number | null>(null)
   const [isAdmitModalOpen, setIsAdmitModalOpen] = useState(false)
-  const [admitDraft, setAdmitDraft] = useState({ patient: 0, admitting_doctor: 0, bed: 0, admission_diagnosis: "" })
+  const [admitDraft, setAdmitDraft] = useState({ patient: 0, admitting_doctor: 0, bed: 0, admission_diagnosis: "", package: 0 })
   const [showDischarged, setShowDischarged] = useState(false)
 
   const wardsQuery = useQuery({ queryKey: ["wards"], queryFn: () => listWards() })
@@ -44,6 +45,9 @@ export function IPDPage() {
     queryFn: () => listAdmissions(showDischarged ? {} : { status: "admitted" }),
   })
   const doctorsQuery = useQuery({ queryKey: ["doctors"], queryFn: () => listDoctors() })
+  const packagesQuery = useQuery({ queryKey: ["health-packages"], queryFn: () => listHealthPackages() })
+  const ipdPackages = (packagesQuery.data?.results ?? []).filter((p) => p.is_active)
+  const chosenPackage = ipdPackages.find((p) => p.id === admitDraft.package)
   const patientsQuery = useQuery({ queryKey: ["patients-dropdown"], queryFn: () => listPatients() })
 
   const wards = wardsQuery.data?.results ?? []
@@ -70,10 +74,10 @@ export function IPDPage() {
   const availableBeds = beds.filter((b) => b.status === "available")
 
   const admitMutation = useMutation({
-    mutationFn: () => admitPatient(admitDraft),
+    mutationFn: () => admitPatient({ ...admitDraft, package: admitDraft.package || null }),
     onSuccess: () => {
       setIsAdmitModalOpen(false)
-      setAdmitDraft({ patient: 0, admitting_doctor: 0, bed: 0, admission_diagnosis: "" })
+      setAdmitDraft({ patient: 0, admitting_doctor: 0, bed: 0, admission_diagnosis: "", package: 0 })
       queryClient.invalidateQueries({ queryKey: ["admissions"] })
       queryClient.invalidateQueries({ queryKey: ["facilities-beds"] })
       queryClient.invalidateQueries({ queryKey: ["beds"] })
@@ -234,6 +238,23 @@ export function IPDPage() {
                   </select>
                 )}
               </div>
+              <select
+                aria-label="Package"
+                className="w-full h-9 px-3 border border-border-strong rounded-control text-[13px]"
+                value={admitDraft.package}
+                onChange={(e) => setAdmitDraft({ ...admitDraft, package: Number(e.target.value) })}
+              >
+                <option value={0}>No package (itemised billing)</option>
+                {ipdPackages.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name} · ₹{Number(p.price).toLocaleString("en-IN")}</option>
+                ))}
+              </select>
+              {chosenPackage && (
+                <div className="text-[12px] rounded-control border border-border bg-page px-3 py-2 space-y-1">
+                  {chosenPackage.included_tests.length > 0 && <div><span className="font-semibold">Includes:</span> {chosenPackage.included_tests.join(", ")}{chosenPackage.length_of_stay_days ? ` · ${chosenPackage.length_of_stay_days} room days` : ""}</div>}
+                  {chosenPackage.excluded_services.length > 0 && <div className="text-danger-text"><span className="font-semibold">Not included:</span> {chosenPackage.excluded_services.join(", ")}</div>}
+                </div>
+              )}
               <textarea
                 rows={2}
                 placeholder="Admission diagnosis"

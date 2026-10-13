@@ -12,6 +12,7 @@ import { listAppointments, listDoctors } from "../../api/appointments"
 import { createConsent, listConsent, listMessages, setConsent } from "../../api/communications"
 import { listHisBilling } from "../../api/integrations"
 import { DpdpConsentCard } from "./DpdpConsentCard"
+import { ImmunizationsCard } from "./ImmunizationsCard"
 import { createPrescription, downloadPrescriptionPdf, listPrescriptions } from "../../api/prescriptions"
 import { listEnquiries } from "../../api/enquiries"
 import { createNominee, deleteNominee, listNominees, verifyNominee } from "../../api/privacy"
@@ -24,7 +25,7 @@ import { useAuthStore } from "../../store/auth"
 
 const INR = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })
 
-type TabKey = "timeline" | "prescriptions" | "documents" | "appointments" | "messages" | "consents"
+type TabKey = "timeline" | "prescriptions" | "documents" | "appointments" | "messages" | "consents" | "immunizations"
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "timeline", label: "Timeline" },
@@ -33,6 +34,7 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: "appointments", label: "Appointments" },
   { key: "messages", label: "Messages" },
   { key: "consents", label: "Consents" },
+  { key: "immunizations", label: "Immunizations" },
 ]
 
 
@@ -1105,6 +1107,8 @@ export function PatientDetailPage() {
           )}
         </Card>
       )}
+
+      {activeTab === "immunizations" && <ImmunizationsCard patientId={Number(patientId)} />}
 
       {activeTab === "consents" && (
         <>

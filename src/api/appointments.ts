@@ -23,7 +23,7 @@ export function listAppointments(params: Record<string, string> = {}) {
   return api.get<Paginated<Appointment>>(`/appointments/${qs ? `?${qs}` : ""}`)
 }
 
-export function bookAppointment(payload: { patient: number; slot: number; source?: string; reason?: string }) {
+export function bookAppointment(payload: { patient: number; slot: number; source?: string; reason?: string; external_reference?: string }) {
   return api.post<Appointment>("/appointments/", payload)
 }
 

@@ -92,6 +92,13 @@ export function AdmissionDetailPanel({ admission, onDischarged }: { admission: A
 
   return (
     <div className="space-y-4">
+      {admission.package_name && (
+        <div className="text-[12.5px] rounded-control border border-border bg-page px-3 py-2 space-y-1">
+          <div className="font-semibold">Package: {admission.package_name}</div>
+          {admission.package_included?.length ? <div>Includes: {admission.package_included.join(", ")}</div> : null}
+          {admission.package_excluded?.length ? <div className="text-danger-text">Not included (billed separately): {admission.package_excluded.join(", ")}</div> : null}
+        </div>
+      )}
       <BedChargesCard admissionId={admission.id} />
 
       <div>

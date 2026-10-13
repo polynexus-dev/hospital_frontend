@@ -161,7 +161,7 @@ export function OPDRegistrationPage() {
     }).catch(() => setPin(null))
   }, [patient.pincode])
 
-  const useExisting = async (id: number) => {
+  const selectExistingPatient = async (id: number) => {
     const p = await api.get<Row>(`/patients/${id}/`)
     setExisting(p)
     setSearch("")
@@ -280,7 +280,7 @@ export function OPDRegistrationPage() {
               <div className="absolute z-20 left-0 right-0 top-9 bg-surface border border-border rounded-control shadow-lg max-h-72 overflow-y-auto">
                 {(searchResults.data ?? []).length === 0 && <div className="px-3 py-2 text-[12.5px] text-ink-4">{searchResults.isFetching ? "Searching…" : "No match. Fill in the form for a new patient."}</div>}
                 {(searchResults.data ?? []).map((r) => (
-                  <button key={r.id} type="button" onClick={() => useExisting(r.id)} className="w-full text-left px-3 py-2 text-[13px] hover:bg-page border-b border-border-faint">
+                  <button key={r.id} type="button" onClick={() => selectExistingPatient(r.id)} className="w-full text-left px-3 py-2 text-[13px] hover:bg-page border-b border-border-faint">
                     <span className="font-semibold">{r.full_name}</span> <span className="font-mono text-ink-4">{r.uhid}</span>
                     <span className="text-ink-4"> · {r.gender || "—"} · {r.date_of_birth || "age not recorded"}</span>
                   </button>
@@ -341,7 +341,7 @@ export function OPDRegistrationPage() {
               {dupes.map((d) => (
                 <div key={d.id} className="flex flex-wrap items-center justify-between gap-2 text-[12.5px] py-1">
                   <span><b>{d.name}</b> <span className="font-mono">{d.uhid}</span> · {d.match === "exact" ? "exact match" : "possible match"}: {d.reasons.join(", ")}</span>
-                  <Button size="sm" variant="secondary" onClick={() => useExisting(d.id)}>Use this patient</Button>
+                  <Button size="sm" variant="secondary" onClick={() => selectExistingPatient(d.id)}>Use this patient</Button>
                 </div>
               ))}
             </div>

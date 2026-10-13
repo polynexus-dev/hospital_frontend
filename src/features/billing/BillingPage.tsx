@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react"
-import { addBillItem, createBill, createInsuranceClaim, downloadBillPdf, listBills, listInsuranceClaims, listPayments, recordPayment } from "../../api/billing"
+import { addBillItem, createBill, createInsuranceClaim, createPaymentLink, downloadBillPdf, listBills, listInsuranceClaims, listPayments, recordPayment, type OnlinePaymentLink } from "../../api/billing"
+import { extractApiError } from "../../api/client"
 import { triggerBlobDownload } from "../../api/client"
 import type { Bill, InsuranceClaim, Payment } from "../../types/api"
 
@@ -24,6 +25,9 @@ export function BillingPage() {
 
   // Payment Modal
   const [selectedBillForPay, setSelectedBillForPay] = useState<Bill | null>(null)
+  const [payLink, setPayLink] = useState<OnlinePaymentLink | null>(null)
+  const [payLinkError, setPayLinkError] = useState("")
+  const [payLinkBusy, setPayLinkBusy] = useState(false)
   const [payAmount, setPayAmount] = useState("")
   const [payMethod, setPayMethod] = useState("cash")
   const [txnId, setTxnId] = useState("")
@@ -99,6 +103,25 @@ export function BillingPage() {
     } catch (err: any) {
       alert("Failed to record payment: " + (err.response?.data?.detail || err.message))
     }
+  }
+
+  const handleSendPaymentLink = async () => {
+    if (!selectedBillForPay) return
+    setPayLinkBusy(true)
+    setPayLinkError("")
+    try {
+      setPayLink(await createPaymentLink(selectedBillForPay.id, payAmount ? Number(payAmount) : undefined))
+    } catch (err) {
+      setPayLinkError(extractApiError(err))
+    } finally {
+      setPayLinkBusy(false)
+    }
+  }
+
+  const closePayModal = () => {
+    setSelectedBillForPay(null)
+    setPayLink(null)
+    setPayLinkError("")
   }
 
   const handleCreateClaim = async (e: React.FormEvent) => {
@@ -460,7 +483,7 @@ export function BillingPage() {
                 />
               </div>
               <div className="flex justify-end gap-2">
-                <button type="button" onClick={() => setSelectedBillForPay(null)} className="px-4 py-2 text-sm text-ink-4">
+                <button type="button" onClick={closePayModal} className="px-4 py-2 text-sm text-ink-4">
                   Cancel
                 </button>
                 <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-success rounded-lg">
@@ -468,6 +491,26 @@ export function BillingPage() {
                 </button>
               </div>
             </form>
+            <div className="border-t border-border pt-4 space-y-2">
+              <div className="text-xs font-semibold text-ink-2">Or let the patient pay online</div>
+              <p className="text-xs text-ink-4">
+                Sends a secure link by WhatsApp/SMS for {payAmount ? `₹${payAmount}` : "the full balance"}. UPI, cards, netbanking and wallets; the payment is recorded here automatically.
+              </p>
+              {payLink ? (
+                <div className="text-xs space-y-1">
+                  <div className="text-success-text font-medium">{payLink.patient_notified_at ? "Link sent to the patient." : "Link created (not sent: share it yourself)."}</div>
+                  <div className="flex gap-2 items-center">
+                    <input readOnly value={payLink.short_url} className="flex-1 px-2 py-1 border rounded font-mono" />
+                    <button type="button" className="px-2 py-1 border rounded" onClick={() => navigator.clipboard?.writeText(payLink.short_url)}>Copy</button>
+                  </div>
+                </div>
+              ) : (
+                <button type="button" disabled={payLinkBusy} onClick={handleSendPaymentLink} className="px-3 py-1.5 text-sm font-medium border border-brand text-brand rounded-lg disabled:opacity-50">
+                  {payLinkBusy ? "Creating link…" : "Send payment link"}
+                </button>
+              )}
+              {payLinkError && <div className="text-xs text-danger-text">{payLinkError}</div>}
+            </div>
           </div>
         </div>
       )}

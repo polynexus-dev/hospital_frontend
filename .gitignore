@@ -46,3 +46,7 @@ coverage/
 Thumbs.db
 desktop.ini
 /.json
+
+# Playwright
+/playwright-report
+/test-results

@@ -359,7 +359,8 @@ export interface Appointment {
   doctor: number
   slot: number
   status: AppointmentStatus
-  source: "crm" | "whatsapp" | "website"
+  source: "crm" | "whatsapp" | "website" | "portal" | "external" | "telephone" | "walk_in"
+  external_reference?: string
   reason: string
   consent_captured: boolean
   consent_captured_at: string | null
@@ -1237,6 +1238,7 @@ export interface LicenseStatus {
   days_left?: number | null
   read_only?: boolean
   support?: { email: string; phone: string }
+  app_version?: string
   license_id?: string | null
   hospital_name?: string | null
   deployment_id?: string | null

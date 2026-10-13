@@ -153,7 +153,29 @@ export function PatientPortal() {
             {tab === "bills" && (
               <>
                 <div className="bg-white rounded-xl p-4 border"><div className="text-xs text-ink-4">Outstanding</div><div className="text-2xl font-bold">₹{data.outstanding}</div></div>
-                <List title="Bills" rows={data.bills} render={(b: any) => <><b>{new Date(b.date).toLocaleDateString()}</b> · ₹{b.net_amount} · paid ₹{b.paid} · balance ₹{b.balance} · {b.status}</>} />
+                <List title="Bills" rows={data.bills} render={(b: any) => (
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span><b>{new Date(b.date).toLocaleDateString()}</b> · ₹{b.net_amount} · paid ₹{b.paid} · balance ₹{b.balance} · {b.status}</span>
+                    {b.balance > 0 && b.status !== "cancelled" && (
+                      <button
+                        type="button"
+                        className="px-3 py-1.5 rounded-lg bg-success-text text-white text-sm font-medium"
+                        onClick={async () => {
+                          setError(null)
+                          try {
+                            const res = await portal<{ pay_url: string }>(`/bills/${b.id}/pay/`, { method: "POST", body: { patient: patientId } })
+                            window.location.assign(res.pay_url)
+                          } catch (e) {
+                            setError(extractApiError(e))
+                          }
+                        }}
+                      >
+                        Pay ₹{b.balance} online
+                      </button>
+                    )}
+                  </div>
+                )} />
+                <p className="text-xs text-ink-4">UPI, cards, netbanking and wallets. The bill updates here as soon as the payment goes through.</p>
               </>
             )}
             {tab === "video" && <List title="Video consultations" rows={data} render={(c: any) => <><b>{new Date(c.scheduled_at).toLocaleString()}</b> · {c.doctor} · {c.status}{c.join_token && <a className="ml-2 text-success-text font-semibold" href={`/tele/join/${c.join_token}`}>Join</a>}</>} />}
