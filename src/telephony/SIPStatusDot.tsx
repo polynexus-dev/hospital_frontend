@@ -1,5 +1,6 @@
 import { useSIPClient } from "./useSIPClient"
 import type { SIPStatus } from "./sipClient"
+import { CONFIG as SIP_CONFIG } from "./sipClient"
 
 export function StatusDot({ status }: { status: SIPStatus }) {
   const map: Record<SIPStatus, { color: string; bg: string; border: string; label: string; dot: string }> = {
@@ -65,10 +66,10 @@ export function WebRTCHeaderBadge() {
         }`}
         title={
           sipStatus === "offline"
-            ? "WebRTC offline. Extension 101 may need WebRTC enabled in HoduPBX admin. Click to retry."
+            ? "Softphone offline. Click to retry (the extension may need WebRTC enabled on the PBX, or the server's WEBRTC_SIP_* settings)."
             : sipStatus === "registering"
-            ? "Connecting to HoduPBX WSS (wss://ecallpbx.konnectcom.in:7443)…"
-            : `WebRTC SIP Phone: ${sipStatus} — Extension 101 (1048101@ecallpbx.konnectcom.in)`
+            ? `Connecting to ${SIP_CONFIG.wsUrl || "the PBX"}…`
+            : `Softphone: ${sipStatus}${SIP_CONFIG.extNumber ? ` — extension ${SIP_CONFIG.extNumber}` : ""}`
         }
         onClick={() => {
           if (sipStatus === "offline") reconnect()

@@ -11,13 +11,33 @@ export interface SIPConfig {
   displayName: string
 }
 
+// Filled from the server (/telephony/webrtc-config/) for signed-in telephony
+// users. Credentials are never built into the bundle: every browser can read
+// whatever is.
 export const CONFIG: SIPConfig = {
-  wsUrl:       (import.meta as any).env?.VITE_SIP_SERVER       || "wss://ecallpbx.konnectcom.in:7443",
-  sipDomain:   (import.meta as any).env?.VITE_SIP_DOMAIN       || "ecallpbx.konnectcom.in",
-  extNumber:   (import.meta as any).env?.VITE_SIP_USER         || "1048101",
-  authNumber:  (import.meta as any).env?.VITE_SIP_AUTH_USER    || "1048101",
-  password:    (import.meta as any).env?.VITE_SIP_PASSWORD     || "Hospital@123",
-  displayName: (import.meta as any).env?.VITE_SIP_DISPLAY_NAME || "Reception",
+  wsUrl: "",
+  sipDomain: "",
+  extNumber: "",
+  authNumber: "",
+  password: "",
+  displayName: "Reception",
+}
+
+let configLoaded: Promise<boolean> | null = null
+
+/** Loads the softphone settings once; false when the server has none (or the role doesn't use telephony). */
+export function loadSIPConfig(): Promise<boolean> {
+  if (!configLoaded) {
+    configLoaded = import("../api/client")
+      .then(({ api }) => api.get<Partial<SIPConfig> & { configured: boolean }>("/telephony/webrtc-config/"))
+      .then((res) => {
+        if (!res.configured) return false
+        Object.assign(CONFIG, { ...res, configured: undefined })
+        return true
+      })
+      .catch(() => false)
+  }
+  return configLoaded
 }
 
 export interface ActiveCallInfo {
@@ -410,20 +430,18 @@ export function reconnectSIPClient(): void {
  * Auto-tries all permutations of domain, ext, auth user, and password
  */
 export async function autoTryPermutations(onProgress?: (msg: string) => void): Promise<boolean> {
-  const passPlain = CONFIG.password || "Hospital@123"
-  const passMd5   = "2ab76c1c2cb433a09dfe4a2a36e26905"
-
+  // Try the server's settings, then the common variants of the same extension
+  // (with and without the tenant prefix). No credentials live in this file.
+  if (!(await loadSIPConfig())) {
+    onProgress?.("The softphone isn't set up on the server (WEBRTC_SIP_* settings).")
+    return false
+  }
+  const pwd = CONFIG.password
+  const shortExt = CONFIG.extNumber.length > 3 ? CONFIG.extNumber.slice(-3) : CONFIG.extNumber
   const combos = [
-    { domain: "ecallpbx.konnectcom.in", ext: "1048101", auth: "1048101", pwd: passPlain },
-    { domain: "1048",                  ext: "101",     auth: "101",     pwd: passPlain },
-    { domain: "1048",                  ext: "1048101", auth: "1048101", pwd: passPlain },
-    { domain: "ecallpbx.konnectcom.in", ext: "101",     auth: "101",     pwd: passPlain },
-    { domain: "ecallpbx.konnectcom.in", ext: "101",     auth: "1048101", pwd: passPlain },
-    { domain: "74.225.89.85",          ext: "1048101", auth: "1048101", pwd: passPlain },
-    { domain: "74.225.89.85",          ext: "101",     auth: "101",     pwd: passPlain },
-    { domain: "1048.ecallpbx.konnectcom.in", ext: "101", auth: "101",   pwd: passPlain },
-    { domain: "ecallpbx.konnectcom.in", ext: "1048101", auth: "1048101", pwd: passMd5 },
-    { domain: "1048",                  ext: "101",     auth: "101",     pwd: passMd5 },
+    { domain: CONFIG.sipDomain, ext: CONFIG.extNumber, auth: CONFIG.authNumber, pwd },
+    { domain: CONFIG.sipDomain, ext: shortExt, auth: shortExt, pwd },
+    { domain: CONFIG.sipDomain, ext: shortExt, auth: CONFIG.authNumber, pwd },
   ]
 
   for (const c of combos) {

@@ -38,7 +38,12 @@ export function TenantOnboardModal({ onClose, onSuccess, onSubmit }: TenantOnboa
   const [ownerFirstName, setOwnerFirstName] = useState("Dr. Hospital")
   const [ownerLastName, setOwnerLastName] = useState("Director")
   const [ownerPhone, setOwnerPhone] = useState("")
-  const [ownerPassword, setOwnerPassword] = useState("Hospital@123")
+  // A fresh random password per hospital (shown once to hand over); never a shared default.
+  const [ownerPassword, setOwnerPassword] = useState(() => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789@#%"
+    const bytes = crypto.getRandomValues(new Uint32Array(14))
+    return Array.from(bytes, (b) => chars[b % chars.length]).join("")
+  })
 
   // Auto-slug generator from hospital name
   const handleNameChange = (val: string) => {
@@ -134,7 +139,7 @@ export function TenantOnboardModal({ onClose, onSuccess, onSubmit }: TenantOnboa
           first_name: ownerFirstName.trim(),
           last_name: ownerLastName.trim(),
           phone: ownerPhone.trim() || undefined,
-          password: ownerPassword.trim() || "Hospital@123",
+          password: ownerPassword.trim(),
         },
       }
 

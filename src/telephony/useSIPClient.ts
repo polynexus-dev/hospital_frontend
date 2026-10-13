@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import {
   initSIPClient,
+  loadSIPConfig,
   reconnectSIPClient,
   hangupCurrentCall,
   getSIPStatus,
@@ -18,11 +19,15 @@ export function useSIPClient() {
   const [autoTryStatus, setAutoTryStatus] = useState<string | null>(null)
 
   useEffect(() => {
-    initSIPClient({
-      onStatusChange: setSipStatus,
-      onCallBridged: () => {
-        console.log("[SIP] Bridge connected — patient is ringing")
-      },
+    // Connect only once the server has provided this user's softphone settings.
+    loadSIPConfig().then((ok) => {
+      if (!ok) return
+      initSIPClient({
+        onStatusChange: setSipStatus,
+        onCallBridged: () => {
+          console.log("[SIP] Bridge connected — patient is ringing")
+        },
+      })
     })
 
     return () => {
