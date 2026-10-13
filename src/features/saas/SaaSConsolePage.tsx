@@ -25,7 +25,7 @@ import {
   updateHospitalModules,
   updateSubscription,
 } from "../../api/saas"
-import type { OnboardTenantPayload, SaaSHospital, SaaSSupportTicket, TenantInvoice, TenantSubscription } from "../../types/api"
+import type { OnboardTenantPayload, SaaSHospital, SaaSSupportTicket, TenantInvoice, TenantSubscription, OnPremiseLicense } from "../../types/api"
 import type { Tone } from "../../components/ui/tone"
 import { TenantModulesModal, SYSTEM_MODULES } from "./TenantModulesModal"
 import { PermissionMatrixModal } from "../admin/PermissionMatrixModal"
@@ -345,6 +345,7 @@ export function SaaSConsolePage() {
   const [modulesHospital, setModulesHospital] = useState<SaaSHospital | null>(null)
   const [permissionsHospital, setPermissionsHospital] = useState<SaaSHospital | null>(null)
   const [licenseHospital, setLicenseHospital] = useState<SaaSHospital | null>(null)
+  const [renewFrom, setRenewFrom] = useState<OnPremiseLicense | null>(null)
 
   const analytics = useQuery({
     queryKey: ["saas-analytics"],
@@ -1131,7 +1132,16 @@ export function SaaSConsolePage() {
         </Card>
       )}
 
-      {activeTab === "licences" && <LicencesTab hospitals={hospitals.data?.results ?? []} onIssueLicence={setLicenseHospital} />}
+      {activeTab === "licences" && (
+        <LicencesTab
+          hospitals={hospitals.data?.results ?? []}
+          onIssueLicence={(h) => { setRenewFrom(null); setLicenseHospital(h) }}
+          onRenew={(lic) => {
+            const h = (hospitals.data?.results ?? []).find((x) => String(x.id) === String(lic.hospital))
+            if (h) { setRenewFrom(lic); setLicenseHospital(h) }
+          }}
+        />
+      )}
 
       {activeTab === "tickets" && (
         <Card>
@@ -1180,7 +1190,7 @@ export function SaaSConsolePage() {
         />
       )}
 
-      {licenseHospital && <LicenseGeneratorModal hospital={licenseHospital} onClose={() => setLicenseHospital(null)} />}
+      {licenseHospital && <LicenseGeneratorModal key={renewFrom?.id ?? "new"} hospital={licenseHospital} renewFrom={renewFrom} onClose={() => { setLicenseHospital(null); setRenewFrom(null) }} />}
       {permissionsHospital && (
         <PermissionMatrixModal
           mode="ceiling"

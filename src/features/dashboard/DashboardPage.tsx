@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react"
+import { LicenseTile } from "../settings/LicenseTile"
 import { useQuery } from "@tanstack/react-query"
 import { LoadingState, ErrorState } from "../../components/ui/QueryStates"
 import {
@@ -205,6 +206,8 @@ export function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-3.5 bg-page/50 px-3.5 pb-3.5 pt-1 min-h-screen font-sans text-ink">
+
+      <LicenseTile />
 
       {/* ── ACTION TOOLBAR: EXPORT BUTTONS ──────────────────────────────────── */}
       <div className="flex items-center justify-end gap-2.5">

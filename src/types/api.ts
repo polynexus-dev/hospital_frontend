@@ -1254,6 +1254,8 @@ export interface LicenseStatus {
   /** Staff codes signed into the licence: who requested it and the Owner who approved it. */
   issued_by?: string | null
   approved_by?: string | null
+  /** Admins only: what's in use against the limits. */
+  usage?: { active_users: number; beds: number }
 }
 
 export interface OnPremiseLicense {

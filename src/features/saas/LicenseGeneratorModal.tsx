@@ -30,17 +30,24 @@ const labelClass = "block text-xs font-semibold text-ink-3 dark:text-slate-300 m
 
 /** SaaS console: issue a signed license file for an on-premise installation,
  *  and see / re-download / revoke the ones already issued. */
-export function LicenseGeneratorModal({ hospital, onClose }: { hospital: SaaSHospital; onClose: () => void }) {
+/** Renewal: a year after the current expiry, or after today if it has already expired. */
+function renewalExpiry(lic: OnPremiseLicense) {
+  const base = Math.max(new Date(lic.expires_at).getTime(), Date.now())
+  return isoDate(new Date(base + 365 * DAY))
+}
+
+export function LicenseGeneratorModal({ hospital, onClose, renewFrom }: { hospital: SaaSHospital; onClose: () => void; renewFrom?: OnPremiseLicense | null }) {
   const queryClient = useQueryClient()
-  const [fingerprint, setFingerprint] = useState("")
-  const [binding, setBinding] = useState(true)
-  const [deploymentId, setDeploymentId] = useState("")
-  const [expiresOn, setExpiresOn] = useState(isoDate(new Date(Date.now() + 365 * DAY)))
-  const [graceDays, setGraceDays] = useState(14)
-  const [tier, setTier] = useState<string>("enterprise")
-  const [maxUsers, setMaxUsers] = useState(50)
-  const [maxBeds, setMaxBeds] = useState(100)
-  const [features, setFeatures] = useState<string[]>(["hms_core"])
+  const boundTo = renewFrom && renewFrom.machine_fingerprint !== "*" && renewFrom.machine_fingerprint !== "-" ? renewFrom.machine_fingerprint : ""
+  const [fingerprint, setFingerprint] = useState(boundTo)
+  const [binding, setBinding] = useState(renewFrom ? !!boundTo : true)
+  const [deploymentId, setDeploymentId] = useState(renewFrom?.deployment_id ?? "")
+  const [expiresOn, setExpiresOn] = useState(renewFrom ? renewalExpiry(renewFrom) : isoDate(new Date(Date.now() + 365 * DAY)))
+  const [graceDays, setGraceDays] = useState(renewFrom?.grace_period_days ?? 14)
+  const [tier, setTier] = useState<string>(renewFrom?.tier || "enterprise")
+  const [maxUsers, setMaxUsers] = useState(renewFrom?.max_active_users ?? 50)
+  const [maxBeds, setMaxBeds] = useState(renewFrom?.max_beds ?? 100)
+  const [features, setFeatures] = useState<string[]>(renewFrom?.features?.length ? renewFrom.features : ["hms_core"])
   const toggleFeature = (key: string) => setFeatures((f) => (f.includes(key) ? f.filter((k) => k !== key) : [...f, key]))
   const [otp, setOtp] = useState("")
   const [issued, setIssued] = useState<OnPremiseLicense | null>(null)
@@ -99,6 +106,7 @@ export function LicenseGeneratorModal({ hospital, onClose }: { hospital: SaaSHos
             <h2 id="license-gen-title" className="text-xl font-bold tracking-tight">On-Premise License Generator</h2>
             <p className="text-xs text-ink-4 mt-1">
               Tenant: <span className="font-semibold text-ink dark:text-slate-200">{hospital.name}</span> — signs a license.lic for their own server.
+              {renewFrom && <span className="block mt-1 text-accent font-semibold">Renewing {renewFrom.license_id}: same server and features, expiry moved on a year. Change anything they've bought since.</span>}
             </p>
           </div>
           <button onClick={onClose} aria-label="Close" className="text-slate-400 hover:text-ink-3 dark:hover:text-slate-200 text-lg p-1">✕</button>

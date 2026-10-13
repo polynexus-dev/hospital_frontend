@@ -9,6 +9,7 @@ import { triggerBlobDownload } from "../../api/client"
 import { Button } from "../../components/ui/Button"
 import type { LicenseState } from "../../types/api"
 import { featureLabel } from "../saas/licenceFeatures"
+import { UsageMeter, daysLeftInfo } from "./licenceUsage"
 
 const STATE: Record<LicenseState, { label: string; tone: Tone }> = {
   valid: { label: "Active", tone: "ok" },
@@ -80,9 +81,12 @@ export function LicenseCard() {
             <span className="font-mono text-[12px]">{data.issued_by || "—"}</span>
             {data.approved_by && data.approved_by !== data.issued_by && <span className="text-ink-4 font-normal"> (approved by <span className="font-mono">{data.approved_by}</span>)</span>}
           </Row>
-          <Row label="Valid until">{formatDate(data.expires_at)}{data.grace_ends_at && data.state !== "valid" ? ` (read-only after ${formatDate(data.grace_ends_at)})` : ""}</Row>
-          <Row label="User limit">{data.max_active_users ? data.max_active_users : "Unlimited"}</Row>
-          <Row label="Bed limit">{data.max_beds ? data.max_beds : "Unlimited"}</Row>
+          <Row label="Valid until">
+            {formatDate(data.expires_at)}{data.grace_ends_at && data.state !== "valid" ? ` (read-only after ${formatDate(data.grace_ends_at)})` : ""}
+            {daysLeftInfo(data) && <span className="ml-2"><Pill tone={daysLeftInfo(data)!.tone}>{daysLeftInfo(data)!.text}</Pill></span>}
+          </Row>
+          <UsageMeter label="Active users" used={data.usage?.active_users} limit={data.max_active_users} />
+          <UsageMeter label="Beds" used={data.usage?.beds} limit={data.max_beds} />
           <Row label="Licensed features">
             {data.features ? (data.features.length ? data.features.map(featureLabel).join(", ") : "None") : data.enabled_modules?.join(", ") || "All"}
           </Row>
@@ -113,7 +117,11 @@ export function LicenseCard() {
               Download usage report
             </Button>
           </div>
-          {done && <p className="mt-2 text-[12px] text-success font-semibold">License installed.</p>}
+          {done && <p className="mt-2 text-[12px] text-success-text font-semibold">License installed.</p>}
+          <div className="mt-3 rounded-control bg-page px-3 py-2 text-[12px] text-ink-3">
+            <b>To renew or add users, beds or modules:</b> download the usage report above and send it to Polynexus with this server's
+            deployment ID. You'll receive a new licence file: drop it on the box above. It applies at once; no reinstall, nothing is lost.
+          </div>
         </>
       )}
       {data.support && (data.support.email || data.support.phone) && (

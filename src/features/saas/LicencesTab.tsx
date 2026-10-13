@@ -36,13 +36,13 @@ const date = (iso: string) => new Date(iso).toLocaleDateString("en-IN", { day: "
 /** SaaS console → Licences: requests awaiting approval, every on-premise
  *  licence (renewals due first, with who issued it and real usage from the
  *  reports hospitals send in), and — for SaaS Owners — the licence team. */
-export function LicencesTab({ hospitals, onIssueLicence }: { hospitals: SaaSHospital[]; onIssueLicence: (h: SaaSHospital) => void }) {
+export function LicencesTab({ hospitals, onIssueLicence, onRenew }: { hospitals: SaaSHospital[]; onIssueLicence: (h: SaaSHospital) => void; onRenew?: (lic: OnPremiseLicense) => void }) {
   const licenceRole = useAuthStore((s) => s.user?.licence_role)
   return (
     <div className="space-y-4">
       {licenceRole && <IssueLicenceBar hospitals={hospitals} onIssue={onIssueLicence} isOwner={licenceRole === "approver"} />}
       {licenceRole && <LicenceRequestsPanel />}
-      <LicenceRegister canManage={!!licenceRole} isOwner={licenceRole === "approver"} />
+      <LicenceRegister canManage={!!licenceRole} isOwner={licenceRole === "approver"} onRenew={licenceRole ? onRenew : undefined} />
       {licenceRole === "approver" && <LicenceTeamPanel />}
     </div>
   )
@@ -80,7 +80,7 @@ function IssueLicenceBar({ hospitals, onIssue, isOwner }: { hospitals: SaaSHospi
   )
 }
 
-function LicenceRegister({ canManage, isOwner }: { canManage: boolean; isOwner: boolean }) {
+function LicenceRegister({ canManage, isOwner, onRenew }: { canManage: boolean; isOwner: boolean; onRenew?: (lic: OnPremiseLicense) => void }) {
   const queryClient = useQueryClient()
   const [status, setStatus] = useState("")
   const [expiringSoon, setExpiringSoon] = useState(false)
@@ -202,6 +202,7 @@ function LicenceRegister({ canManage, isOwner }: { canManage: boolean; isOwner: 
                     <td className="py-2.5 text-right whitespace-nowrap">
                       {lic.status !== "revoked" && (
                         <div className="flex justify-end gap-1.5">
+                          {onRenew && <Button size="sm" variant="primary" onClick={() => onRenew(lic)}>Renew</Button>}
                           <Button size="sm" variant="secondary" onClick={async () => triggerBlobDownload(await downloadLicense(lic.id), `${lic.license_id}.lic`)}>Download</Button>
                           {isOwner && (
                             <Button size="sm" variant="secondary" disabled={revoke.isPending}
