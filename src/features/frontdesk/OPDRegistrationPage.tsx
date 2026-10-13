@@ -40,7 +40,7 @@ const blankPatient = () => ({
 
 const blankVisit = () => ({
   department: "", doctor: "", visit_type: "", case_type: "new_complaint", payer_type: "self", rate_category: "",
-  corporate_client: "", tpa: "", scheme: "", campaign: "", referred_by: "", referral_note: "",
+  corporate_client: "", tpa: "", scheme: "", campaign: "", insurance_policy: "", referred_by: "", referral_note: "", marketing_person: "",
 })
 
 const money = (v: string | number) => `₹${Number(v || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -89,6 +89,12 @@ export function OPDRegistrationPage() {
   const states = useQuery({ queryKey: ["fd-states"], queryFn: listStates })
   const districts = useQuery({ queryKey: ["fd-districts", patient.state], queryFn: () => listDistricts(patient.state), enabled: !!patient.state })
   const approvers = useQuery({ queryKey: ["fd-approvers"], queryFn: listApprovers })
+  const staff = useQuery({ queryKey: ["fd-staff"], queryFn: () => listOptions<Row>("/users/?is_active=true&page_size=300") })
+  const policies = useQuery({
+    queryKey: ["fd-policies", existing?.id],
+    queryFn: () => listOptions<Row>(`/finance/insurance-policies/?patient=${existing!.id}`),
+    enabled: !!existing && visit.payer_type === "insurance",
+  })
   const searchResults = useQuery({
     queryKey: ["fd-search", search],
     queryFn: () => listOptions<Row>(`/patients/?search=${encodeURIComponent(search)}&page_size=8`),
@@ -394,10 +400,24 @@ export function OPDRegistrationPage() {
           {visit.payer_type === "corporate" && <label className="block md:col-span-2"><span className={label}>Corporate</span><select className={input} value={visit.corporate_client} onChange={(e) => setV("corporate_client", e.target.value)}><option value="">—</option>{(corporates.data ?? []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>}
           {visit.payer_type === "tpa" && <label className="block md:col-span-2"><span className={label}>TPA</span><select className={input} value={visit.tpa} onChange={(e) => setV("tpa", e.target.value)}><option value="">—</option>{(tpas.data ?? []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>}
           {visit.payer_type === "scheme" && <label className="block md:col-span-2"><span className={label}>Scheme</span><select className={input} value={visit.scheme} onChange={(e) => setV("scheme", e.target.value)}><option value="">—</option>{(schemes.data ?? []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>}
+          {visit.payer_type === "insurance" && (
+            <label className="block md:col-span-2"><span className={label}>Insurance policy</span>
+              <select className={input} value={visit.insurance_policy} onChange={(e) => setV("insurance_policy", e.target.value)}>
+                <option value="">{existing ? ((policies.data ?? []).length ? "—" : "No policy on file (add under Accounts)") : "Register first, then add the policy"}</option>
+                {(policies.data ?? []).map((pol) => <option key={pol.id} value={pol.id}>{pol.insurer} · {pol.policy_number}{pol.eligibility_status ? ` · ${pol.eligibility_status}` : ""}</option>)}
+              </select>
+            </label>
+          )}
           {visit.payer_type === "health_camp" && <label className="block md:col-span-2"><span className={label}>Camp</span><select className={input} value={visit.campaign} onChange={(e) => setV("campaign", e.target.value)}><option value="">—</option>{(camps.data ?? []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>}
           <label className="block "><span className={label}>Rate category</span><select className={input} value={visit.rate_category} onChange={(e) => setV("rate_category", e.target.value)}><option value="">Default</option>{RATE_CATEGORIES.map((r) => <option key={r} value={r}>{r}</option>)}</select></label>
           <label className="block md:col-span-2"><span className={label}>Referred by</span><select className={input} value={visit.referred_by} onChange={(e) => setV("referred_by", e.target.value)}><option value="">Self / walk-in</option>{(referrers.data ?? []).map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}</select></label>
           <label className="block md:col-span-2"><span className={label}>Referral note</span><input className={input} value={visit.referral_note} onChange={(e) => setV("referral_note", e.target.value)} /></label>
+          <label className="block md:col-span-2"><span className={label}>Marketing person (referral payouts only)</span>
+            <select className={input} value={visit.marketing_person} onChange={(e) => setV("marketing_person", e.target.value)}>
+              <option value="">—</option>
+              {(staff.data ?? []).map((u) => <option key={u.id} value={u.id}>{[u.first_name, u.last_name].filter(Boolean).join(" ") || u.email}</option>)}
+            </select>
+          </label>
         </div>
       </Card>}
 
