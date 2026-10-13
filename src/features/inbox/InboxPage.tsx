@@ -29,6 +29,7 @@ import type { Channel, ConsentOptOut, Enquiry, EnquiryStage, Thread } from "../.
 import type { Tone } from "../../components/ui/tone"
 import { BroadcastCampaignManager } from "./BroadcastCampaignManager"
 
+import { WebChatPanel } from "./WebChatPanel"
 const CHANNELS: Channel[] = ["whatsapp", "sms", "email", "call_note"]
 
 const CHANNEL_LABELS: Record<Channel, string> = {
@@ -36,6 +37,7 @@ const CHANNEL_LABELS: Record<Channel, string> = {
   sms: "SMS",
   email: "Email",
   call_note: "Call note",
+  web_chat: "Website chat",
 }
 
 const CHANNEL_TONE: Record<Channel, Tone> = {
@@ -43,6 +45,7 @@ const CHANNEL_TONE: Record<Channel, Tone> = {
   sms: "info",
   email: "neutral",
   call_note: "warn",
+  web_chat: "info",
 }
 
 const PURPOSE_LABELS: Record<ConsentOptOut["purpose"], string> = {
@@ -128,7 +131,7 @@ export function InboxPage() {
 
   const [selectedThreadId, setSelectedThreadId] = useState<number | null>(null)
   const [channelFilter, setChannelFilter] = useState<Channel | "all">("all")
-  const [activeInboxTab, setActiveInboxTab] = useState<"conversations" | "broadcasts">("conversations")
+  const [activeInboxTab, setActiveInboxTab] = useState<"conversations" | "webchat" | "broadcasts">("conversations")
   const [composerBody, setComposerBody] = useState("")
   const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -149,7 +152,7 @@ export function InboxPage() {
   // Threads whose last message fell outside this page fall back to a generic line.
   const recentMessagesQuery = useQuery({ queryKey: ["messages", "recent-preview"], queryFn: listRecentThreads })
 
-  const threads = threadsQuery.data?.results ?? []
+  const threads = (threadsQuery.data?.results ?? []).filter((t) => t.channel !== "web_chat")
   const selectedThread: Thread | null = threads.find((t) => t.id === selectedThreadId) ?? null
 
   const selectedPatientQuery = useQuery({
@@ -418,6 +421,16 @@ export function InboxPage() {
           </button>
           <button
             type="button"
+            onClick={() => setActiveInboxTab("webchat")}
+            className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition ${
+              activeInboxTab === "webchat" ? "bg-brand text-white shadow-xs" : "text-ink-3 hover:text-ink-1 hover:bg-chip-bg"
+            }`}
+          >
+            <span>🌐</span>
+            <span>Website chats</span>
+          </button>
+          <button
+            type="button"
             onClick={() => setActiveInboxTab("broadcasts")}
             className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition ${
               activeInboxTab === "broadcasts"
@@ -434,7 +447,9 @@ export function InboxPage() {
         </div>
       </div>
 
-      {activeInboxTab === "broadcasts" ? (
+      {activeInboxTab === "webchat" ? (
+        <WebChatPanel />
+      ) : activeInboxTab === "broadcasts" ? (
         <BroadcastCampaignManager />
       ) : (
         <div className="grid grid-cols-[268px_minmax(380px,1fr)_248px] gap-3 flex-1 min-h-0">

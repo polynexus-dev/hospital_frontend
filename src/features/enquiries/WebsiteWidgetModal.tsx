@@ -16,6 +16,8 @@ export interface WebsiteWidget {
   services: string[]
   consent_text: string
   thank_you_message: string
+  chat_welcome: string
+  chat_auto_reply: string
   embed_code: string
   preview_url: string
 }
@@ -48,6 +50,7 @@ export function WebsiteWidgetModal({ open, onClose }: { open: boolean; onClose: 
         services: (draft.servicesText ?? "").split("\n").map((s) => s.trim()).filter(Boolean),
         form_enabled: draft.form_enabled, title: draft.title, intro: draft.intro, button_text: draft.button_text,
         accent_color: draft.accent_color, consent_text: draft.consent_text, thank_you_message: draft.thank_you_message,
+        chat_enabled: draft.chat_enabled, chat_welcome: draft.chat_welcome, chat_auto_reply: draft.chat_auto_reply,
       }),
     onSuccess: (data) => {
       queryClient.setQueryData(["website-widget"], data)
@@ -123,11 +126,26 @@ export function WebsiteWidgetModal({ open, onClose }: { open: boolean; onClose: 
                 <label className="flex items-center gap-2 text-[13px]">
                   <input type="checkbox" checked={!!draft.form_enabled} onChange={(e) => setDraft({ ...draft, form_enabled: e.target.checked })} /> Form is live
                 </label>
+                <label className="flex items-center gap-2 text-[13px]">
+                  <input type="checkbox" checked={!!draft.chat_enabled} onChange={(e) => setDraft({ ...draft, chat_enabled: e.target.checked })} /> Live chat is on (answer in Inbox → Website chats)
+                </label>
               </div>
               <div className="sm:col-span-2">
                 <label className={label} htmlFor="ww-consent">Consent text (DPDP Act; patients must tick it)</label>
                 <textarea id="ww-consent" rows={2} className={`${input} h-auto py-2`} value={draft.consent_text ?? ""} onChange={(e) => setDraft({ ...draft, consent_text: e.target.value })} />
               </div>
+              {draft.chat_enabled && (
+                <>
+                  <div className="sm:col-span-2">
+                    <label className={label} htmlFor="ww-chat-welcome">Chat greeting</label>
+                    <input id="ww-chat-welcome" className={input} value={draft.chat_welcome ?? ""} onChange={(e) => setDraft({ ...draft, chat_welcome: e.target.value })} />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className={label} htmlFor="ww-chat-auto">Automatic reply to a new chat</label>
+                    <input id="ww-chat-auto" className={input} value={draft.chat_auto_reply ?? ""} onChange={(e) => setDraft({ ...draft, chat_auto_reply: e.target.value })} />
+                  </div>
+                </>
+              )}
               <div className="sm:col-span-2">
                 <label className={label} htmlFor="ww-thanks">Message after sending</label>
                 <input id="ww-thanks" className={input} value={draft.thank_you_message ?? ""} onChange={(e) => setDraft({ ...draft, thank_you_message: e.target.value })} />

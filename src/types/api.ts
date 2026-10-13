@@ -398,7 +398,7 @@ export interface DoctorQueue {
   waiting: Appointment[]
 }
 
-export type Channel = "whatsapp" | "sms" | "email" | "call_note"
+export type Channel = "whatsapp" | "sms" | "email" | "call_note" | "web_chat"
 
 export interface Template {
   id: number
@@ -443,6 +443,8 @@ export type ThreadStatus = "open" | "closed"
 export interface Thread {
   id: number
   patient: number
+  enquiry?: number | null
+  enquiry_name?: string | null
   channel: Channel
   owner: number | null
   status: ThreadStatus

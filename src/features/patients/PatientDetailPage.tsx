@@ -46,6 +46,7 @@ const CHANNEL_LABELS: Record<Channel, string> = {
   sms: "SMS",
   email: "Email",
   call_note: "Call note",
+  web_chat: "Website chat",
 }
 
 const PURPOSES: ConsentOptOut["purpose"][] = ["transactional", "marketing", "all"]
