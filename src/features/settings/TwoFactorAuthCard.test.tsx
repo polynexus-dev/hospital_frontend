@@ -130,7 +130,8 @@ describe("TwoFactorAuthCard", () => {
     await waitFor(() => expect(screen.getByText("My phone")).toBeInTheDocument())
 
     await user.click(screen.getByRole("button", { name: /add another authenticator app/i }))
-    const continueButton = screen.getByRole("button", { name: /continue/i })
+    expect(screen.getByText(/step 1 of 2/i)).toBeInTheDocument()
+    const continueButton = screen.getByRole("button", { name: /show qr code/i })
     await user.type(screen.getByLabelText(/name for this app/i), "Backup phone")
     expect(continueButton).toBeDisabled() // no code from the existing app yet
     await user.type(screen.getByLabelText(/current code from an app/i), "123456")
@@ -138,6 +139,8 @@ describe("TwoFactorAuthCard", () => {
     expect(setup2FA).toHaveBeenCalledWith("Backup phone", "123456")
 
     await waitFor(() => expect(screen.getByText("NEWSECRET")).toBeInTheDocument())
+    expect(screen.getByAltText("TOTP QR code")).toBeInTheDocument()
+    expect(screen.getByText(/step 2 of 2/i)).toBeInTheDocument()
     await user.type(screen.getByLabelText(/6-digit code/i), "654321")
     await user.click(screen.getByRole("button", { name: /confirm and enable/i }))
     await waitFor(() => expect(screen.getByText(/authenticator app added/i)).toBeInTheDocument())

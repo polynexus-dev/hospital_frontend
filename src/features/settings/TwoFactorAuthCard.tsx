@@ -214,7 +214,7 @@ export function TwoFactorAuthCard() {
 
       {mode === "name" && (
         <form onSubmit={handleStartSetup} className="flex flex-col gap-3">
-          {enabled && <p className="text-[12.5px] text-ink-4">{t("twoFactor.addDeviceIntro")}</p>}
+          {enabled && <p className="text-[12.5px] text-ink-4">{t("twoFactor.addStep1")}</p>}
           <div>
             <label htmlFor="totp-device-name" className={labelClass}>{t("twoFactor.deviceNameLabel")}</label>
             <input id="totp-device-name" required maxLength={60} value={deviceName} onChange={(e) => setDeviceName(e.target.value)} className={inputClass} />
@@ -237,7 +237,7 @@ export function TwoFactorAuthCard() {
           {error && <div className="text-[12.5px] text-danger-text">{error}</div>}
           <div className="flex gap-2">
             <Button type="submit" variant="primary" disabled={loading || !deviceName.trim() || (enabled && existingCode.length !== 6)} className="flex-1">
-              {loading ? t("common.loading") : t("twoFactor.continueButton")}
+              {loading ? t("common.loading") : enabled ? t("twoFactor.showQrButton") : t("twoFactor.continueButton")}
             </Button>
             {cancelButton}
           </div>
@@ -246,7 +246,7 @@ export function TwoFactorAuthCard() {
 
       {mode === "setup" && (
         <form onSubmit={handleConfirmSetup} className="flex flex-col gap-3">
-          <p className="text-[12.5px] text-ink-4">{t("twoFactor.setupIntro")}</p>
+          <p className="text-[12.5px] text-ink-4">{enabled ? t("twoFactor.addStep2") : t("twoFactor.setupIntro")}</p>
           {qrDataUrl && <img src={qrDataUrl} alt="TOTP QR code" width={180} height={180} className="self-center" />}
           <div className="text-[12px] text-ink-4 text-center">
             {t("twoFactor.manualEntry")} <code className="font-mono">{secret}</code>
