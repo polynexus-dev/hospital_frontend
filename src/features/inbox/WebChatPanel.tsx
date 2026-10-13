@@ -23,9 +23,9 @@ const time = (iso: string) => new Date(iso).toLocaleTimeString("en-IN", { hour: 
 /** Inbox → Website chats: visitors chatting from the hospital's website
  *  (the website widget). Each chat is also a Website enquiry. Polls, so new
  *  messages show up without refreshing. */
-export function WebChatPanel() {
+export function WebChatPanel({ initialThread = null }: { initialThread?: number | null }) {
   const queryClient = useQueryClient()
-  const [selected, setSelected] = useState<number | null>(null)
+  const [selected, setSelected] = useState<number | null>(initialThread)
   const [draft, setDraft] = useState("")
   const logRef = useRef<HTMLDivElement>(null)
 

@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react"
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom"
 import { IdleLock } from "./IdleLock"
 import { LicenseBanner } from "./LicenseBanner"
+import { WebChatAlerts } from "./WebChatAlerts"
 import { useLicensedFeature } from "./useLicensedFeature"
 import { useTranslation } from "react-i18next"
 import { useQuery } from "@tanstack/react-query"
@@ -691,6 +692,7 @@ export function Shell() {
 
         <IdleLock />
         <LicenseBanner />
+        <WebChatAlerts />
         {/* Dynamic Outlet with Compact Mode Class */}
         <div className={`flex-1 overflow-y-auto p-5 ${isCompactMode ? "text-[12px] p-3 gap-2" : ""}`}>
           <Outlet />

@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useEffect, useMemo, useState } from "react"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Card, CardHeader, Eyebrow } from "../../components/ui/Card"
 import { Avatar } from "../../components/ui/Avatar"
@@ -131,7 +131,12 @@ export function InboxPage() {
 
   const [selectedThreadId, setSelectedThreadId] = useState<number | null>(null)
   const [channelFilter, setChannelFilter] = useState<Channel | "all">("all")
-  const [activeInboxTab, setActiveInboxTab] = useState<"conversations" | "webchat" | "broadcasts">("conversations")
+  const [searchParams] = useSearchParams()
+  const [activeInboxTab, setActiveInboxTab] = useState<"conversations" | "webchat" | "broadcasts">(searchParams.get("tab") === "webchat" ? "webchat" : "conversations")
+  const chatFromLink = Number(searchParams.get("thread")) || null
+  useEffect(() => {
+    if (searchParams.get("tab") === "webchat") setActiveInboxTab("webchat")
+  }, [searchParams])
   const [composerBody, setComposerBody] = useState("")
   const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -448,7 +453,7 @@ export function InboxPage() {
       </div>
 
       {activeInboxTab === "webchat" ? (
-        <WebChatPanel />
+        <WebChatPanel key={chatFromLink ?? 0} initialThread={chatFromLink} />
       ) : activeInboxTab === "broadcasts" ? (
         <BroadcastCampaignManager />
       ) : (
