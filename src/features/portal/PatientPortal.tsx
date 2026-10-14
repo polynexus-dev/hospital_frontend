@@ -243,6 +243,7 @@ function List({ title, rows, render }: { title: string; rows: any[]; render: (r:
 }
 
 function Appointments({ rows, patientId, onBooked }: { rows: any[]; patientId: number; onBooked: (m: string) => void }) {
+  const [payLinks, setPayLinks] = useState<Record<number, string>>({})
   const [doctors, setDoctors] = useState<any[]>([])
   const [doctor, setDoctor] = useState<string>("")
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
@@ -258,7 +259,19 @@ function Appointments({ rows, patientId, onBooked }: { rows: any[]; patientId: n
     setError(null)
     try {
       const r = await portal<any>("/appointments/", { method: "POST", body: { slot, patient: patientId } })
-      onBooked(`Booked with ${r.doctor} on ${r.date} at ${String(r.time).slice(0, 5)}.`)
+      const when = `${r.doctor} on ${r.date} at ${String(r.time).slice(0, 5)}`
+      if (r.payment === "required" && r.pay_url) {
+        // The slot is held while they pay; Razorpay brings them back to the portal.
+        onBooked(`Slot held with ${when}. Taking you to pay ₹${r.amount}…`)
+        window.location.assign(r.pay_url)
+        return
+      }
+      if (r.payment === "optional" && r.pay_url) {
+        onBooked(`Booked with ${when}. You can pay ₹${r.amount} now (Your appointments → Pay) or at the hospital.`)
+        setPayLinks((m) => ({ ...m, [r.id]: r.pay_url }))
+        return
+      }
+      onBooked(`Booked with ${when}.${r.amount ? ` Fee ₹${r.amount}, payable at the hospital.` : ""}${r.note ? ` ${r.note}` : ""}`)
     } catch (e) {
       setError(extractApiError(e))
     }
@@ -281,7 +294,20 @@ function Appointments({ rows, patientId, onBooked }: { rows: any[]; patientId: n
         )}
         {error && <div className="text-sm text-danger-text">{error}</div>}
       </section>
-      <List title="Your appointments" rows={rows} render={(a: any) => <><b>{a.date} {String(a.time).slice(0, 5)}</b> · {a.doctor} · {a.status}{a.token ? ` · token ${a.token}` : ""}</>} />
+      <List title="Your appointments" rows={rows} render={(a: any) => (
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span>
+            <b>{a.date} {String(a.time).slice(0, 5)}</b> · {a.doctor} · {a.status}{a.token ? ` · token ${a.token}` : ""}
+            {a.paid_online && <span className="text-success-text"> · paid</span>}
+            {a.awaiting_payment_until && a.status === "booked" && (
+              <span className="text-warning-text"> · held until {new Date(a.awaiting_payment_until).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}: pay to confirm</span>
+            )}
+          </span>
+          {payLinks[a.id] && !a.paid_online && (
+            <a href={payLinks[a.id]} className="px-3 py-1.5 rounded-lg bg-success-text text-white text-sm font-medium">Pay now</a>
+          )}
+        </div>
+      )} />
     </>
   )
 }

@@ -127,3 +127,33 @@ test("patient uploads a missing document from the portal", async ({ page }) => {
   await expect(page.getByText('"Photo ID" uploaded')).toBeVisible()
   expect(uploaded).toContain("multipart/form-data")
 })
+
+test("patient books a slot and is taken to pay when the hospital requires it", async ({ page }) => {
+  await mockApi(page, {
+    "/portal/auth/request-otp/": { sent: true },
+    "/portal/auth/verify-otp/": { token: "portal-token", patients: [{ id: 7, name: "Asha Rao" }] },
+    "/portal/me/": { hospital: "City Hospital", patients: [{ id: 7, name: "Asha Rao", uhid: "CH-000007" }] },
+    "/portal/doctors/": [{ id: 4, name: "Dr Rao", department: "OPD" }],
+    "/portal/doctors/4/slots/": [{ id: 99, date: "2030-01-15", start_time: "10:00:00", end_time: "10:15:00" }],
+  })
+  await page.route("http://api.e2e.test/api/v1/portal/appointments/**", async (route) => {
+    const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "GET, POST, OPTIONS" }
+    if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers: cors })
+    if (route.request().method() === "POST") {
+      return route.fulfill({ status: 201, headers: cors, json: { id: 5, status: "booked", doctor: "Dr Rao", date: "2030-01-15", time: "10:00:00",
+        payment: "required", amount: 600, pay_url: "http://pay.e2e.test/checkout/plink_book", hold_until: "2030-01-15T09:15:00Z" } })
+    }
+    return route.fulfill({ status: 200, headers: cors, json: [] })
+  })
+  await page.route("http://pay.e2e.test/**", (route) => route.fulfill({ status: 200, contentType: "text/html", body: "<h1>Razorpay checkout</h1>" }))
+
+  await page.goto("/portal")
+  await page.getByPlaceholder("Hospital code").fill("city-hospital")
+  await page.getByPlaceholder("Mobile number").fill("9811100051")
+  await page.getByRole("button", { name: "Send OTP" }).click()
+  await page.getByPlaceholder("6-digit OTP").fill("123456")
+  await page.getByRole("button", { name: "Verify & sign in" }).click()
+  await page.locator("select").filter({ hasText: "Dr Rao" }).selectOption("4")
+  await page.getByRole("button", { name: "10:00" }).click()
+  await expect(page.getByRole("heading", { name: "Razorpay checkout" })).toBeVisible()
+})

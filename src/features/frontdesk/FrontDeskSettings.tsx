@@ -92,6 +92,19 @@ export function FrontDeskPolicyForm() {
           {["general", "private", "insurance", "corporate"].map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
       </label>
+      <label className="block"><span className="block text-xs font-semibold text-ink-3 mb-1">Patient-portal bookings</span>
+        <select className={field} value={policy.portal_payment ?? "at_hospital"} onChange={(e) => set("portal_payment", e.target.value)}>
+          <option value="at_hospital">Pay at the hospital</option>
+          <option value="optional">Offer online payment when booking</option>
+          <option value="required">Online payment required to confirm the booking</option>
+        </select>
+      </label>
+      {policy.portal_payment === "required" && (
+        <label className="block"><span className="block text-xs font-semibold text-ink-3 mb-1">Hold the slot while the patient pays (minutes)</span>
+          <input type="number" min={5} max={120} className={field} value={policy.portal_payment_hold_minutes ?? 15} onChange={(e) => set("portal_payment_hold_minutes", Number(e.target.value))} />
+          <span className="block text-[11.5px] text-ink-4 mt-1">Unpaid holds are released so the slot can be booked again. Needs Razorpay set up in Settings → Online payments.</span>
+        </label>
+      )}
       <div className="flex items-center gap-3">
         <Button variant="primary" onClick={save}>Save</Button>
         {msg && <span className={msg.ok ? "text-success-text" : "text-danger-text"}>{msg.text}</span>}
