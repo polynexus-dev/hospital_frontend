@@ -2,6 +2,7 @@ import { ModuleHub } from "../../components/resource/ModuleHub"
 import { StatusPill } from "../../components/resource/ResourceTable"
 import { admissionField, col, doctorField, opts, patientCol, patientField, userField } from "./fields"
 import { CDSSChecker } from "./CDSSChecker"
+import { RiskScorePanel, interventionBundlesResource } from "../clinical/RiskScorePanel"
 
 export function ClinicalSafetyPage() {
   return (
@@ -51,18 +52,8 @@ export function ClinicalSafetyPage() {
               { key: "data", label: "Template answers (JSON)", type: "json", help: "Keys from the chosen template, e.g. {\"lmp\": \"2026-06-01\"}" }],
           },
         },
-        {
-          key: "risk",
-          label: "Risk scores",
-          resource: {
-            title: "Fall / pressure ulcer / VTE / early warning", endpoint: "/clinical/risk-assessments/", createLabel: "Score patient",
-            description: "Morse, Braden, Caprini, NEWS2 and vulnerability screens are scored on the server; high risk alerts the nursing team.",
-            columns: [patientCol, col("tool", "Tool"), col("score", "Score"), { key: "risk_level", label: "Risk" }, col("assessed_at", "At")],
-            fields: [patientField(), admissionField(), { key: "tool", label: "Tool", type: "select", options: opts("morse_fall", "braden", "caprini", "news2", "vulnerability"), required: true },
-              { key: "answers", label: "Answers (JSON)", type: "json", required: true, help: 'e.g. Morse: {"history_of_falling": true, "gait": "impaired"}; NEWS2: {"respiratory_rate": 24, "spo2": 93, "systolic_bp": 105, "heart_rate": 115, "temperature_c": 38.4}' },
-              { key: "interventions", label: "Interventions", type: "textarea" }],
-          },
-        },
+        { key: "risk", label: "Risk scores", render: () => <RiskScorePanel /> },
+        { key: "risk-bundles", label: "Intervention checklists", resource: interventionBundlesResource },
         {
           key: "consents",
           label: "Consents",

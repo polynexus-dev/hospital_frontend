@@ -10,6 +10,7 @@ export interface Encounter {
   doctor_name: string
   department: number | null
   created_at: string
+  case_type?: string
 }
 
 export interface VitalsReading {

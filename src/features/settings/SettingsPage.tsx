@@ -2,6 +2,7 @@ import { Card, Eyebrow } from "../../components/ui/Card"
 import { AvatarSquare } from "../../components/ui/Avatar"
 import { useAuthStore } from "../../store/auth"
 import { TwoFactorAuthCard } from "./TwoFactorAuthCard"
+import { SignatureCard } from "./SignatureCard"
 import { LicenseCard } from "./LicenseCard"
 import { SubscriptionCard } from "./SubscriptionCard"
 import { ReportIncidentCard } from "./ReportIncidentCard"
@@ -64,6 +65,7 @@ export function SettingsPage() {
       </div>
 
       <TwoFactorAuthCard />
+      {user?.hospital && <SignatureCard />}
       {user?.hospital && <ReportIncidentCard />}
       <PinDirectoryCard />
       {user?.hospital && <DoctorCalendarsCard />}

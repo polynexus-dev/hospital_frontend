@@ -21,15 +21,18 @@ import type { Medication, Prescription } from "../../api/prescriptions"
 import { triggerBlobDownload } from "../../api/client"
 import type { AppointmentStatus, Channel, ConsentOptOut, Patient } from "../../types/api"
 import { useAuthStore } from "../../store/auth"
+import { PatientHeaderCards } from "../clinical/PatientHeaderCards"
+import { PatientHistoryCard } from "../clinical/PatientHistoryCard"
 
 
 
 const INR = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })
 
-type TabKey = "timeline" | "prescriptions" | "documents" | "appointments" | "messages" | "consents" | "immunizations"
+type TabKey = "timeline" | "history" | "prescriptions" | "documents" | "appointments" | "messages" | "consents" | "immunizations"
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "timeline", label: "Timeline" },
+  { key: "history", label: "Medical history" },
   { key: "prescriptions", label: "e-Prescriptions (e-Rx)" },
   { key: "documents", label: "Documents" },
   { key: "appointments", label: "Appointments" },
@@ -885,6 +888,8 @@ export function PatientDetailPage() {
         </div>
       </Card>
 
+      <PatientHeaderCards patientId={patient.id} />
+
       {/* Account + Linked people */}
       <div className="grid grid-cols-2 gap-3.5">
         <AccountCard patient={patient} outstandingDues={outstandingDues} lifetimeBilled={lifetimeBilled} />
@@ -1013,6 +1018,7 @@ export function PatientDetailPage() {
         </Card>
       )}
 
+      {activeTab === "history" && <PatientHistoryCard patientId={Number(patientId)} gender={patient.gender} />}
       {activeTab === "documents" && <DocumentChecklistCard patientId={Number(patientId)} />}
       {activeTab === "documents" && (
         <Card padded>

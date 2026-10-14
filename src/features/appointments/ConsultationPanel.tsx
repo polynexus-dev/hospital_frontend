@@ -15,6 +15,7 @@ import {
   type Diagnosis,
 } from "../../api/opd"
 import { SpecialtyAssessmentSection } from "../nabh/ClinicalTemplates"
+import { PatientHeaderCards } from "../clinical/PatientHeaderCards"
 
 const inputClass = "w-full h-8 px-2.5 border border-border-strong rounded-control text-[12.5px]"
 const textareaClass = "w-full border border-border rounded-control p-2 text-[12.5px] leading-relaxed outline-none focus:border-brand"
@@ -105,6 +106,7 @@ export function ConsultationPanel({ appointmentId }: { appointmentId: number }) 
 
   return (
     <div className="space-y-4 border-t border-border-soft pt-3 mt-1">
+      <PatientHeaderCards patientId={encounter.patient} />
       <div>
         <div className="text-[11px] font-semibold uppercase tracking-[.04em] text-ink-4 mb-1.5">Vitals</div>
         {latestVitals && (
@@ -169,7 +171,7 @@ export function ConsultationPanel({ appointmentId }: { appointmentId: number }) 
         </div>
       </div>
 
-      <SpecialtyAssessmentSection encounterId={encounter.id} patientId={encounter.patient} doctorId={encounter.doctor} />
+      <SpecialtyAssessmentSection encounterId={encounter.id} patientId={encounter.patient} doctorId={encounter.doctor} caseType={encounter.case_type} />
 
       <div>
         <div className="text-[11px] font-semibold uppercase tracking-[.04em] text-ink-4 mb-1.5">Diagnosis</div>

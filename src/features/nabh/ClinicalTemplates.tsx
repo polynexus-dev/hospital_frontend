@@ -140,8 +140,14 @@ export function answerText(v: unknown): string {
 // ------------------------------------------------- consultation section
 
 /** "Specialty assessment" inside the OPD consultation panel. */
-export function SpecialtyAssessmentSection({ encounterId, patientId, doctorId }: { encounterId: number; patientId: number; doctorId?: number }) {
+type CaseType = "new_complaint" | "old_complaint"
+
+export function SpecialtyAssessmentSection({ encounterId, patientId, doctorId, caseType: initialCase = "" }: {
+  encounterId: number; patientId: number; doctorId?: number; caseType?: string
+}) {
   const queryClient = useQueryClient()
+  const [caseType, setCaseType] = useState<CaseType | "">((initialCase as CaseType) || "")
+  const [loadedFrom, setLoadedFrom] = useState<string | null>(null)
   const doctorQuery = useQuery({
     queryKey: ["doctor", doctorId],
     queryFn: () => api.get<{ speciality: string }>(`/doctors/${doctorId}/`),
@@ -167,8 +173,42 @@ export function SpecialtyAssessmentSection({ encounterId, patientId, doctorId }:
   }, [active, doctorSpeciality, templateId])
 
   const template = active.find((t) => t.id === templateId)
+
+  // Same complaint as before: reload the patient's last answers for this
+  // template (a re-assessment). New complaint: start the template clean.
+  const reload = async (tid: number | "", ct: CaseType | "", keep: Record<string, unknown>) => {
+    setLoadedFrom(null)
+    const next = active.find((t) => t.id === tid)
+    if (!next) return setAnswers({})
+    const kept = Object.fromEntries(Object.entries(keep).filter(([k]) => next.fields.some((f) => f.key === k)))
+    if (ct !== "old_complaint") return setAnswers(kept)
+    try {
+      const res = await api.get<any>(`/clinical/assessments/?patient=${patientId}&template=${tid}&ordering=-assessed_at&page_size=5`)
+      const prev = ((res.results ?? res) as any[]).find((a) => a.encounter !== encounterId)
+      if (prev) {
+        setAnswers({ ...prev.data, ...kept })
+        setLoadedFrom(prev.assessed_at)
+        return
+      }
+    } catch {
+      // fall through to a clean form
+    }
+    setAnswers(kept)
+  }
+  const changeCase = async (ct: CaseType) => {
+    setCaseType(ct)
+    setError(null)
+    try {
+      await api.post(`/opd/encounters/${encounterId}/case-type/`, { case_type: ct })
+      queryClient.invalidateQueries({ queryKey: ["opd-encounter"] })
+    } catch (e) {
+      setError(extractApiError(e))
+    }
+    reload(templateId, ct, ct === "new_complaint" ? {} : answers)
+  }
   const save = useMutation({
-    mutationFn: () => api.post("/clinical/assessments/", { patient: patientId, encounter: encounterId, template: templateId, kind: "initial", data: answers }),
+    mutationFn: () => api.post("/clinical/assessments/", { patient: patientId, encounter: encounterId, template: templateId,
+      kind: caseType === "old_complaint" ? "reassessment" : "initial", data: answers }),
     onSuccess: () => {
       setAnswers({})
       setError(null)
@@ -193,13 +233,22 @@ export function SpecialtyAssessmentSection({ encounterId, patientId, doctorId }:
           </div>
         )
       })}
+      <div className="flex gap-1.5 mb-2" role="group" aria-label="Case type">
+        {([["new_complaint", "New complaint"], ["old_complaint", "Same complaint (follow-up)"]] as [CaseType, string][]).map(([k, label]) => (
+          <button key={k} type="button" onClick={() => changeCase(k)} aria-pressed={caseType === k}
+            className={`text-[11.5px] px-2.5 py-1 rounded-full border ${caseType === k ? "bg-brand text-white border-brand" : "border-border text-ink-3 hover:bg-page"}`}>
+            {label}
+          </button>
+        ))}
+      </div>
       <select className="w-full h-8 px-2.5 border border-border-strong rounded-control text-[12.5px] bg-transparent mb-2" value={templateId}
-        onChange={(e) => { setTemplateId(e.target.value ? Number(e.target.value) : ""); setAnswers({}) }}>
+        onChange={(e) => { const tid = e.target.value ? Number(e.target.value) : ""; setTemplateId(tid); reload(tid, caseType, answers) }}>
         <option value="">Choose a template…</option>
         {active.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
       </select>
       {template && (
         <>
+          {loadedFrom && <div className="text-[11.5px] text-ink-4 mb-1">Loaded from the assessment of {new Date(loadedFrom).toLocaleDateString("en-IN")} — update what has changed.</div>}
           <TemplateFields fields={template.fields} value={answers} onChange={setAnswers} look="panel" />
           {error && <div className="text-[12px] text-danger-text mt-1.5">{error}</div>}
           <button className="mt-2 h-7 px-3 rounded-control text-[12px] font-semibold bg-brand text-white disabled:opacity-50" disabled={save.isPending} onClick={() => save.mutate()}>

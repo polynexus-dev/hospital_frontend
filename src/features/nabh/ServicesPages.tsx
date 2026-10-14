@@ -2,6 +2,7 @@ import { ModuleHub } from "../../components/resource/ModuleHub"
 import { StatusPill } from "../../components/resource/ResourceTable"
 import { admissionField, col, doctorField, opts, patientCol, patientField, userField } from "./fields"
 import { LaundryPanel, linenStockResource, linenTypesResource } from "./LaundryPanel"
+import { MRDReportsPanel } from "../clinical/MRDReportsPanel"
 
 export function SupportServicesPage() {
   return (
@@ -254,6 +255,7 @@ export function MRDPage() {
             toolbar: [{ label: "Morbidity statistics", path: "morbidity/", method: "get" }],
           },
         },
+        { key: "mrd-reports", label: "MRD reports", render: () => <MRDReportsPanel /> },
         {
           key: "icd",
           label: "ICD-10 browser",
