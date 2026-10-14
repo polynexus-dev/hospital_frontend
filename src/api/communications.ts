@@ -82,6 +82,12 @@ export interface BroadcastCampaign {
   delivered_count: number
   read_count: number
   failed_count: number
+  skipped_count: number
+  started_at: string | null
+  completed_at: string | null
+  error: string
+  /** false: the channel doesn't report delivery / reads back (email, WhatsApp for now) */
+  delivery_reported: boolean
   created_by?: number | null
   created_by_name?: string
   created_at: string
@@ -114,3 +120,11 @@ export function getAudienceCounts() {
 
 
 
+
+export function cancelBroadcastCampaign(id: number) {
+  return api.post<BroadcastCampaign>(`/broadcasts/${id}/cancel/`)
+}
+
+export function updateTemplate(id: number, payload: Partial<Template>) {
+  return api.patch<Template>(`/templates/${id}/`, payload)
+}

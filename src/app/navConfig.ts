@@ -28,6 +28,7 @@ export const dailyWorkNav: NavItem[] = [
   { key: "console", moduleKey: "telephony", path: "/console", labelKey: "nav.console", subKey: "screenSub.console" },
   { key: "call-logs", moduleKey: "telephony", path: "/call-logs", labelKey: "Call Logs", subKey: "Full call history & recordings" },
   { key: "callbacks", moduleKey: "telephony", path: "/callbacks", labelKey: "nav.callbacks", subKey: "screenSub.callbacks" },
+  { key: "phone-menu", moduleKey: "telephony", path: "/phone-menu", labelKey: "Phone Menu", subKey: "IVR options, queue & hold menu", requiredPermission: "telephony.change_ivrmenu" },
   { key: "enquiries", moduleKey: "enquiries", path: "/enquiries", labelKey: "nav.enquiries", subKey: "screenSub.enquiries" },
   { key: "patients", path: "/patients", labelKey: "nav.patients", subKey: "screenSub.patients", requiredPermission: "patients.view_patient" },
   { key: "appointments", path: "/appointments", labelKey: "nav.appointments", subKey: "screenSub.appointments", requiredPermission: "appointments.view_appointment" },

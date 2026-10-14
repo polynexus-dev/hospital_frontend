@@ -8,6 +8,7 @@ import { ReportIncidentCard } from "./ReportIncidentCard"
 import { PinDirectoryCard } from "./PinDirectoryCard"
 import { OnlinePaymentsCard } from "./OnlinePaymentsCard"
 import { SupportCard } from "./SupportCard"
+import { DoctorCalendarsCard } from "./DoctorCalendarsCard"
 
 function Field({ label, value }: { label: string; value: string }) {
   return (
@@ -63,6 +64,7 @@ export function SettingsPage() {
       <TwoFactorAuthCard />
       {user?.hospital && <ReportIncidentCard />}
       <PinDirectoryCard />
+      {user?.hospital && <DoctorCalendarsCard />}
       {user?.hospital && <OnlinePaymentsCard />}
       {user?.hospital && <SupportCard />}
 

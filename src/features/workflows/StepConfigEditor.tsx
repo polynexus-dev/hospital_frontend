@@ -11,6 +11,8 @@ const CONDITION_FIELDS: { value: string; label: string; options?: string[] }[] =
   { value: "source", label: "Source", options: ["ivr", "whatsapp", "website", "walk_in", "referral", "google", "meta", "other"] },
   { value: "urgency", label: "Urgency", options: ["low", "normal", "high", "urgent"] },
   { value: "score", label: "Lead score (0–100)" },
+  { value: "quiet_days", label: "Days since the lead last engaged" },
+  { value: "has_email", label: "Has an email address", options: ["true", "false"] },
   { value: "department", label: "Department name" },
   { value: "service_requested", label: "Service requested" },
   { value: "assigned", label: "Has an owner", options: ["true", "false"] },
@@ -36,7 +38,7 @@ export function StepConfigEditor({ step, onChange }: { step: WorkflowStep; onCha
   const templates = useQuery({
     queryKey: ["message-templates-for-workflows"],
     queryFn: () => listTemplates({ page_size: "200" }),
-    enabled: step.action_type === "send_whatsapp" || step.action_type === "send_sms",
+    enabled: step.action_type === "send_whatsapp" || step.action_type === "send_sms" || step.action_type === "send_email",
   })
 
   if (step.step_type === "trigger") return null
@@ -83,20 +85,23 @@ export function StepConfigEditor({ step, onChange }: { step: WorkflowStep; onCha
     )
   }
 
-  if (step.action_type === "send_whatsapp" || step.action_type === "send_sms") {
-    const channel = step.action_type === "send_whatsapp" ? "whatsapp" : "sms"
+  if (step.action_type === "send_whatsapp" || step.action_type === "send_sms" || step.action_type === "send_email") {
+    const channel = step.action_type === "send_whatsapp" ? "whatsapp" : step.action_type === "send_email" ? "email" : "sms"
     const purposes = [...new Set((templates.data?.results ?? []).filter((t) => t.channel === channel).map((t) => t.purpose))].sort()
     return (
       <div className="flex flex-wrap items-center gap-2 mt-2 text-[12.5px]">
         <span className="text-ink-3">Message template</span>
         <select aria-label="Message template" className={input} value={cfg.purpose || cfg.template || ""} onChange={(e) => set({ purpose: e.target.value, template: undefined })}>
           <option value="">choose…</option>
-          {[...new Set([...purposes, "enquiry_follow_up", "no_show_recall"])].map((p) => <option key={p} value={p}>{p.replace(/_/g, " ")}</option>)}
+          {[...new Set([...purposes, "enquiry_follow_up", "no_show_recall", ...(channel === "email" ? ["enquiry_follow_up_email"] : [])])].map((p) => <option key={p} value={p}>{p.replace(/_/g, " ")}</option>)}
         </select>
         {channel === "whatsapp" && (
           <label className="flex items-center gap-1.5"><input type="checkbox" checked={cfg.fallback_sms !== false} onChange={(e) => set({ fallback_sms: e.target.checked })} /> SMS if WhatsApp fails</label>
         )}
-        <span className="text-ink-4 basis-full">Sent to the patient, or to the lead if they aren't registered yet. Lost leads and opted-out numbers are skipped.</span>
+        <span className="text-ink-4 basis-full">
+          Sent to the patient, or to the lead if they aren't registered yet. Lost leads and opted-out {channel === "email" ? "addresses" : "numbers"} are skipped.
+          {channel === "email" && " Goes out through polyMX with an unsubscribe link; skipped when there's no email address."}
+        </span>
       </div>
     )
   }

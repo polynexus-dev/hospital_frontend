@@ -5,7 +5,9 @@ import { StatTile } from "../../components/ui/StatTile"
 import { Pill } from "../../components/ui/Pill"
 import { Button } from "../../components/ui/Button"
 import { LoadingState, EmptyState } from "../../components/ui/QueryStates"
-import { claimCallbackTask, completeCallbackTask, listCallbackTasks, logCallbackAttempt } from "../../api/telephony"
+import { claimCallbackTask, clickToCall, completeCallbackTask, getLiveQueue, listCallbackTasks, logCallbackAttempt } from "../../api/telephony"
+import { showToast } from "../../components/ui/Toast"
+import { extractApiError } from "../../api/client"
 import { createEnquiry } from "../../api/enquiries"
 import { listUsers } from "../../api/accounts"
 import { slaInfo } from "../../lib/sla"
@@ -50,6 +52,8 @@ export function CallbacksPage() {
 
   return (
     <div className="flex flex-col gap-3.5">
+      <LiveQueueCard />
+
       <div className="grid grid-cols-4 gap-3">
         <StatTile label="Pending" value={pending.data?.count ?? "…"} />
         <StatTile label="In progress" value={inProgress.data?.count ?? "…"} valueClassName="text-warning" />
@@ -79,7 +83,10 @@ export function CallbacksPage() {
               <div key={task.id} className="grid grid-cols-[1.3fr_0.9fr_1.1fr_0.6fr_0.9fr_0.8fr_1.5fr] gap-2.5 py-2.5 border-b border-border-faint items-center text-[13px] min-w-[880px]">
                 <div className="font-mono text-[12.5px]">{task.phone_number}</div>
                 <div className="text-ink-3 text-[12.5px]">{new Date(task.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
-                <div className="text-ink-3 text-[12.5px] truncate">{task.ivr_path || "—"}</div>
+                <div className="text-ink-3 text-[12.5px] truncate">
+                  {(task.source === "queue" || task.source === "ivr_menu") && <Pill tone="info">Asked for callback</Pill>}{" "}
+                  {task.ivr_path || (task.source === "queue" || task.source === "ivr_menu" ? "" : "—")}
+                </div>
                 <div className="text-ink-3 text-[12.5px]">{task.attempt_count}</div>
                 <div className="text-ink-3 text-[12.5px] truncate">{userName(task.owner)}</div>
                 <div><Pill tone={sla.tone}>{sla.text}</Pill></div>
@@ -124,6 +131,61 @@ export function CallbacksPage() {
     </div>
   )
 }
+function minutes(seconds: number) {
+  if (seconds < 60) return `${seconds}s`
+  return `${Math.round(seconds / 60)} min`
+}
+
+/** Callers waiting in the phone queue right now (fed by the PBX through the
+ *  phone-menu webhooks), with today's queue figures. */
+function LiveQueueCard() {
+  const live = useQuery({ queryKey: ["call-queue"], queryFn: getLiveQueue, refetchInterval: 5_000 })
+  const call = useMutation({
+    mutationFn: (number: string) => clickToCall(number),
+    onError: (e) => showToast(extractApiError(e), "error"),
+  })
+  const t = live.data?.today
+  const waiting = live.data?.waiting ?? []
+  return (
+    <Card>
+      <div className="px-3.5 py-3 border-b border-border flex items-center gap-2 flex-wrap">
+        <div className="text-[13px] font-semibold">Waiting on the phone now</div>
+        <div className="text-[12px] text-ink-4">refreshes every 5 s</div>
+        {t && (
+          <div className="ml-auto flex gap-3 text-[12px] text-ink-3">
+            <span>Today: <b>{t.queued}</b> queued</span>
+            <span><b>{t.answered}</b> answered</span>
+            <span className={t.abandoned ? "text-danger-text" : ""}><b>{t.abandoned}</b> hung up</span>
+            <span><b>{t.callbacks_requested}</b> asked for a callback</span>
+            <span>avg wait <b>{t.avg_wait_seconds === null ? "—" : minutes(t.avg_wait_seconds)}</b></span>
+          </div>
+        )}
+      </div>
+      {live.isLoading && <LoadingState />}
+      {live.isError && <div className="px-3.5 py-3 text-[12.5px] text-danger-text">{extractApiError(live.error)}</div>}
+      {waiting.map((w) => (
+        <div key={w.id} className="px-3.5 py-2.5 border-b border-border-faint flex items-center gap-3 text-[13px]">
+          <div className="w-7 h-7 rounded-full bg-brand-tint text-brand font-semibold flex items-center justify-center flex-none">{w.position}</div>
+          <div className="min-w-0 flex-1">
+            <div className="font-mono text-[12.5px]">{w.caller}{w.patient_name && <span className="font-sans font-semibold ml-2">{w.patient_name}</span>}</div>
+            <div className="text-[11.5px] text-ink-4 truncate">{[w.department || w.queue, w.language.toUpperCase(), w.path].filter(Boolean).join(" · ")}</div>
+          </div>
+          <div className="text-right text-[12px]">
+            <div className={w.waiting_seconds > 300 ? "text-danger-text font-semibold" : "text-ink-2"}>waiting {minutes(w.waiting_seconds)}</div>
+            <div className="text-ink-4">told ~{minutes(w.estimated_wait_seconds)}</div>
+          </div>
+          <Button size="sm" variant="secondary" onClick={() => call.mutate(w.caller)} disabled={call.isPending}>Call back</Button>
+        </div>
+      ))}
+      {live.data && waiting.length === 0 && (
+        <div className="px-3.5 py-3 text-[12.5px] text-ink-4">
+          Nobody is waiting. Callers appear here once the phone system uses a phone menu from Phone Menu.
+        </div>
+      )}
+    </Card>
+  )
+}
+
 function CallbackToEnquiryModal({
   task,
   onClose,

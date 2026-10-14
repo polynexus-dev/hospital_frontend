@@ -109,6 +109,7 @@ export function WorkflowsPage() {
         stepType === "condition" ? { field: "stage", op: "eq", value: "new" }
         : actionType === "wait_delay" ? { delay_minutes: 1440 }
         : actionType === "send_whatsapp" || actionType === "send_sms" ? { purpose: "enquiry_follow_up", fallback_sms: true }
+        : actionType === "send_email" ? { purpose: "enquiry_follow_up_email" }
         : actionType === "create_task" ? { title: "Follow up enquiry #{enquiry_id}", assign_to: "owner", priority: "normal", due_in_minutes: 60 }
         : {},
     }
@@ -227,6 +228,7 @@ export function WorkflowsPage() {
                     <option value="appointment_no_show">⏰ Appointment No-Show</option>
                     <option value="nps_detractor">⭐ NPS Detractor Rating Received</option>
                     <option value="patient_recall_due">🔁 Patient Recall Due (scheduled)</option>
+                    <option value="enquiry_went_quiet">🤫 Lead Went Quiet (no reply for 2 days)</option>
                   </select>
                 </div>
 
@@ -384,6 +386,13 @@ export function WorkflowsPage() {
                     className="px-3 py-1.5 text-xs font-bold rounded-lg bg-accent-tint hover:bg-accent/25 text-accent-hover border border-accent/25 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
                   >
                     <span>✉️</span> Send SMS
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleAddStep("action", "send_email", "Send an email")}
+                    className="px-3 py-1.5 text-xs font-bold rounded-lg bg-accent-tint hover:bg-accent/25 text-accent-hover border border-accent/25 transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                  >
+                    <span>📧</span> Send Email
                   </button>
                   <button
                     type="button"

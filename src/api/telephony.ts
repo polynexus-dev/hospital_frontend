@@ -92,3 +92,152 @@ export function operatorProductivity(params: { start?: string; end?: string } = 
   const qs = new URLSearchParams(params as Record<string, string>).toString()
   return api.get<OperatorProductivityRow[]>(`/calls/operator-productivity/${qs ? `?${qs}` : ""}`)
 }
+
+// ─── AI call analysis & missed opportunities ────────────────────────────────
+
+export interface CallAnalysis {
+  id: number
+  transcript: string
+  call_reason: string
+  ai_summary: string
+  ai_lead_class: string
+  ai_booking_intent: boolean | null
+  ai_status: string
+  ai_error: string
+  ai_processed_at: string | null
+  missed_opportunity: string
+  missed_opportunity_at: string | null
+}
+
+export function getCallAnalysis(id: number | string) {
+  return api.get<CallAnalysis>(`/calls/${id}/analysis/`)
+}
+
+export function reanalyseCall(id: number | string) {
+  return api.post<CallAnalysis>(`/calls/${id}/analyse/`)
+}
+
+export interface MissedOpportunityReport {
+  from: string
+  to: string
+  summary: {
+    missed_opportunities: number
+    unreturned: number
+    not_booked: number
+    analysed_calls: number
+    booking_intent_calls: number
+    lead_classes: Record<string, number>
+  }
+  flagged: Call[]
+}
+
+export function getMissedOpportunities(params: { start?: string; end?: string } = {}) {
+  const qs = new URLSearchParams(params as Record<string, string>).toString()
+  return api.get<MissedOpportunityReport>(`/calls/missed-opportunities/${qs ? `?${qs}` : ""}`)
+}
+
+// ─── Live call queue ─────────────────────────────────────────────────────────
+
+export interface QueuedCaller {
+  id: number
+  caller: string
+  patient_id: number | null
+  patient_name: string
+  queue: string
+  department: string
+  language: string
+  path: string
+  position: number
+  waiting_seconds: number
+  estimated_wait_seconds: number
+}
+
+export interface LiveQueue {
+  waiting: QueuedCaller[]
+  today: { queued: number; answered: number; abandoned: number; callbacks_requested: number; avg_wait_seconds: number | null }
+}
+
+export function getLiveQueue() {
+  return api.get<LiveQueue>("/call-queue/")
+}
+
+// ─── Phone menu (dynamic IVR) ───────────────────────────────────────────────
+
+export type IVRAction = "menu" | "language" | "queue" | "info" | "callback" | "booking_link"
+
+export interface IVRNode {
+  id: number
+  menu: number
+  parent: number | null
+  digit: string
+  label: string
+  action: IVRAction
+  prompt: string
+  language: string
+  department: number | null
+  queue_target: string
+  queue_agents: number
+  sort_order: number
+}
+
+export interface IVRMenu {
+  id: number
+  name: string
+  dial_in_number: string
+  is_active: boolean
+  fallback_target: string
+  hold_announce_seconds: number
+  hold_info_text: string
+  booking_url: string
+  nodes: IVRNode[]
+  webhooks: { step: string; hold: string; event: string }
+  created_at: string
+}
+
+export interface IVRReply {
+  action: "collect" | "queue" | "hold" | "transfer" | "hangup" | "none"
+  say: string
+  language: string
+  target?: string
+  position?: number
+  estimated_wait_seconds?: number
+  call_id: string
+  state: string
+  path: string
+}
+
+export function listIVRMenus() {
+  return api.get<Paginated<IVRMenu>>("/ivr-menus/")
+}
+
+export function createIVRMenu(body: Partial<IVRMenu>) {
+  return api.post<IVRMenu>("/ivr-menus/", body)
+}
+
+export function updateIVRMenu(id: number, body: Partial<IVRMenu>) {
+  return api.patch<IVRMenu>(`/ivr-menus/${id}/`, body)
+}
+
+export function deleteIVRMenu(id: number) {
+  return api.delete(`/ivr-menus/${id}/`)
+}
+
+export function rotateIVRMenuToken(id: number) {
+  return api.post<IVRMenu>(`/ivr-menus/${id}/rotate-token/`)
+}
+
+export function simulateIVRMenu(id: number, body: { call_id?: string; digits?: string; hold?: boolean }) {
+  return api.post<IVRReply>(`/ivr-menus/${id}/simulate/`, body)
+}
+
+export function createIVRNode(body: Partial<IVRNode>) {
+  return api.post<IVRNode>("/ivr-nodes/", body)
+}
+
+export function updateIVRNode(id: number, body: Partial<IVRNode>) {
+  return api.patch<IVRNode>(`/ivr-nodes/${id}/`, body)
+}
+
+export function deleteIVRNode(id: number) {
+  return api.delete(`/ivr-nodes/${id}/`)
+}

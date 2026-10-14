@@ -184,7 +184,18 @@ export interface Call {
   provider_name: string
   provider_call_id: string
   created_at: string
+  // AI analysis of the recording (backend apps.telephony.call_ai)
+  ai_summary?: string
+  ai_lead_class?: CallLeadClass | ""
+  ai_booking_intent?: boolean | null
+  ai_status?: "" | "pending" | "done" | "failed" | "skipped"
+  ai_error?: string
+  ai_processed_at?: string | null
+  missed_opportunity?: "" | "unreturned" | "not_booked"
+  missed_opportunity_at?: string | null
 }
+
+export type CallLeadClass = "hot" | "warm" | "cold" | "not_a_lead"
 
 export interface CallHistorySummary {
   direction: "inbound" | "outbound"
@@ -222,6 +233,7 @@ export interface CallbackTask {
   notes: string
   resolved_at: string | null
   created_at: string
+  source?: "missed_call" | "queue" | "ivr_menu" | "manual"
 }
 
 export type EnquiryStage = "new" | "contacted" | "scheduled" | "visited" | "completed" | "follow_up" | "lost"
@@ -409,6 +421,8 @@ export interface Template {
   subject: string
   body: string
   is_active: boolean
+  provider_template_id?: string
+  provider_variables?: string
 }
 
 export interface ConsentOptOut {

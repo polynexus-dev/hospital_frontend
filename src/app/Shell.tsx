@@ -208,6 +208,7 @@ export function Shell() {
       location.pathname.startsWith("/appointments") ||
       location.pathname.startsWith("/console") ||
       location.pathname.startsWith("/callbacks") ||
+      location.pathname.startsWith("/phone-menu") ||
       location.pathname.startsWith("/enquiries") ||
       location.pathname.startsWith("/inbox") ||
       location.pathname.startsWith("/referrals") ||

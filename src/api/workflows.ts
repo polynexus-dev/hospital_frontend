@@ -5,7 +5,7 @@ export interface WorkflowStep {
   id?: number
   order: number
   step_type: "trigger" | "condition" | "action"
-  action_type: "create_task" | "send_whatsapp" | "send_sms" | "escalate" | "wait_delay"
+  action_type: "create_task" | "send_whatsapp" | "send_sms" | "send_email" | "escalate" | "wait_delay"
   title: string
   config: Record<string, any>
 }
@@ -14,7 +14,7 @@ export interface Workflow {
   id: number
   name: string
   description: string
-  trigger_type: "missed_call" | "enquiry_created" | "enquiry_stage_changed" | "appointment_no_show" | "nps_detractor" | "patient_recall_due"
+  trigger_type: "missed_call" | "enquiry_created" | "enquiry_stage_changed" | "appointment_no_show" | "nps_detractor" | "patient_recall_due" | "enquiry_went_quiet"
   is_active: boolean
   steps: WorkflowStep[]
   created_at: string

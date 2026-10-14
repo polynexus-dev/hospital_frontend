@@ -1,5 +1,5 @@
 import { useState, useRef } from "react"
-import { useQuery, useMutation } from "@tanstack/react-query"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Card } from "../../components/ui/Card"
 import { NeutralTag } from "../../components/ui/Pill"
 import { LoadingState } from "../../components/ui/QueryStates"
@@ -10,7 +10,11 @@ import {
   listActiveCalls,
   operatorProductivity,
   clickToCall,
+  getCallAnalysis,
+  reanalyseCall,
 } from "../../api/telephony"
+import { MissedOpportunitiesModal } from "./MissedOpportunitiesModal"
+import { LEAD_CLASS, MISSED_OPPORTUNITY } from "./callLabels"
 import { useSIPClient } from "../../telephony/useSIPClient"
 import { showToast } from "../../components/ui/Toast"
 import { extractApiError } from "../../api/client"
@@ -102,6 +106,71 @@ function AudioPlayer({ url }: { url: string }) {
           <span className="text-[14px]">▶</span> Play recording
         </button>
       )}
+    </div>
+  )
+}
+
+function AIBadges({ call }: { call: Call }) {
+  const lead = call.ai_lead_class ? LEAD_CLASS[call.ai_lead_class] : undefined
+  return (
+    <>
+      {lead && <span className={`text-[11px] font-semibold px-2 py-0.5 rounded ${lead.cls}`}>{lead.label}</span>}
+      {call.missed_opportunity && (
+        <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-danger-bg text-danger-text">
+          ⚠ {MISSED_OPPORTUNITY[call.missed_opportunity] ?? call.missed_opportunity}
+        </span>
+      )}
+    </>
+  )
+}
+
+/** AI summary of the recording: written by the hospital's own Whisper +
+ *  Ollama servers (backend apps.telephony.call_ai), for staff only. */
+function AICallSection({ call }: { call: Call }) {
+  const queryClient = useQueryClient()
+  const [showTranscript, setShowTranscript] = useState(false)
+  const analysis = useQuery({
+    queryKey: ["calls", call.id, "analysis"],
+    queryFn: () => getCallAnalysis(call.id),
+    enabled: showTranscript,
+  })
+  const again = useMutation({
+    mutationFn: () => reanalyseCall(call.id),
+    onSuccess: () => {
+      showToast("Analysis queued. It can take a few minutes.", "success")
+      queryClient.invalidateQueries({ queryKey: ["calls"] })
+    },
+    onError: (e) => showToast(extractApiError(e), "error"),
+  })
+  if (!call.recording_url && !call.ai_status) return null
+  const status = call.ai_status
+  return (
+    <div className="col-span-2 border-t border-border-faint pt-2 mt-1">
+      <div className="flex items-center gap-2">
+        <span className="text-ink-4 text-[11px] uppercase tracking-wider">AI summary</span>
+        <AIBadges call={call} />
+        {call.ai_booking_intent && <span className="text-[11px] text-success-text font-semibold">Wanted to book</span>}
+        {call.recording_url && status !== "pending" && (
+          <button onClick={() => again.mutate()} disabled={again.isPending} className="ml-auto text-[11.5px] font-semibold text-brand hover:text-brand-dark">
+            {status ? "Analyse again" : "Analyse"}
+          </button>
+        )}
+      </div>
+      {status === "done" && <p className="mt-1 text-[12.5px] text-ink-2 leading-relaxed">{call.ai_summary || "—"}</p>}
+      {status === "pending" && <p className="mt-1 text-[12px] text-ink-4">Transcribing and summarising…</p>}
+      {(status === "failed" || status === "skipped") && <p className="mt-1 text-[12px] text-ink-4">{call.ai_error || "Not analysed."}</p>}
+      {!status && <p className="mt-1 text-[12px] text-ink-4">Not analysed yet.</p>}
+      {status === "done" && (
+        <button onClick={() => setShowTranscript((v) => !v)} className="mt-1 text-[11.5px] font-semibold text-brand hover:text-brand-dark">
+          {showTranscript ? "Hide transcript" : "Show transcript"}
+        </button>
+      )}
+      {showTranscript && (
+        <div className="mt-1 max-h-48 overflow-y-auto rounded border border-border bg-page p-2 text-[12px] leading-relaxed whitespace-pre-wrap text-ink-2">
+          {analysis.isLoading ? "Loading…" : analysis.data?.transcript || "—"}
+        </div>
+      )}
+      <div className="mt-1 text-[10.5px] text-ink-5">Machine-generated from the recording. Check before acting on it.</div>
     </div>
   )
 }
@@ -232,6 +301,7 @@ function CallRow({ call, expanded, onToggle }: {
             {(call.call_reason_display || call.call_reason) && (
               <NeutralTag>{call.call_reason_display || call.call_reason}</NeutralTag>
             )}
+            <AIBadges call={call} />
           </div>
 
           <div className="text-[11px] text-ink-5 mt-0.5 flex items-center gap-2 flex-wrap">
@@ -316,6 +386,7 @@ function CallRow({ call, expanded, onToggle }: {
               <AudioPlayer url={call.recording_url} />
             </div>
           )}
+          <AICallSection call={call} />
           {/* ── click-to-call action ── */}
           <div className="col-span-2 border-t border-border-faint pt-3 mt-1">
             <div className="text-[10.5px] uppercase tracking-wider text-ink-4 mb-2">Click-to-Call</div>
@@ -370,6 +441,7 @@ export function CallLogsPage() {
   const [page, setPage] = useState(1)
   const [quickDial, setQuickDial] = useState("")
   const [qdFeedback, setQdFeedback] = useState<"idle" | "ok" | "err">("idle")
+  const [showOpportunities, setShowOpportunities] = useState(false)
   const { sipStatus, hangup, reconnect, autoDetect, autoTryStatus, testMic, isOnCall } = useSIPClient()
 
   const PAGE_SIZE = 20
@@ -500,10 +572,19 @@ export function CallLogsPage() {
             {totalCount > 0 ? ` · ${totalCount} records` : ""}
           </p>
         </div>
-        {callsQuery.isFetching && (
-          <span className="text-[12px] text-ink-4 animate-pulse">Refreshing…</span>
-        )}
+        <div className="flex items-center gap-3">
+          {callsQuery.isFetching && (
+            <span className="text-[12px] text-ink-4 animate-pulse">Refreshing…</span>
+          )}
+          <button
+            onClick={() => setShowOpportunities(true)}
+            className="h-8 px-3 rounded-control border border-border-strong text-[12.5px] font-semibold text-ink-2 hover:bg-page"
+          >
+            Missed opportunities
+          </button>
+        </div>
       </div>
+      <MissedOpportunitiesModal open={showOpportunities} onClose={() => setShowOpportunities(false)} />
 
       {/* ── live active calls banner ── */}
       {activeCalls.length > 0 && (

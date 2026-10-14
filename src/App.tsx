@@ -15,6 +15,7 @@ const DashboardPage = lazy(() => import("./features/dashboard/DashboardPage").th
 const ConsolePage = lazy(() => import("./features/console/ConsolePage").then((m) => ({ default: m.ConsolePage })))
 const CallLogsPage = lazy(() => import("./features/console/CallLogsPage").then((m) => ({ default: m.CallLogsPage })))
 const CallbacksPage = lazy(() => import("./features/callbacks/CallbacksPage").then((m) => ({ default: m.CallbacksPage })))
+const PhoneMenuPage = lazy(() => import("./features/callbacks/PhoneMenuPage").then((m) => ({ default: m.PhoneMenuPage })))
 const OPDRegistrationPage = lazy(() => import("./features/frontdesk/OPDRegistrationPage").then((m) => ({ default: m.OPDRegistrationPage })))
 const EnquiriesPage = lazy(() => import("./features/enquiries/EnquiriesPage").then((m) => ({ default: m.EnquiriesPage })))
 const PatientsListPage = lazy(() => import("./features/patients/PatientsListPage").then((m) => ({ default: m.PatientsListPage })))
@@ -102,6 +103,7 @@ function App() {
           <Route path="/console" element={<Suspense fallback={<LoadingState />}><ConsolePage /></Suspense>} />
           <Route path="/call-logs" element={<Suspense fallback={<LoadingState />}><CallLogsPage /></Suspense>} />
           <Route path="/callbacks" element={<Suspense fallback={<LoadingState />}><CallbacksPage /></Suspense>} />
+          <Route path="/phone-menu" element={<Suspense fallback={<LoadingState />}><PhoneMenuPage /></Suspense>} />
           <Route element={<RequirePermission permission="patients.add_patient" />}>
             <Route path="/opd-desk" element={<Suspense fallback={<LoadingState />}><OPDRegistrationPage /></Suspense>} />
           </Route>
