@@ -93,3 +93,37 @@ test("patient signs in to the portal and pays a bill online", async ({ page }) =
   await expect(page.getByRole("heading", { name: "Razorpay checkout" })).toBeVisible()
   expect(paidRequest).toEqual({ patient: 7 })
 })
+
+test("patient uploads a missing document from the portal", async ({ page }) => {
+  let uploaded = ""
+  await mockApi(page, {
+    "/portal/auth/request-otp/": { sent: true },
+    "/portal/auth/verify-otp/": { token: "portal-token", patients: [{ id: 7, name: "Asha Rao" }] },
+    "/portal/me/": { hospital: "City Hospital", patients: [{ id: 7, name: "Asha Rao", uhid: "CH-000007" }] },
+    "/portal/appointments/": [],
+  })
+  // Registered after mockApi so it wins for this path (Playwright: last route first).
+  await page.route("http://api.e2e.test/api/v1/portal/documents/**", async (route) => {
+    const req = route.request()
+    const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "GET, POST, OPTIONS" }
+    if (req.method() === "OPTIONS") return route.fulfill({ status: 204, headers: cors })
+    if (req.method() === "POST") {
+      uploaded = req.headers()["content-type"] || ""
+      return route.fulfill({ status: 201, headers: cors, json: { id: 1, requirement: 3 } })
+    }
+    return route.fulfill({ status: 200, headers: cors, json: { stages: [{ stage: "registration", stage_label: "Registration", items: [
+      { requirement: 3, name: "Photo ID", required: true, satisfied: false },
+    ] }] } })
+  })
+  await page.goto("/portal")
+  await page.getByPlaceholder("Hospital code").fill("city-hospital")
+  await page.getByPlaceholder("Mobile number").fill("9811100051")
+  await page.getByRole("button", { name: "Send OTP" }).click()
+  await page.getByPlaceholder("6-digit OTP").fill("123456")
+  await page.getByRole("button", { name: "Verify & sign in" }).click()
+  await page.getByRole("button", { name: "Documents", exact: true }).click()
+  await expect(page.getByText("Documents for registration")).toBeVisible()
+  await page.locator('input[type="file"]').setInputFiles({ name: "aadhaar.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4") })
+  await expect(page.getByText('"Photo ID" uploaded')).toBeVisible()
+  expect(uploaded).toContain("multipart/form-data")
+})

@@ -16,10 +16,11 @@ function getToken() {
 
 async function portal<T>(path: string, init: { method?: string; body?: unknown } = {}): Promise<T> {
   const token = getToken()
+  const isForm = init.body instanceof FormData  // file uploads: the browser sets the multipart boundary
   const res = await fetch(`${API_BASE_URL}/portal${path}`, {
     method: init.method ?? "GET",
-    headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Portal ${token}` } : {}) },
-    body: init.body === undefined ? undefined : JSON.stringify(init.body),
+    headers: { ...(isForm ? {} : { "Content-Type": "application/json" }), ...(token ? { Authorization: `Portal ${token}` } : {}) },
+    body: init.body === undefined ? undefined : isForm ? (init.body as FormData) : JSON.stringify(init.body),
   })
   if (!res.ok) {
     let body: unknown = null
@@ -75,7 +76,50 @@ function Login({ onDone }: { onDone: () => void }) {
   )
 }
 
-type Tab = "appointments" | "reports" | "prescriptions" | "discharge" | "bills" | "video" | "feedback" | "info"
+function PortalDocuments({ stages, patientId, onUploaded, onError }: { stages: any[]; patientId: number; onUploaded: (m: string) => void; onError: (e: string | null) => void }) {
+  const [busy, setBusy] = useState<number | null>(null)
+  if (!stages?.length) return <section className="bg-white rounded-xl border px-4 py-3 text-sm">Nothing is needed from you right now. ✅</section>
+  const upload = async (requirement: number, name: string, file: File) => {
+    onError(null)
+    setBusy(requirement)
+    const fd = new FormData()
+    fd.append("patient", String(patientId))
+    fd.append("requirement", String(requirement))
+    fd.append("file", file)
+    try {
+      await portal("/documents/", { method: "POST", body: fd })
+      onUploaded(`Thank you. "${name}" uploaded.`)
+    } catch (e) {
+      onError(extractApiError(e))
+    } finally {
+      setBusy(null)
+    }
+  }
+  return (
+    <>
+      {stages.map((st) => (
+        <section key={st.stage} className="bg-white rounded-xl border">
+          <h2 className="px-4 py-3 font-semibold border-b">Documents for {st.stage_label.toLowerCase()}</h2>
+          {st.items.map((i: any) => (
+            <div key={i.requirement} className="px-4 py-3 border-b last:border-0 text-sm flex flex-wrap items-center justify-between gap-2">
+              <span>{i.satisfied ? "✅" : "⬜"} {i.name}{!i.required && <span className="text-ink-4"> (optional)</span>}</span>
+              {!i.satisfied && (
+                <label className={`px-3 py-1.5 rounded-lg text-white text-sm font-medium cursor-pointer ${busy === i.requirement ? "bg-ink-4" : "bg-success-text"}`}>
+                  {busy === i.requirement ? "Uploading…" : "Upload"}
+                  <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png" disabled={busy !== null}
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) void upload(i.requirement, i.name, f); e.target.value = "" }} />
+                </label>
+              )}
+            </div>
+          ))}
+        </section>
+      ))}
+      <p className="text-xs text-ink-4">Photos or PDFs up to the hospital's size limit. A clear photo of the document is fine.</p>
+    </>
+  )
+}
+
+type Tab = "appointments" | "reports" | "prescriptions" | "discharge" | "bills" | "documents" | "video" | "feedback" | "info"
 
 export function PatientPortal() {
   const [authed, setAuthed] = useState(!!getToken())
@@ -102,7 +146,7 @@ export function PatientPortal() {
 
   const endpoints: Record<Tab, string> = {
     appointments: "/appointments/", reports: "/reports/", prescriptions: "/prescriptions/", discharge: "/discharge-summaries/",
-    bills: "/bills/", video: "/teleconsultations/", feedback: "/measures/", info: "/care-information/",
+    bills: "/bills/", documents: "/documents/", video: "/teleconsultations/", feedback: "/measures/", info: "/care-information/",
   }
   useEffect(() => {
     if (!patientId) return
@@ -132,7 +176,7 @@ export function PatientPortal() {
         </div>
       </header>
       <nav className="flex gap-1 overflow-x-auto bg-white border-b px-3">
-        {([["appointments", "Appointments"], ["reports", "Reports"], ["prescriptions", "Prescriptions"], ["discharge", "Discharge"], ["bills", "Bills"], ["video", "Video consults"], ["feedback", "Feedback"], ["info", "Hospital info"]] as [Tab, string][]).map(([k, l]) => (
+        {([["appointments", "Appointments"], ["reports", "Reports"], ["prescriptions", "Prescriptions"], ["discharge", "Discharge"], ["bills", "Bills"], ["documents", "Documents"], ["video", "Video consults"], ["feedback", "Feedback"], ["info", "Hospital info"]] as [Tab, string][]).map(([k, l]) => (
           <button key={k} onClick={() => { setTab(k); setMsg(null) }} className={`px-3 py-3 text-sm font-semibold whitespace-nowrap border-b-2 ${tab === k ? "border-success text-success-text" : "border-transparent text-ink-4"}`}>{l}</button>
         ))}
       </nav>
@@ -180,6 +224,7 @@ export function PatientPortal() {
             )}
             {tab === "video" && <List title="Video consultations" rows={data} render={(c: any) => <><b>{new Date(c.scheduled_at).toLocaleString()}</b> · {c.doctor} · {c.status}{c.join_token && <a className="ml-2 text-success-text font-semibold" href={`/tele/join/${c.join_token}`}>Join</a>}</>} />}
             {tab === "feedback" && <Feedback instruments={data} patientId={patientId!} onDone={setMsg} />}
+            {tab === "documents" && <PortalDocuments stages={data.stages} patientId={patientId!} onUploaded={(m) => { setMsg(m); setReload((n) => n + 1) }} onError={setError} />}
             {tab === "info" && <List title="Information for patients" rows={data} render={(i: any) => <><b>{i.title}</b><div className="whitespace-pre-wrap text-ink-3">{i.body}</div></>} />}
           </>
         )}

@@ -9,6 +9,7 @@ import { PinDirectoryCard } from "./PinDirectoryCard"
 import { OnlinePaymentsCard } from "./OnlinePaymentsCard"
 import { SupportCard } from "./SupportCard"
 import { MISScheduleCard } from "./MISScheduleCard"
+import { RequiredDocumentsCard } from "./RequiredDocumentsCard"
 import { DoctorCalendarsCard } from "./DoctorCalendarsCard"
 
 function Field({ label, value }: { label: string; value: string }) {
@@ -67,6 +68,7 @@ export function SettingsPage() {
       <PinDirectoryCard />
       {user?.hospital && <DoctorCalendarsCard />}
       {user?.hospital && <OnlinePaymentsCard />}
+      {user?.hospital && <RequiredDocumentsCard />}
       {user?.hospital && <MISScheduleCard />}
       {user?.hospital && <SupportCard />}
 

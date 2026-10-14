@@ -13,6 +13,7 @@ import { createConsent, listConsent, listMessages, setConsent } from "../../api/
 import { listHisBilling } from "../../api/integrations"
 import { DpdpConsentCard } from "./DpdpConsentCard"
 import { ImmunizationsCard } from "./ImmunizationsCard"
+import { DocumentChecklistCard } from "./DocumentChecklistCard"
 import { createPrescription, downloadPrescriptionPdf, listPrescriptions } from "../../api/prescriptions"
 import { listEnquiries } from "../../api/enquiries"
 import { createNominee, deleteNominee, listNominees, verifyNominee } from "../../api/privacy"
@@ -1012,6 +1013,7 @@ export function PatientDetailPage() {
         </Card>
       )}
 
+      {activeTab === "documents" && <DocumentChecklistCard patientId={Number(patientId)} />}
       {activeTab === "documents" && (
         <Card padded>
 
