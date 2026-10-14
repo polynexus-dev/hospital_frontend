@@ -74,6 +74,7 @@ function DoctorFormModal({ doctor, departments, onClose }: DoctorModalProps) {
   const [department, setDepartment] = useState<string>(doctor?.department ? String(doctor.department) : "")
   const [phone, setPhone] = useState(doctor?.phone ?? "")
   const [email, setEmail] = useState(doctor?.email ?? "")
+  const [pan, setPan] = useState(doctor?.pan ?? "")
   const [degree, setDegree] = useState(doctor?.degree ?? "")
   const [smcReg, setSmcReg] = useState(doctor?.smc_registration_number ?? "")
   const [consultMinutes, setConsultMinutes] = useState(doctor?.default_consultation_minutes ?? 15)
@@ -87,6 +88,7 @@ function DoctorFormModal({ doctor, departments, onClose }: DoctorModalProps) {
         department: department ? Number(department) : null,
         phone: phone.trim() || undefined,
         email: email.trim() || undefined,
+        pan: pan.trim().toUpperCase(),
         degree: degree.trim() || undefined,
         smc_registration_number: smcReg.trim() || undefined,
         default_consultation_minutes: Number(consultMinutes) || 15,
@@ -266,6 +268,17 @@ function DoctorFormModal({ doctor, departments, onClose }: DoctorModalProps) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full h-8.5 px-3 border border-border-strong rounded bg-page outline-none focus:border-brand text-ink"
+              />
+            </div>
+            <div>
+              <label className="text-[11px] font-semibold text-ink-3 block mb-1">PAN (for TDS on payouts)</label>
+              <input
+                type="text"
+                placeholder="ABCDE1234F"
+                maxLength={10}
+                value={pan}
+                onChange={(e) => setPan(e.target.value.toUpperCase())}
+                className="w-full h-8.5 px-3 border border-border-strong rounded bg-page outline-none focus:border-brand text-ink font-mono uppercase"
               />
             </div>
           </div>

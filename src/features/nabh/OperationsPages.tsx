@@ -1,7 +1,10 @@
 import { ModuleHub } from "../../components/resource/ModuleHub"
 import { admissionField, col, opts, patientCol, patientField, userField } from "./fields"
 import { BedBoard } from "./BedBoard"
-import { BedBillingPanel, DoctorPayoutsPanel, payoutRulesResource } from "./BillingExtras"
+import { LabSettingsPanel, labTestsResource } from "../diagnostics/LabSetup"
+import { AccountsSettingsPanel, DayBookPanel, VouchersPanel } from "../finance/Books"
+import { CustomerInvoicesPanel, CustomerLedgerPanel, RecurringInvoicesPanel, customerReceiptsResource, customersResource } from "../finance/Receivables"
+import { BedBillingPanel, DoctorPayoutsPanel, payoutDeductionHeadsResource, payoutRulesResource } from "./BillingExtras"
 import { consultationFeesResource, discountApprovalsResource, FrontDeskPolicyForm } from "../frontdesk/FrontDeskSettings"
 
 const caseField = { key: "case", label: "Cancer case", type: "fk" as const, source: "/oncology/cases/", sourceLabel: (r: any) => `#${r.id} ${r.patient_name} — ${r.primary_site} ${r.tnm ?? ""}`, required: true }
@@ -124,7 +127,7 @@ export function AccountsPage() {
   return (
     <ModuleHub
       title="Accounts, Tariff & Insurance"
-      subtitle="NABH FPM.2–4 — payables with 3-way match, double-entry ledger, Tally export, GST reports, tariff, insurance & claim reconciliation"
+      subtitle="NABH FPM.2–4 — payables with 3-way match, vouchers with approval, day book, customer invoicing & receivables, Tally export, GST reports, tariff, insurance & claim reconciliation"
       tabs={[
         {
           key: "invoices",
@@ -144,27 +147,18 @@ export function AccountsPage() {
         },
         { key: "vendors", label: "Vendors", resource: { title: "Vendors", endpoint: "/finance/vendors/", createLabel: "Add vendor", columns: [col("name", "Vendor"), col("gstin", "GSTIN"), col("credit_days", "Credit days"), col("email", "Email"), col("phone", "Phone")], fields: [{ key: "name", label: "Name", required: true }, { key: "gstin", label: "GSTIN" }, { key: "pan", label: "PAN" }, { key: "state_code", label: "GST state code" }, { key: "email", label: "Email (payment advice)" }, { key: "phone", label: "Phone" }, { key: "credit_days", label: "Credit days", type: "number", defaultValue: 30 }, { key: "bank_account", label: "Bank a/c" }, { key: "ifsc", label: "IFSC" }] } },
         { key: "notes", label: "Debit / credit notes", resource: { title: "Supplier debit & credit notes", endpoint: "/finance/supplier-notes/", createLabel: "New note", columns: [col("note_number", "Note"), col("vendor_name", "Vendor"), col("kind", "Kind"), col("amount", "Amount"), col("gst_amount", "GST"), col("reason", "Reason"), col("issued_on", "Date")], fields: [{ key: "vendor", label: "Vendor", type: "fk", source: "/finance/vendors/", required: true }, { key: "invoice", label: "Against invoice", type: "fk", source: "/finance/vendor-invoices/", sourceLabel: "invoice_number" }, { key: "kind", label: "Kind", type: "select", options: opts("debit", "credit"), required: true }, { key: "amount", label: "Amount", type: "number", required: true }, { key: "gst_amount", label: "GST", type: "number" }, { key: "reason", label: "Reason", required: true }] } },
-        {
-          key: "ledger",
-          label: "Journal & Tally",
-          resource: {
-            title: "Journal vouchers (auto-posted)", endpoint: "/finance/journal/", searchable: false,
-            filters: [{ key: "voucher_type", label: "Voucher", type: "select", options: opts("sales", "receipt", "purchase", "payment", "debit_note", "credit_note", "journal") }],
-            columns: [col("entry_date", "Date"), col("voucher_type", "Voucher"), col("voucher_number", "No."), col("party_name", "Party"), col("narration", "Narration"),
-              { key: "lines", label: "Dr / Cr", render: (r) => (r.lines ?? []).map((l: any) => `${l.account}: ${l.debit ? `Dr ${l.debit}` : `Cr ${l.credit}`}`).join(" · ") }, col("exported_to_tally_at", "Tally export")],
-            toolbar: [
-              { label: "Tally vouchers XML", path: "../tally-export/", method: "get", download: "tally-vouchers.xml" },
-              { label: "Tally ledgers XML", path: "../tally-export/?masters=1", method: "get", download: "tally-ledgers.xml" },
-              { label: "Trial balance", path: "../trial-balance/", method: "get" },
-              { label: "GST outward (xlsx)", path: "../gst/?export=xlsx", method: "get", download: "gst-outward.xlsx" },
-              { label: "GST HSN summary (csv)", path: "../gst/?export=csv&section=hsn", method: "get", download: "gst-hsn.csv" },
-              { label: "GST inward / ITC (csv)", path: "../gst/?kind=inward&export=csv", method: "get", download: "gst-inward.csv" },
-            ],
-          },
-        },
+        { key: "ledger", label: "Vouchers & Tally", render: () => <VouchersPanel /> },
+        { key: "day-book", label: "Day book", render: () => <DayBookPanel /> },
+        { key: "customer-invoices", label: "Customer invoices", render: () => <CustomerInvoicesPanel /> },
+        { key: "customer-receipts", label: "Customer receipts", resource: customerReceiptsResource },
+        { key: "customers", label: "Customers", resource: customersResource },
+        { key: "customer-ledger", label: "Customer ledger & ageing", render: () => <CustomerLedgerPanel /> },
+        { key: "recurring", label: "Recurring invoices", render: () => <RecurringInvoicesPanel /> },
+        { key: "accounts-settings", label: "Accounts settings", render: () => <AccountsSettingsPanel /> },
         { key: "bed-charges", label: "Bed charges", render: () => <BedBillingPanel /> },
         { key: "payouts", label: "Doctor payouts", render: () => <DoctorPayoutsPanel /> },
         { key: "payout-rules", label: "Payout rules", resource: payoutRulesResource },
+        { key: "payout-deductions", label: "Payout deductions", resource: payoutDeductionHeadsResource },
         { key: "tariff", label: "Tariff", resource: { title: "Service tariff (rate master)", endpoint: "/finance/tariff/", createLabel: "Add service", columns: [col("code", "Code"), col("name", "Service"), col("department", "Dept"), col("rate", "Rate"), col("category_rates", "Category rates"), col("hsn_sac", "SAC/HSN"), col("gst_rate", "GST %")], fields: [{ key: "code", label: "Code", required: true }, { key: "name", label: "Name", required: true }, { key: "department", label: "Department" }, { key: "rate", label: "Base rate", type: "number", required: true }, { key: "category_rates", label: "Rates by patient category (JSON)", type: "json", placeholder: '{"private": 1500, "insurance": 1800, "corporate": 1350}' }, { key: "hsn_sac", label: "SAC / HSN", defaultValue: "9993" }, { key: "gst_rate", label: "GST %", type: "number", defaultValue: 0 }] } },
         { key: "consultation-fees", label: "Consultation fees", resource: consultationFeesResource },
         { key: "front-desk-rules", label: "Front-desk rules", render: () => <FrontDeskPolicyForm /> },
@@ -288,8 +282,10 @@ export function DiagnosticsSetupPage() {
   return (
     <ModuleHub
       title="Diagnostics — Setup & Integration"
-      subtitle="Report templates, outsourced tests, analyser (HL7) integration, radiology equipment slots and templates"
+      subtitle="Lab tests, lab settings, report templates, outsourced tests, analyser (HL7) integration, radiology equipment slots and templates"
       tabs={[
+        { key: "lab-tests", label: "Lab tests", resource: labTestsResource },
+        { key: "lab-settings", label: "Lab settings", render: () => <LabSettingsPanel /> },
         { key: "lab-tpl", label: "Lab report templates", resource: { title: "Lab report templates", endpoint: "/laboratory/report-templates/", createLabel: "New template", columns: [col("name", "Name"), col("department", "Dept"), col("signatory_designation", "Signatory")], fields: [{ key: "name", label: "Name", required: true }, { key: "department", label: "Department", type: "select", options: opts("hematology", "biochemistry", "microbiology", "serology", "pathology", "other") }, { key: "header_text", label: "Header", type: "textarea" }, { key: "footer_text", label: "Footer / method / interpretation", type: "textarea" }, { key: "signatory_designation", label: "Signatory", defaultValue: "Consultant Pathologist" }] } },
         { key: "outsourced", label: "Outsourced tests", resource: { title: "Tests sent to external labs", endpoint: "/laboratory/outsourced-tests/", createLabel: "Send out test", columns: [col("patient_name", "Patient"), col("test_name", "Test"), col("external_lab", "Lab"), col("external_reference", "Ref"), col("sent_at", "Sent"), { key: "status", label: "Status" }], fields: [{ key: "lab_order", label: "Lab order", type: "fk", source: "/laboratory/orders/", sourceLabel: (r: any) => `${r.order_number} ${r.patient_name}`, required: true }, { key: "lab_test", label: "Test", type: "fk", source: "/laboratory/tests/", required: true }, { key: "external_lab", label: "External lab", required: true }, { key: "expected_by", label: "Expected by", type: "datetime" }], actions: [{ label: "Mark sent", path: "mark_sent/", prompt: [{ key: "external_reference", label: "External ref" }], show: (r) => r.status === "pending" }, { label: "Record result", path: "record_result/", tone: "primary", prompt: [{ key: "result_text", label: "Result", type: "textarea", required: true }], show: (r) => r.status === "sent" }] } },
         { key: "analyzers", label: "Analysers (HL7)", resource: { title: "Lab analysers", endpoint: "/laboratory/analyzers/", createLabel: "Add analyser", description: "Analysers post HL7 v2 ORU^R01 to /api/v1/laboratory/analyzer/results/ with header X-Analyzer-Token.", columns: [col("name", "Analyser"), col("model_name", "Model"), col("protocol", "Protocol"), col("last_message_at", "Last message")], fields: [{ key: "name", label: "Name", required: true }, { key: "model_name", label: "Model" }, { key: "protocol", label: "Protocol", type: "select", options: opts("hl7", "astm"), defaultValue: "hl7" }, { key: "test_code_map", label: "Test code map (JSON)", type: "json", placeholder: '{"GLU": "RBS", "HGB": "HB"}' }], actions: [{ label: "Generate token", path: "rotate_token/", confirm: "Issue a new analyser token?" }] } },

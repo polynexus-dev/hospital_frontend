@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { api, extractApiError } from "../../api/client"
+import { api, extractApiError, triggerBlobDownload } from "../../api/client"
 import { ResourceTable } from "../../components/resource/ResourceTable"
 import { col, opts } from "./fields"
 
@@ -179,18 +179,103 @@ function PayoutPreview() {
   )
 }
 
+const TDS_VIEWS = [
+  { value: "summary", label: "Summary by month" },
+  { value: "consultant", label: "Consultant-wise" },
+  { value: "detail", label: "Statement-wise detail" },
+]
+
+interface TdsReport { columns: string[]; rows: (string | number)[][]; totals: Record<string, string | number> }
+
+/** Sec 194J TDS deducted from consultants — for 26Q and Form 16A. */
+export function ConsultantTdsReport() {
+  const [from, setFrom] = useState(monthStart())
+  const [to, setTo] = useState(monthEnd())
+  const [view, setView] = useState("summary")
+  const [basis, setBasis] = useState("paid")
+  const [data, setData] = useState<TdsReport | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const query = `from=${from}&to=${to}&view=${view}&basis=${basis}`
+  const run = async () => {
+    setError(null)
+    try {
+      setData(await api.get<TdsReport>(`/finance/doctor-payouts/tds-report/?${query}`))
+    } catch (e) {
+      setError(extractApiError(e))
+    }
+  }
+  const exportAs = async (output: "csv" | "xlsx") => {
+    setError(null)
+    try {
+      triggerBlobDownload(await api.getBlob(`/finance/doctor-payouts/tds-report/?${query}&output=${output}`), `consultant-tds-${view}-${from}-to-${to}.${output}`)
+    } catch (e) {
+      setError(extractApiError(e))
+    }
+  }
+  const money = new Set(["Gross", "TDS", "Deductions", "Net paid"])
+  return (
+    <section className="bg-white dark:bg-slate-800 rounded-xl border border-border dark:border-slate-700 p-5 space-y-3">
+      <div>
+        <h2 className="text-lg font-bold">Consultant TDS report</h2>
+        <p className="text-sm text-ink-4">TDS u/s 194J deducted from consultant payouts. “Paid” counts statements by payment date (when TDS is deducted); “Accrued” counts approved and paid statements by period end.</p>
+      </div>
+      <div className="flex flex-wrap gap-3 items-end">
+        <label className="text-xs font-semibold text-ink-3">From<input type="date" className={`${inputCls} mt-1`} value={from} onChange={(e) => setFrom(e.target.value)} /></label>
+        <label className="text-xs font-semibold text-ink-3">To<input type="date" className={`${inputCls} mt-1`} value={to} onChange={(e) => setTo(e.target.value)} /></label>
+        <label className="text-xs font-semibold text-ink-3">View
+          <select className={`${inputCls} mt-1`} value={view} onChange={(e) => { setView(e.target.value); setData(null) }}>
+            {TDS_VIEWS.map((v) => <option key={v.value} value={v.value}>{v.label}</option>)}
+          </select>
+        </label>
+        <label className="text-xs font-semibold text-ink-3">Basis
+          <select className={`${inputCls} mt-1`} value={basis} onChange={(e) => setBasis(e.target.value)}>
+            <option value="paid">Paid</option>
+            <option value="period">Accrued</option>
+          </select>
+        </label>
+        <button onClick={run} className="px-4 py-2 text-sm font-semibold rounded-lg bg-chip-bg dark:bg-slate-700">Show</button>
+        <button onClick={() => exportAs("xlsx")} className="px-4 py-2 text-sm font-semibold rounded-lg border border-border-strong">Excel</button>
+        <button onClick={() => exportAs("csv")} className="px-4 py-2 text-sm font-semibold rounded-lg border border-border-strong">CSV</button>
+      </div>
+      {error && <div className="text-sm text-danger-text">{error}</div>}
+      {data && (data.rows.length ? (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead><tr className="text-xs text-ink-4 uppercase text-left">{data.columns.map((c) => <th key={c} className="py-2 pr-3 whitespace-nowrap">{c}</th>)}</tr></thead>
+            <tbody className="divide-y divide-border dark:divide-slate-700">
+              {data.rows.map((r, i) => (
+                <tr key={i}>{r.map((v, j) => <td key={j} className="py-2 pr-3 whitespace-nowrap">{money.has(data.columns[j]) ? inr(v) : String(v ?? "")}</td>)}</tr>
+              ))}
+              <tr className="font-semibold">
+                {data.columns.map((c, j) => {
+                  const key = { Gross: "gross_payout", TDS: "tds_amount", Deductions: "deductions_total", "Net paid": "net_payable" }[c]
+                  return <td key={j} className="py-2 pr-3 whitespace-nowrap">{key ? inr(data.totals[key]) : j === 0 ? "Total" : ""}</td>
+                })}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      ) : <div className="text-sm text-ink-4">No statements in this period.</div>)}
+    </section>
+  )
+}
+
+const channelOptions = [{ value: "email", label: "Email (PDF attached)" }, { value: "whatsapp", label: "WhatsApp (summary + download link)" }, { value: "email,whatsapp", label: "Email and WhatsApp" }]
+
 export function DoctorPayoutsPanel() {
   return (
     <div className="space-y-6">
       <PayoutPreview />
       <ResourceTable config={{
         title: "Payout statements",
-        description: "Draft → approved → paid. Paying posts the voucher (professional fees, bank, TDS payable) to the journal and the Tally export. A service can only ever be on one live statement; cancelling a statement frees its services for the next run.",
+        description: "Draft → approved → paid. Deduction heads can be added while a statement is a draft. Paying posts the voucher (professional fees, bank, TDS payable, recoveries) to the journal and the Tally export. Approved and paid statements can be sent to the consultant by email or WhatsApp. A service can only ever be on one live statement; cancelling a statement frees its services for the next run.",
         endpoint: "/finance/doctor-payouts/", searchable: false,
         filters: [{ key: "status", label: "Status", type: "select", options: opts("draft", "approved", "paid", "cancelled") }],
         columns: [col("doctor_name", "Doctor"), { key: "period", label: "Period", render: (r) => `${r.period_start} → ${r.period_end}` }, col("line_count", "Services"),
           { key: "gross_payout", label: "Gross", render: (r) => inr(r.gross_payout) }, { key: "tds_amount", label: "TDS", render: (r) => `${inr(r.tds_amount)} (${Number(r.tds_percent)}%)` },
-          { key: "net_payable", label: "Net payable", render: (r) => inr(r.net_payable) }, { key: "status", label: "Status" }, col("payment_reference", "Reference")],
+          { key: "deductions_total", label: "Deductions", render: (r) => (Number(r.deductions_total) ? <span title={(r.deductions || []).map((d: any) => `${d.head_name}: ${inr(d.amount)}`).join("\n")}>{inr(r.deductions_total)}</span> : "—") },
+          { key: "net_payable", label: "Net payable", render: (r) => inr(r.net_payable) }, { key: "status", label: "Status" }, col("payment_reference", "Reference"),
+          { key: "last_sent_at", label: "Sent", render: (r) => (r.last_sent_at ? new Date(r.last_sent_at).toLocaleDateString("en-IN") : "—") }],
         toolbar: [{
           label: "Generate statements", path: "generate/", method: "post", prompt: [
             { key: "period_start", label: "From", type: "date", required: true, defaultValue: monthStart() },
@@ -198,10 +283,30 @@ export function DoctorPayoutsPanel() {
             { key: "doctor", label: "Only this doctor (optional)", type: "fk", source: "/doctors/" },
             { key: "tds_percent", label: "TDS % (Sec 194J)", type: "number", defaultValue: 10 },
           ],
+        }, {
+          label: "Send statements", path: "send-statements/", method: "post", prompt: [
+            { key: "period_start", label: "Statements from", type: "date", required: true, defaultValue: monthStart() },
+            { key: "period_end", label: "To", type: "date", required: true, defaultValue: monthEnd() },
+            { key: "doctor", label: "Only this doctor (optional)", type: "fk", source: "/doctors/" },
+            { key: "channels", label: "Send by", type: "select", options: channelOptions, defaultValue: "email", required: true },
+          ],
         }],
         actions: [
           { label: "Lines", path: "lines/", method: "get" },
           { label: "Excel", path: "lines/?output=xlsx", method: "get", download: "payout-statement.xlsx" },
+          { label: "PDF", path: "statement/", method: "get", download: "payout-statement.pdf" },
+          { label: "Add deduction", path: "add-deduction/", show: (r) => r.status === "draft", prompt: [
+            { key: "head", label: "Deduction head", type: "fk", source: "/finance/payout-deduction-heads/?is_active=true", required: true },
+            { key: "amount", label: "Amount (blank = head's default)", type: "number" },
+            { key: "remarks", label: "Remarks" },
+          ] },
+          { label: "Remove deduction", path: "remove-deduction/", tone: "danger", show: (r) => r.status === "draft" && Number(r.deductions_total) > 0, prompt: [
+            { key: "head", label: "Deduction head (removes the latest one)", type: "fk", source: "/finance/payout-deduction-heads/", required: true },
+          ] },
+          { label: "Send", path: "send/", show: (r) => ["approved", "paid"].includes(r.status), prompt: [
+            { key: "channels", label: "Send by", type: "select", options: channelOptions, defaultValue: "email", required: true },
+          ] },
+          { label: "Sent log", path: "deliveries/", method: "get", show: (r) => ["approved", "paid"].includes(r.status) },
           { label: "Approve", path: "approve/", tone: "primary", confirm: "Approve this statement for payment?", show: (r) => r.status === "draft" },
           { label: "Mark paid", path: "mark-paid/", tone: "primary", show: (r) => r.status === "approved", prompt: [
             { key: "payment_mode", label: "Mode", type: "select", options: opts("neft", "upi", "cheque", "cash"), defaultValue: "neft", required: true },
@@ -211,8 +316,24 @@ export function DoctorPayoutsPanel() {
           { label: "Cancel", path: "cancel/", tone: "danger", confirm: "Cancel this statement? Its services become payable again on the next run.", show: (r) => ["draft", "approved"].includes(r.status) },
         ],
       }} />
+      <ConsultantTdsReport />
     </div>
   )
+}
+
+export const payoutDeductionHeadsResource = {
+  title: "Payout deduction heads",
+  description: "Amounts recovered from a consultant's payout — advance recovery, room rent share, indemnity premium… Add them to a draft statement, or tick “Apply automatically” to put the default amount on every new statement. Each head posts to its ledger when the statement is paid.",
+  endpoint: "/finance/payout-deduction-heads/", createLabel: "Add head",
+  columns: [col("name", "Head"), { key: "default_amount", label: "Default", render: (r: any) => (Number(r.default_amount) ? inr(r.default_amount) : "—") },
+    col("auto_apply", "Automatic"), col("ledger_code", "Ledger"), col("is_active", "Active")],
+  fields: [
+    { key: "name", label: "Name", required: true, placeholder: "e.g. Advance recovery" },
+    { key: "default_amount", label: "Default amount (₹)", type: "number" as const, defaultValue: 0 },
+    { key: "auto_apply", label: "Apply automatically to every new statement", type: "boolean" as const, defaultValue: false },
+    { key: "ledger_code", label: "Ledger code credited", defaultValue: "4200", help: "4200 = Recoveries from consultants" },
+    { key: "is_active", label: "Active", type: "boolean" as const, defaultValue: true },
+  ],
 }
 
 export const payoutRulesResource = {
@@ -222,7 +343,7 @@ export const payoutRulesResource = {
   filters: [{ key: "earned_on", label: "Earned", type: "select" as const, options: opts("billed", "collected") }],
   columns: [col("name", "Rule"), { key: "doctor_name", label: "Doctor", render: (r: any) => r.doctor_name || "Any" }, { key: "tariff_name", label: "Service", render: (r: any) => r.tariff_name || r.service_department || "Any" },
     { key: "patient_category", label: "Category", render: (r: any) => r.patient_category || "Any" },
-    { key: "value", label: "Share", render: (r: any) => (r.basis === "percent" ? `${Number(r.value)}%` : `${inr(r.value)} / unit`) }, col("earned_on", "Earned"), col("is_active", "Active")],
+    { key: "value", label: "Share", render: (r: any) => (r.basis === "percent" ? `${Number(r.value)}%${r.deduct_medicine_cost ? " (net of medicines)" : ""}` : `${inr(r.value)} / unit`) }, col("earned_on", "Earned"), col("is_active", "Active")],
   fields: [
     { key: "name", label: "Name", required: true, placeholder: "e.g. Cardiology consultants — echo" },
     { key: "doctor", label: "Doctor (blank = any)", type: "fk" as const, source: "/doctors/" },
@@ -232,6 +353,7 @@ export const payoutRulesResource = {
     { key: "patient_category", label: "Patient category", type: "select" as const, options: opts("general", "private", "insurance", "corporate") },
     { key: "basis", label: "Basis", type: "select" as const, options: [{ value: "percent", label: "% of net amount" }, { value: "fixed", label: "Fixed ₹ per unit" }], defaultValue: "percent", required: true },
     { key: "value", label: "Value (% or ₹)", type: "number" as const, required: true },
+    { key: "deduct_medicine_cost", label: "Exclude medicine purchase cost (% rules, admission bills)", type: "boolean" as const, defaultValue: false, help: "The share is worked out after taking off what the hospital paid for medicines dispensed during the stay" },
     { key: "earned_on", label: "Earned", type: "select" as const, options: [{ value: "billed", label: "When billed" }, { value: "collected", label: "When the bill is fully paid" }], defaultValue: "billed" },
     { key: "priority", label: "Priority (tie-break)", type: "number" as const, defaultValue: 0 },
     { key: "effective_from", label: "Effective from", type: "date" as const },

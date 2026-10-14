@@ -330,6 +330,7 @@ export interface Doctor {
   is_active: boolean
   smc_registration_number?: string
   degree?: string
+  pan?: string
 }
 
 export interface Slot {

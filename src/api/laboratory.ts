@@ -13,6 +13,9 @@ export interface LabTest {
   unit: string
   price: string
   is_active: boolean
+  formula?: string
+  is_nabl_accredited?: boolean
+  tat_hours?: number | null
 }
 
 export interface LabOrder {
@@ -24,7 +27,66 @@ export interface LabOrder {
   status: LabOrderStatus
   ordered_by: number | null
   ordered_at: string
+  order_number?: string
+  priority?: string
+  department?: string
+  dispatched_at?: string | null
+  dispatch_due_at?: string | null
 }
+
+export interface PlacedLabOrder extends LabOrder {
+  orders?: { id: number; order_number: string; department: string; merged: boolean }[]
+  merged?: boolean
+}
+
+export type WorklistStatus = "pending_collection" | "collected" | "in_process" | "outsourced" | "resulted" | "verified"
+
+export interface WorklistRow {
+  order: number
+  order_number: string
+  patient: number
+  patient_name: string
+  uhid: string
+  priority: string
+  ordered_at: string
+  test: number
+  test_name: string
+  test_code: string
+  department: string
+  status: WorklistStatus
+  result: number | null
+  value: string
+  unit: string
+  flag: LabResultFlag | ""
+  calculated: boolean
+  due_at: string | null
+  overdue: boolean
+}
+
+export interface LabDispatch {
+  id: number
+  channel: string
+  recipient: string
+  sent: boolean
+  error: string
+  automatic: boolean
+  created_at: string
+}
+
+export interface LabSettings {
+  nabl_certificate_number: string
+  nabl_valid_until: string | null
+  nabl_logo: string
+  nabl_active: boolean
+  auto_dispatch: boolean
+  dispatch_channels: string[]
+  dispatch_times: string[]
+  dispatch_delay_minutes: number
+  merge_window_minutes: number
+  split_by_department: boolean
+}
+
+export const LAB_DEPARTMENTS = ["hematology", "biochemistry", "microbiology", "serology", "pathology", "other"]
 
 export interface LabResult {
   id: number
@@ -51,7 +113,32 @@ export function listLabOrders(params: Record<string, string> = {}) {
 }
 
 export function createLabOrder(payload: { patient: number; ordered_tests: number[]; investigation_order?: number }) {
-  return api.post<LabOrder>("/laboratory/orders/", payload)
+  return api.post<PlacedLabOrder>("/laboratory/orders/", payload)
+}
+
+export function getLabOrder(id: number) {
+  return api.get<LabOrder>(`/laboratory/orders/${id}/`)
+}
+
+export function labWorklist(params: Record<string, string> = {}) {
+  const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v)).toString()
+  return api.get<WorklistRow[]>(`/laboratory/orders/worklist/${qs ? `?${qs}` : ""}`)
+}
+
+export function dispatchLabReport(orderId: number, channels: string[]) {
+  return api.post<{ channel: string; recipient: string; sent: boolean; error: string }[]>(`/laboratory/orders/${orderId}/dispatch_report/`, { channels })
+}
+
+export function listLabDispatches(orderId: number) {
+  return api.get<LabDispatch[]>(`/laboratory/orders/${orderId}/dispatches/`)
+}
+
+export function getLabSettings() {
+  return api.get<LabSettings>("/laboratory/settings/")
+}
+
+export function saveLabSettings(payload: Partial<LabSettings>) {
+  return api.put<LabSettings>("/laboratory/settings/", payload)
 }
 
 export function createSampleCollection(payload: { lab_order: number; sample_type: string; barcode: string }) {

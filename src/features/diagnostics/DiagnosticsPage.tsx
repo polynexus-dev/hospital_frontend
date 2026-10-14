@@ -6,9 +6,10 @@ import { Pill } from "../../components/ui/Pill"
 import type { Tone } from "../../components/ui/tone"
 import { LoadingState } from "../../components/ui/QueryStates"
 import { listPatients } from "../../api/patients"
-import { createLabOrder, listLabOrders, listLabTests, type LabOrderStatus } from "../../api/laboratory"
+import { LAB_DEPARTMENTS, createLabOrder, getLabOrder, listLabOrders, listLabTests, type LabOrderStatus } from "../../api/laboratory"
 import { createRadiologyOrder, listRadiologyOrders, listRadiologyProcedures, type RadiologyOrderStatus } from "../../api/radiology"
 import { LabOrderDetailPanel } from "./LabOrderDetailPanel"
+import { LabWorklist } from "./LabWorklist"
 import { RadiologyOrderDetailPanel } from "./RadiologyOrderDetailPanel"
 
 const LAB_STATUS_TONE: Record<LabOrderStatus, Tone> = {
@@ -31,11 +32,14 @@ export function DiagnosticsPage() {
   const [isNewOrderOpen, setIsNewOrderOpen] = useState(false)
   const [selectedLabOrderId, setSelectedLabOrderId] = useState<number | null>(null)
   const [selectedRadOrderId, setSelectedRadOrderId] = useState<number | null>(null)
+  const [labView, setLabView] = useState<"orders" | "worklist">("orders")
+  const [labDept, setLabDept] = useState("")
+  const [notice, setNotice] = useState<string | null>(null)
 
   const patientsQuery = useQuery({ queryKey: ["patients-dropdown"], queryFn: () => listPatients() })
   const labTestsQuery = useQuery({ queryKey: ["lab-tests"], queryFn: () => listLabTests() })
   const proceduresQuery = useQuery({ queryKey: ["radiology-procedures"], queryFn: () => listRadiologyProcedures() })
-  const labOrdersQuery = useQuery({ queryKey: ["lab-orders"], queryFn: () => listLabOrders() })
+  const labOrdersQuery = useQuery({ queryKey: ["lab-orders", labDept], queryFn: () => listLabOrders(labDept ? { department: labDept } : {}) })
   const radOrdersQuery = useQuery({ queryKey: ["radiology-orders"], queryFn: () => listRadiologyOrders() })
 
   const patients = patientsQuery.data?.results ?? []
@@ -47,10 +51,16 @@ export function DiagnosticsPage() {
   const [labDraft, setLabDraft] = useState({ patient: 0, ordered_tests: [] as number[] })
   const newLabOrderMutation = useMutation({
     mutationFn: () => createLabOrder(labDraft),
-    onSuccess: () => {
+    onSuccess: (placed) => {
       setIsNewOrderOpen(false)
       setLabDraft({ patient: 0, ordered_tests: [] })
+      const parts = placed.orders ?? []
+      setNotice(
+        parts.length > 1 ? `Split into ${parts.length} department orders: ${parts.map((p) => `${p.order_number}${p.merged ? " (added to open order)" : ""}`).join(", ")}.`
+          : placed.merged ? `Added to the patient's open order ${placed.order_number}.` : null,
+      )
       queryClient.invalidateQueries({ queryKey: ["lab-orders"] })
+      queryClient.invalidateQueries({ queryKey: ["lab-worklist"] })
     },
   })
 
@@ -68,7 +78,12 @@ export function DiagnosticsPage() {
     setLabDraft((d) => ({ ...d, ordered_tests: d.ordered_tests.includes(id) ? d.ordered_tests.filter((t) => t !== id) : [...d.ordered_tests, id] }))
   }
 
-  const selectedLabOrder = labOrders.find((o) => o.id === selectedLabOrderId) ?? null
+  const selectedLabOrderQuery = useQuery({
+    queryKey: ["lab-order", selectedLabOrderId],
+    queryFn: () => getLabOrder(selectedLabOrderId as number),
+    enabled: selectedLabOrderId !== null && !labOrders.some((o) => o.id === selectedLabOrderId),
+  })
+  const selectedLabOrder = labOrders.find((o) => o.id === selectedLabOrderId) ?? (selectedLabOrderQuery.data?.id === selectedLabOrderId ? selectedLabOrderQuery.data : null) ?? null
   const selectedRadOrder = radOrders.find((o) => o.id === selectedRadOrderId) ?? null
 
   if (labOrdersQuery.isLoading || radOrdersQuery.isLoading) return <LoadingState />
@@ -92,14 +107,38 @@ export function DiagnosticsPage() {
         </button>
       </div>
 
+      {notice && <div className="text-[12.5px] text-success-text bg-success-bg rounded-control px-3 py-2" role="status">{notice}</div>}
+
       {tab === "lab" && (
+        <div className="flex flex-wrap gap-1.5 items-center">
+          <button className={`text-[12px] font-semibold px-2.5 py-1 rounded-control ${labView === "orders" ? "bg-ink text-white" : "bg-surface border border-border-strong"}`} onClick={() => setLabView("orders")}>By order</button>
+          <button className={`text-[12px] font-semibold px-2.5 py-1 rounded-control ${labView === "worklist" ? "bg-ink text-white" : "bg-surface border border-border-strong"}`} onClick={() => setLabView("worklist")}>By investigation</button>
+          {labView === "orders" && (
+            <select aria-label="Department" className="h-8 px-2.5 border border-border-strong rounded-control text-[12.5px] bg-surface" value={labDept} onChange={(e) => setLabDept(e.target.value)}>
+              <option value="">All departments</option>
+              {LAB_DEPARTMENTS.map((d) => <option key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</option>)}
+            </select>
+          )}
+        </div>
+      )}
+
+      {tab === "lab" && labView === "worklist" && <LabWorklist onOpenOrder={setSelectedLabOrderId} />}
+
+      {tab === "lab" && labView === "orders" && (
         <Card padded>
           <CardHeader><Eyebrow>Lab orders</Eyebrow></CardHeader>
           <div className="flex flex-col gap-1.5">
             {labOrders.map((order) => (
-              <button key={order.id} className="flex items-center justify-between text-left px-2.5 py-2 rounded-control hover:bg-page text-[12.5px]" onClick={() => setSelectedLabOrderId(order.id)}>
-                <span>{order.patient_name} · {order.ordered_tests.length} test{order.ordered_tests.length === 1 ? "" : "s"}</span>
-                <Pill tone={LAB_STATUS_TONE[order.status]}>{order.status.replace("_", " ")}</Pill>
+              <button key={order.id} className="flex items-center justify-between gap-2 text-left px-2.5 py-2 rounded-control hover:bg-page text-[12.5px]" onClick={() => setSelectedLabOrderId(order.id)}>
+                <span>
+                  {order.patient_name} · {order.ordered_tests.length} test{order.ordered_tests.length === 1 ? "" : "s"}
+                  {order.order_number && <span className="text-ink-5"> · {order.order_number}</span>}
+                  {order.department && <span className="text-ink-5"> · {order.department}</span>}
+                </span>
+                <span className="flex items-center gap-1.5 shrink-0">
+                  {order.dispatched_at && <span className="text-[11px] text-success-text font-semibold">Sent</span>}
+                  <Pill tone={LAB_STATUS_TONE[order.status]}>{order.status.replace("_", " ")}</Pill>
+                </span>
               </button>
             ))}
             {labOrders.length === 0 && <div className="text-[12.5px] text-ink-4">No lab orders yet.</div>}

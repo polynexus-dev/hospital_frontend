@@ -35,6 +35,7 @@ export interface DoctorInput {
   is_active?: boolean
   smc_registration_number?: string
   degree?: string
+  pan?: string
 }
 
 export function createDoctor(payload: DoctorInput) {
