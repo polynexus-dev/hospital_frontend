@@ -3,6 +3,7 @@ import { addBillItem, createBill, createInsuranceClaim, createPaymentLink, downl
 import { extractApiError } from "../../api/client"
 import { triggerBlobDownload } from "../../api/client"
 import type { Bill, InsuranceClaim, Payment } from "../../types/api"
+import { BillAdjustModal } from "./BillAdjustModal"
 
 
 export function BillingPage() {
@@ -31,6 +32,9 @@ export function BillingPage() {
   const [payAmount, setPayAmount] = useState("")
   const [payMethod, setPayMethod] = useState("cash")
   const [txnId, setTxnId] = useState("")
+
+  // Hold / category / credit note
+  const [billToAdjust, setBillToAdjust] = useState<Bill | null>(null)
 
   // Claim Modal
   const [selectedBillForClaim, setSelectedBillForClaim] = useState<Bill | null>(null)
@@ -238,6 +242,9 @@ export function BillingPage() {
                       >
                         {b.status}
                       </span>
+                      {b.on_hold && (
+                        <span className="ml-1.5 px-2 py-0.5 text-xs font-semibold rounded-full bg-warning-bg text-warning-text" title={b.hold_reason}>On hold</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-right space-x-1">
                       <button
@@ -256,11 +263,15 @@ export function BillingPage() {
                       </button>
                       <button
                         onClick={() => setSelectedBillForAddItem(b)}
+                        disabled={b.on_hold}
+                        title={b.on_hold ? `On hold: ${b.hold_reason}` : undefined}
                         className="px-2 py-1 text-xs font-semibold bg-brand-tint text-brand-dark rounded hover:bg-brand-border"
                       >
                         + Add Item
                       </button>
                       <button
+                        disabled={b.on_hold}
+                        title={b.on_hold ? `On hold: ${b.hold_reason}` : undefined}
                         onClick={() => {
                           setSelectedBillForPay(b)
                           setPayAmount(b.net_amount)
@@ -277,6 +288,12 @@ export function BillingPage() {
                         className="px-2 py-1 text-xs font-semibold bg-accent-tint text-accent-hover rounded hover:bg-accent/25"
                       >
                         + Claim
+                      </button>
+                      <button
+                        onClick={() => setBillToAdjust(b)}
+                        className="px-2 py-1 text-xs font-semibold border border-border-strong rounded hover:bg-page"
+                      >
+                        Hold / credit / category
                       </button>
                     </td>
 
@@ -355,6 +372,8 @@ export function BillingPage() {
           </table>
         </div>
       )}
+
+      {billToAdjust && <BillAdjustModal bill={billToAdjust} onClose={() => setBillToAdjust(null)} onChanged={loadData} />}
 
       {/* New Bill Modal */}
       {showBillModal && (

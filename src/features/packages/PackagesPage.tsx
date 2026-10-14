@@ -4,6 +4,7 @@ import { Card } from "../../components/ui/Card"
 import { Button } from "../../components/ui/Button"
 import { NeutralTag, SuccessTag } from "../../components/ui/Pill"
 import { LoadingState } from "../../components/ui/QueryStates"
+import { CampReportModal } from "./CampReportModal"
 import {
   listCampRegistrations,
   listCampaigns,
@@ -469,6 +470,7 @@ export function PackagesPage() {
   const [showNewCampaign, setShowNewCampaign] = useState(false)
   const [showNewRegistration, setShowNewRegistration] = useState(false)
   const [showNewCorporate, setShowNewCorporate] = useState(false)
+  const [reportFor, setReportFor] = useState<number | null>(null)
 
   const { data: packagesData, isLoading: isPackagesLoading } = useQuery({
     queryKey: ["health-packages"],
@@ -668,6 +670,7 @@ export function PackagesPage() {
                     </td>
                     <td className="px-6 py-4">
                       {c.status === "active" ? <SuccessTag>ACTIVE</SuccessTag> : <NeutralTag>{c.status.toUpperCase()}</NeutralTag>}
+                      <button className="block mt-1 text-xs font-semibold text-brand" onClick={() => setReportFor(c.id)}>Camp report</button>
                     </td>
                   </tr>
                 ))}
@@ -767,6 +770,7 @@ export function PackagesPage() {
       {showNewCorporate && (
         <NewCorporateClientForm onClose={() => setShowNewCorporate(false)} />
       )}
+      {reportFor !== null && <CampReportModal campaignId={reportFor} onClose={() => setReportFor(null)} />}
     </div>
   )
 }

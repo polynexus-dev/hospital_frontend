@@ -1009,6 +1009,7 @@ export interface BillItem {
   quantity: number
   unit_price: string
   total_price: string
+  source?: string
 }
 
 export interface Payment {
@@ -1040,6 +1041,11 @@ export interface Bill {
   net_amount: string
   status: "draft" | "unpaid" | "partially_paid" | "paid" | "cancelled"
   created_at: string
+  bill_number?: string
+  patient_category?: string
+  on_hold?: boolean
+  hold_reason?: string
+  held_at?: string | null
   items?: BillItem[]
   payments?: Payment[]
   insurance_claim?: InsuranceClaim

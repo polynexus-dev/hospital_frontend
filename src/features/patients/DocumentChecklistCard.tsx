@@ -4,6 +4,7 @@ import { Card, Eyebrow } from "../../components/ui/Card"
 import { Button } from "../../components/ui/Button"
 import { api, extractApiError } from "../../api/client"
 import { uploadPatientDocument } from "../../api/patients"
+import { PhoneUploadButton } from "./PhoneUploadButton"
 
 export interface ChecklistItem {
   requirement: number
@@ -96,9 +97,12 @@ export function DocumentChecklistCard({ patientId }: { patientId: number }) {
                   </div>
                 </div>
                 {!item.satisfied && (
-                  <Button size="sm" variant="secondary" disabled={upload.isPending} onClick={() => { setUploadFor(item); fileRef.current?.click() }}>
-                    Upload
-                  </Button>
+                  <div className="flex gap-1.5 shrink-0">
+                    <Button size="sm" variant="secondary" disabled={upload.isPending} onClick={() => { setUploadFor(item); fileRef.current?.click() }}>
+                      Upload
+                    </Button>
+                    <PhoneUploadButton patientId={patientId} requirement={item.requirement} category={item.category} label="From phone" />
+                  </div>
                 )}
               </li>
             ))}
@@ -116,6 +120,7 @@ export function DocumentChecklistCard({ patientId }: { patientId: number }) {
             }}
           />
           {upload.isError && <div className="text-[12px] text-danger-text mt-2">{extractApiError(upload.error)}</div>}
+          <div className="mt-3"><PhoneUploadButton patientId={patientId} label="Upload any document from a phone" /></div>
           {!list.complete && (
             <div className="flex items-center gap-3 mt-3 flex-wrap">
               <Button size="sm" disabled={ask.isPending} onClick={() => ask.mutate()}>Ask the patient to upload</Button>

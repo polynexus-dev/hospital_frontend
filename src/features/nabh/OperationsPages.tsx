@@ -169,7 +169,7 @@ export function AccountsPage() {
           resource: {
             title: "Patient insurance & eligibility", endpoint: "/finance/insurance-policies/", createLabel: "Add policy",
             columns: [col("patient_name", "Patient"), col("insurer", "Insurer"), col("scheme", "Scheme"), col("policy_number", "Policy"), col("sum_insured", "Sum insured"), col("balance_available", "Balance"), col("valid_to", "Valid to"), { key: "eligibility_status", label: "Eligibility" }],
-            fields: [patientField(), { key: "tpa_company", label: "TPA", type: "fk", source: "/tpa/companies/" }, { key: "insurer", label: "Insurer", required: true }, { key: "scheme", label: "Scheme" }, { key: "policy_number", label: "Policy no.", required: true }, { key: "member_id", label: "Member ID" },
+            fields: [patientField(), { key: "tpa_company", label: "TPA", type: "fk", source: "/tpa/companies/?is_active=true" }, { key: "insurer", label: "Insurer", required: true }, { key: "scheme", label: "Scheme" }, { key: "policy_number", label: "Policy no.", required: true }, { key: "member_id", label: "Member ID" },
               { key: "sum_insured", label: "Sum insured", type: "number" }, { key: "valid_from", label: "Valid from", type: "date" }, { key: "valid_to", label: "Valid to", type: "date" }, { key: "coverage_notes", label: "Coverage / room-rent cap / co-pay", type: "textarea" }],
             actions: [{ label: "Verify eligibility", path: "verify_eligibility/", tone: "primary", prompt: [{ key: "status", label: "Result", type: "select", options: opts("eligible", "ineligible") }, { key: "balance_available", label: "Balance available", type: "number" }] }],
           },
