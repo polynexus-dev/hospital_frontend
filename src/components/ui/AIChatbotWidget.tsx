@@ -71,15 +71,17 @@ export function AIChatbotWidget() {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed float-above-bar right-6 z-50">
       {/* Floating Toggle Button */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
+          aria-label="24x7 Hospital Assistant"
           className="flex items-center gap-2.5 bg-brand hover:bg-brand-hover text-white font-semibold px-4 py-3 rounded-full shadow-lg transition-colors"
         >
           <span className="w-2 h-2 rounded-full bg-white/80" />
-          <span className="text-[13px]">24x7 Hospital Assistant</span>
+          <span className="text-[13px] hidden sm:inline">24x7 Hospital Assistant</span>
+          <span className="sm:hidden" aria-hidden="true">💬</span>
         </button>
       )}
 

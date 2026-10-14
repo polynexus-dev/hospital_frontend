@@ -6,7 +6,7 @@ export function showToast(message: string, type: "success" | "error" | "info" = 
   if (!container) {
     container = document.createElement("div")
     container.id = "hospital-toast-container"
-    container.className = "fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"
+    container.className = "fixed float-above-bar-sm right-5 z-50 flex flex-col gap-2 pointer-events-none"
     document.body.appendChild(container)
   }
 

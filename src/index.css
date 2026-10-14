@@ -157,3 +157,23 @@ input[type="range"] {
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
+/* Floating buttons and pop-ups stay above a page's bottom action bar
+   (see src/app/actionBar.ts, which sets --action-bar-h). */
+:root {
+  --action-bar-h: 0px;
+}
+.float-above-bar {
+  bottom: calc(1.5rem + var(--action-bar-h));
+}
+.float-above-bar-sm {
+  bottom: calc(1.25rem + var(--action-bar-h));
+}
+.fab-stack {
+  bottom: calc(5rem + var(--action-bar-h));
+}
+@media (min-width: 640px) {
+  .fab-stack {
+    bottom: calc(1.5rem + var(--action-bar-h));
+  }
+}

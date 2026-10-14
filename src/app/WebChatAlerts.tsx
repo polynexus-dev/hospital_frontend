@@ -127,7 +127,7 @@ export function WebChatAlerts() {
   }
 
   return (
-    <div className="fixed left-4 bottom-4 z-[60] flex flex-col gap-2 w-[320px] max-w-[calc(100vw-32px)]" role="region" aria-label="New website chats">
+    <div className="fixed left-4 float-above-bar-sm z-[60] flex flex-col gap-2 w-[320px] max-w-[calc(100vw-32px)]" role="region" aria-label="New website chats">
       {cards.map((c) => (
         <div key={c.thread} role="alert" className="bg-surface border border-border-strong rounded-xl shadow-xl p-3 text-[13px]">
           <div className="flex items-start justify-between gap-2">

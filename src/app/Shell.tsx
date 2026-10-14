@@ -71,6 +71,8 @@ function NavRow({ item }: { item: (typeof allNav)[number] }) {
 export function Shell() {
   const aiAssistLicensed = useLicensedFeature("ai_assist")
   const location = useLocation()
+  const [isNavOpen, setIsNavOpen] = useState(false)
+  useEffect(() => setIsNavOpen(false), [location.pathname])
   const navigate = useNavigate()
   const { t, i18n } = useTranslation()
   const { user, logout } = useAuthStore()
@@ -353,8 +355,15 @@ export function Shell() {
   }
 
   return (
-    <div data-product={product} className="flex h-screen min-h-[760px] text-ink bg-page">
-      <div data-admin-header={isInSaasMode ? "" : undefined} className={`w-[226px] shrink-0 border-r border-border flex flex-col ${isInSaasMode ? "bg-admin" : "bg-sidebar"}`}>
+    <div data-product={product} className="flex h-dvh text-ink bg-page">
+      {/* Below laptop width the sidebar is a slide-out menu (☰ in the header). */}
+      {isNavOpen && <div className="fixed inset-0 z-40 bg-slate-950/40 lg:hidden" onClick={() => setIsNavOpen(false)} aria-hidden="true" />}
+      <div
+        data-admin-header={isInSaasMode ? "" : undefined}
+        className={`w-[226px] shrink-0 border-r border-border flex flex-col fixed inset-y-0 left-0 z-50 transition-transform duration-200 lg:static lg:translate-x-0 ${
+          isNavOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
+        } ${isInSaasMode ? "bg-admin" : "bg-sidebar"}`}
+      >
         <div className="px-[18px] pt-[18px] pb-[14px] border-b border-border-soft flex items-center gap-[10px]">
           <div
             className={`w-8 h-8 rounded-lg text-white flex items-center justify-center font-bold text-sm shadow-xs shrink-0 ${
@@ -475,6 +484,13 @@ export function Shell() {
             <div className="text-[12px] font-semibold truncate">{user?.first_name || user?.email}</div>
             <div className="text-[10.5px] text-ink-6 truncate">{user?.role_name ?? ""}</div>
           </div>
+          <button
+            type="button"
+            onClick={() => i18n.changeLanguage(i18n.language === "mr" ? "en" : "mr")}
+            className="md:hidden text-[11px] font-semibold px-1.5 py-0.5 border border-border rounded text-ink-3"
+          >
+            {i18n.language === "mr" ? "EN" : "मराठी"}
+          </button>
           <button onClick={handleLogout} title={t("common.logout")} className="text-ink-5 hover:text-danger-text text-[11px]">
             ⏻
           </button>
@@ -482,8 +498,16 @@ export function Shell() {
       </div>
 
       <div className="flex-1 min-w-0 flex flex-col">
-        <div data-admin-header={isAdminScreen ? "" : undefined} className="h-14 shrink-0 bg-surface border-b border-border flex items-center gap-4 px-5">
-          <div className="text-[15px] font-semibold shrink-0 whitespace-nowrap">
+        <div data-admin-header={isAdminScreen ? "" : undefined} className="h-14 shrink-0 bg-surface border-b border-border flex items-center gap-2 sm:gap-4 px-3 sm:px-5 min-w-0">
+          <button
+            type="button"
+            onClick={() => setIsNavOpen(true)}
+            aria-label="Open menu"
+            className="lg:hidden h-8 w-8 shrink-0 flex items-center justify-center rounded-control border border-border text-ink-3 hover:bg-page"
+          >
+            ☰
+          </button>
+          <div className="text-[15px] font-semibold shrink-0 whitespace-nowrap truncate max-w-[45vw] sm:max-w-none">
             {active ? t(active.labelKey) : ""}
           </div>
           {isAdminScreen && (
@@ -494,12 +518,12 @@ export function Shell() {
               Admin
             </span>
           )}
-          <div className="text-[12px] text-ink-4 border-l border-border pl-4 min-w-0 overflow-hidden whitespace-nowrap text-ellipsis">
+          <div className="hidden xl:block text-[12px] text-ink-4 border-l border-border pl-4 min-w-0 overflow-hidden whitespace-nowrap text-ellipsis">
             {active ? t(active.subKey) : ""}
           </div>
           <div className="flex-1 min-w-2" />
           
-          <div className="flex items-center gap-2 h-8 px-2.5 border border-border-strong rounded-control flex-none w-[250px] min-w-0 text-ink text-[13px] bg-page focus-within:border-brand transition-colors">
+          <div className="hidden lg:flex items-center gap-2 h-8 px-2.5 border border-border-strong rounded-control flex-none w-[160px] xl:w-[250px] min-w-0 text-ink text-[13px] bg-page focus-within:border-brand transition-colors">
             <span className="text-xs text-ink-4 shrink-0">🔍</span>
             <input
               type="text"
@@ -552,7 +576,7 @@ export function Shell() {
                 ) : (
                   <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
                 )}
-                <span className="max-w-[160px] truncate">
+                <span className="max-w-[70px] xl:max-w-[160px] truncate">
                   {!user?.hospital
                     ? "Select Hospital Branch"
                     : user.hospital_name || availableBranches.find((b) => b.id === user.hospital)?.name || "Active Branch"}
@@ -598,30 +622,32 @@ export function Shell() {
           <button
             onClick={toggleCompactMode}
             title="Toggle Compact View Density (Alt+C)"
-            className={`h-8 px-2.5 border rounded-control text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+            className={`h-8 px-2.5 border rounded-control text-xs font-semibold hidden md:flex items-center gap-1.5 transition-colors ${
               isCompactMode
                 ? "bg-brand-tint text-brand border-brand shadow-xs"
                 : "border-border text-ink-3 hover:bg-page"
             }`}
           >
             <span>📐</span>
-            <span>{isCompactMode ? "Compact" : "Standard"}</span>
+            <span className="hidden 2xl:inline">{isCompactMode ? "Compact" : "Standard"}</span>
           </button>
 
           {/* Keyboard Shortcuts Helper Button */}
           <button
             onClick={() => setIsShortcutsOpen(true)}
             title="View Keyboard Shortcuts (Alt+H or ?)"
-            className="h-8 px-2.5 border border-border text-ink-3 hover:bg-page hover:text-ink rounded-control text-xs font-semibold flex items-center gap-1.5 transition-colors"
+            className="h-8 px-2.5 border border-border text-ink-3 hover:bg-page hover:text-ink rounded-control text-xs font-semibold hidden md:flex items-center gap-1.5 transition-colors"
           >
             <span>⌨️</span>
-            <span>Shortcuts</span>
+            <span className="hidden 2xl:inline">Shortcuts</span>
           </button>
 
           {/* WebRTC SIP Phone Browser Status */}
-          <WebRTCHeaderBadge />
+          <div className="hidden lg:block">
+            <WebRTCHeaderBadge />
+          </div>
 
-          <div className="flex flex-none min-w-[86px] border border-border rounded-control overflow-hidden">
+          <div className="hidden md:flex flex-none min-w-[86px] border border-border rounded-control overflow-hidden">
             <button
               onClick={() => i18n.changeLanguage("en")}
               className={`flex-none whitespace-nowrap px-2.5 h-8 flex items-center text-[12px] font-semibold ${
@@ -647,7 +673,8 @@ export function Shell() {
               className="flex items-center gap-2 h-8 px-3 rounded-control text-xs font-bold text-warning-text bg-warning-bg dark:bg-amber-950/40 border border-warning/30 dark:border-amber-800 animate-pulse"
             >
               <span className="w-2 h-2 rounded-full bg-warning" />
-              <span>• {pendingCallbacks.count} calls waiting</span>
+              <span className="hidden xl:inline">• {pendingCallbacks.count} calls waiting</span>
+              <span className="xl:hidden">{pendingCallbacks.count}</span>
             </button>
           )}
 
@@ -695,14 +722,14 @@ export function Shell() {
         <LicenseBanner />
         <WebChatAlerts />
         {/* Dynamic Outlet with Compact Mode Class */}
-        <div className={`flex-1 overflow-y-auto p-5 ${isCompactMode ? "text-[12px] p-3 gap-2" : ""}`}>
+        <div className={`flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-3 sm:p-5 ${isCompactMode ? "text-[12px] p-3 gap-2" : ""}`}>
           <Outlet />
         </div>
       </div>
 
       {/* Global Quick Action Speed-Dial FAB Button — only shown in Hospital Ops mode */}
       {!isInSaasMode && (
-        <div className="fixed bottom-20 right-6 sm:bottom-6 sm:right-72 z-40 flex flex-col items-end gap-2">
+        <div className="fixed fab-stack right-6 sm:right-72 z-40 flex flex-col items-end gap-2">
           {isFabOpen && (
             <div className="bg-surface border border-border rounded-xl shadow-2xl p-2 flex flex-col gap-1.5 min-w-[200px] animate-in fade-in slide-in-from-bottom-2">
               <div className="px-2 py-1 text-[10px] uppercase font-bold text-ink-5 border-b border-border">
