@@ -164,16 +164,12 @@ input[type="range"] {
   --action-bar-h: 0px;
 }
 .float-above-bar {
-  bottom: calc(1.5rem + var(--action-bar-h));
+  bottom: calc(1.5rem + var(--action-bar-h, 0px));
 }
 .float-above-bar-sm {
-  bottom: calc(1.25rem + var(--action-bar-h));
+  bottom: calc(1.25rem + var(--action-bar-h, 0px));
 }
 .fab-stack {
-  bottom: calc(5rem + var(--action-bar-h));
+  bottom: calc(5rem + var(--action-bar-h, 0px));
 }
-@media (min-width: 640px) {
-  .fab-stack {
-    bottom: calc(1.5rem + var(--action-bar-h));
-  }
-}
+

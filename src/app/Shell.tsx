@@ -27,6 +27,7 @@ import { logoutRequest, switchHospital } from "../api/auth"
 import { listHospitals } from "../api/hospitals"
 import { AIChatbotWidget } from "../components/ui/AIChatbotWidget"
 import { useIdleTimeout } from "../hooks/useIdleTimeout"
+import { useDraggable } from "../hooks/useDraggable"
 import { WebRTCHeaderBadge } from "../telephony/SIPStatusDot"
 import { IncomingCallReceiver } from "../telephony/IncomingCallReceiver"
 
@@ -86,6 +87,7 @@ export function Shell() {
   const [isEnteringHospital, setIsEnteringHospital] = useState(false)
   const [isCompactMode, setIsCompactMode] = useState(() => localStorage.getItem("crm_compact") === "true")
   const [isFabOpen, setIsFabOpen] = useState(false)
+  const quickActionsDrag = useDraggable({ storageKey: "hms_quick_actions_fab_pos_v2" })
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
 
@@ -744,66 +746,174 @@ export function Shell() {
         <IdleLock />
         <LicenseBanner />
         <WebChatAlerts />
-        {/* Dynamic Outlet with Compact Mode Class and Bottom Padding to clear FAB buttons */}
-        <div className={`flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-3 sm:p-5 pb-20 sm:pb-24 ${isCompactMode ? "text-[12px] p-3 gap-2 pb-20 sm:pb-24" : ""}`}>
+        {/* Dynamic Outlet with Compact Mode Class */}
+        <div className={`flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-3 sm:p-5 ${isCompactMode ? "text-[12px] p-3 gap-2" : ""}`}>
           <Outlet />
         </div>
       </div>
 
-      {/* Global Quick Action Speed-Dial FAB Button — only shown in Hospital Ops mode */}
+      {/* Global Quick Action Speed-Dial — Stacked in bottom-right corner or dragged position */}
       {!isInSaasMode && (
-        <div className="fixed fab-stack right-6 sm:right-72 z-40 flex flex-col items-end gap-2">
+        <>
           {isFabOpen && (
-            <div className="bg-surface border border-border rounded-xl shadow-2xl p-2 flex flex-col gap-1.5 min-w-[200px] animate-in fade-in slide-in-from-bottom-2">
-              <div className="px-2 py-1 text-[10px] uppercase font-bold text-ink-5 border-b border-border">
-                Quick Actions (Hotkeys)
-              </div>
-              <button
-                onClick={() => {
-                  setIsFabOpen(false)
-                  navigate("/patients")
-                  showToast("Opening Patient Directory...")
-                }}
-                className="flex items-center gap-2.5 text-xs font-semibold text-ink hover:bg-brand-tint hover:text-brand px-2.5 py-1.5 rounded-lg text-left transition-colors"
-              >
-                <span>👤</span>
-                <span>New Patient (Alt+N)</span>
-              </button>
-              <button
-                onClick={() => {
-                  setIsFabOpen(false)
-                  navigate("/appointments")
-                  showToast("Opening OPD Appointments...")
-                }}
-                className="flex items-center gap-2.5 text-xs font-semibold text-ink hover:bg-brand-tint hover:text-brand px-2.5 py-1.5 rounded-lg text-left transition-colors"
-              >
-                <span>📅</span>
-                <span>Book Appointment (Alt+A)</span>
-              </button>
-              <button
-                onClick={() => {
-                  setIsFabOpen(false)
-                  navigate("/patients/1")
-                  showToast("Opening OPD e-Prescription (e-Rx)...")
-                }}
-                className="flex items-center gap-2.5 text-xs font-semibold text-ink hover:bg-brand-tint hover:text-brand px-2.5 py-1.5 rounded-lg text-left transition-colors"
-              >
-                <span>💊</span>
-                <span>Issue e-Prescription (e-Rx)</span>
-              </button>
-            </div>
+            <div
+              className="fixed inset-0 z-40 bg-black/10 backdrop-blur-[1px]"
+              onClick={() => setIsFabOpen(false)}
+              aria-hidden="true"
+            />
           )}
-
-          <button
-            onClick={() => setIsFabOpen(!isFabOpen)}
-            aria-expanded={isFabOpen}
-            aria-label="Quick Actions"
-            className="h-11 px-4 bg-brand hover:bg-brand-strong text-white rounded-full font-bold text-xs shadow-xl flex items-center gap-2 transition-transform hover:scale-105 active:scale-95"
+          <div
+            style={
+              quickActionsDrag.position
+                ? {
+                    left: `${quickActionsDrag.position.x}px`,
+                    top: `${quickActionsDrag.position.y}px`,
+                    right: "auto",
+                    bottom: "auto",
+                  }
+                : undefined
+            }
+            className={
+              quickActionsDrag.position
+                ? "fixed z-40 flex flex-col items-end touch-none select-none"
+                : "fixed fab-stack right-6 z-40 flex flex-col items-end touch-none select-none"
+            }
           >
-            <span className="text-base">{isFabOpen ? "✕" : "⚡"}</span>
-            <span>Quick Actions</span>
-          </button>
-        </div>
+            {/* Quick Actions Flyout Menu — Expands upwards smoothly (or downwards if near top) */}
+            {isFabOpen && (
+              <div
+                role="dialog"
+                aria-modal="true"
+                aria-label="Quick Actions"
+                className={`absolute ${
+                  quickActionsDrag.position && quickActionsDrag.position.y < 260
+                    ? "top-full mt-2"
+                    : "bottom-full mb-2"
+                } ${
+                  quickActionsDrag.position && quickActionsDrag.position.x < 260
+                    ? "left-0"
+                    : "right-0"
+                } bg-surface/98 backdrop-blur-md border border-border-strong rounded-2xl shadow-2xl p-3.5 w-64 flex flex-col gap-2 animate-in fade-in slide-in-from-bottom-2 duration-200 z-50`}
+              >
+                <div className="flex items-center justify-between pb-2 border-b border-border">
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-ink">
+                    <span className="text-amber-500 text-sm">⚡</span>
+                    <span>Quick Actions</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {quickActionsDrag.position && (
+                      <button
+                        onClick={quickActionsDrag.resetPosition}
+                        title="Reset to default corner position"
+                        className="text-ink-4 hover:text-ink text-xs px-1.5 py-0.5 rounded hover:bg-page transition-colors cursor-pointer"
+                        aria-label="Reset position"
+                      >
+                        ↺ Reset
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setIsFabOpen(false)}
+                      className="w-6 h-6 rounded-full flex items-center justify-center text-ink-4 hover:text-ink hover:bg-page transition-colors text-xs cursor-pointer"
+                      aria-label="Close"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <button
+                    onClick={() => {
+                      setIsFabOpen(false)
+                      navigate("/patients")
+                      showToast("Opening Patient Directory...")
+                    }}
+                    className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-ink hover:bg-brand-tint hover:text-brand border border-transparent hover:border-brand/20 transition-all text-left cursor-pointer group"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="text-base">👤</span>
+                      <span>New Patient</span>
+                    </span>
+                    <kbd className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-page border border-border text-ink-4 group-hover:border-brand/30 group-hover:text-brand font-bold">Alt+N</kbd>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setIsFabOpen(false)
+                      navigate("/appointments")
+                      showToast("Opening OPD Appointments...")
+                    }}
+                    className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-ink hover:bg-brand-tint hover:text-brand border border-transparent hover:border-brand/20 transition-all text-left cursor-pointer group"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="text-base">📅</span>
+                      <span>Book Appointment</span>
+                    </span>
+                    <kbd className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-page border border-border text-ink-4 group-hover:border-brand/30 group-hover:text-brand font-bold">Alt+A</kbd>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setIsFabOpen(false)
+                      navigate("/patients/1")
+                      showToast("Opening OPD e-Prescription (e-Rx)...")
+                    }}
+                    className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-ink hover:bg-brand-tint hover:text-brand border border-transparent hover:border-brand/20 transition-all text-left cursor-pointer group"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="text-base">💊</span>
+                      <span>Issue e-Prescription</span>
+                    </span>
+                    <span className="text-[10px] text-ink-4 font-mono font-medium">e-Rx</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setIsFabOpen(false)
+                      setIsShortcutsOpen(true)
+                    }}
+                    className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-ink hover:bg-page border border-transparent hover:border-border transition-all text-left cursor-pointer group"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="text-base">⌨️</span>
+                      <span>Shortcuts Guide</span>
+                    </span>
+                    <kbd className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-page border border-border text-ink-4 font-bold">Alt+H</kbd>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <button
+              onPointerDown={quickActionsDrag.onPointerDown}
+              onClick={(e) => {
+                if (quickActionsDrag.hasMovedRef.current) {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  return
+                }
+                setIsFabOpen(!isFabOpen)
+              }}
+              aria-expanded={isFabOpen}
+              aria-label="Quick Actions"
+              title="Quick Actions & Hotkeys (Alt+N, Alt+A, Alt+H) • Drag to move anywhere"
+              className={`relative group w-12 h-12 rounded-full bg-slate-900/95 hover:bg-slate-900 text-white shadow-xl hover:shadow-2xl flex items-center justify-center transition-transform duration-150 active:scale-95 border border-slate-700/80 ${
+                quickActionsDrag.isDragging ? "cursor-grabbing scale-110 shadow-2xl ring-2 ring-amber-400" : "cursor-grab hover:scale-110"
+              }`}
+            >
+              <span className="text-amber-400 text-base font-bold group-hover:scale-110 transition-transform pointer-events-none">
+                {isFabOpen ? "✕" : "⚡"}
+              </span>
+              <span className="sr-only">Quick Actions</span>
+
+              {/* Hover Tooltip */}
+              <span className="absolute right-full mr-3 px-2.5 py-1 bg-slate-900/95 text-white text-xs font-semibold rounded-lg shadow-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none border border-slate-700/80 flex items-center gap-1.5">
+                <span>Quick Actions</span>
+                <span className="text-[10px] text-slate-400 font-normal">• Drag to move</span>
+              </span>
+            </button>
+          </div>
+        </>
       )}
 
       {/* Keyboard Shortcuts Cheat Sheet Modal */}

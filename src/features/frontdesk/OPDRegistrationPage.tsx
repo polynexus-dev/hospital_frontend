@@ -9,7 +9,6 @@ import {
   advanceBalance, checkDuplicates, listApprovers, listDistricts, listOptions, listStates, lookupPincode, previewVisit, printDocument, registerVisit,
 } from "../../api/frontdesk"
 import type { DuplicateMatch, PinLookup, RegistrationResult } from "../../api/frontdesk"
-import { useBottomActionBar } from "../../app/actionBar"
 
 // OPD front desk (NABH AAC.1/AAC.2, FPM.3): find or register the patient,
 // open the visit, bill and take payment in one save. Keyboard-first:
@@ -52,8 +51,6 @@ async function openPdf(path: string) {
 }
 
 export function OPDRegistrationPage() {
-  const saveBar = useRef<HTMLDivElement>(null)
-  useBottomActionBar(saveBar)
   const [params] = useSearchParams()
   const [registerOnly, setRegisterOnly] = useState(params.get("mode") === "register")
   const [existing, setExisting] = useState<Row | null>(null)
@@ -487,10 +484,10 @@ export function OPDRegistrationPage() {
         </div>
       </Card>}
 
-      {/* Save bar: part of the page (so it fits whatever the sidebar does), stuck to the bottom of the screen */}
-      <div ref={saveBar} className="sticky bottom-0 -mx-5 -mb-5 mt-auto z-10 bg-surface border-t border-border px-5 py-2.5 flex flex-wrap items-center justify-between gap-3">
+      {/* Save bar: positioned naturally after billing so content never goes behind it */}
+      <div className="mt-3 bg-surface border border-border rounded-xl px-5 py-3.5 flex flex-wrap items-center justify-between gap-3 shadow-xs">
         <div className="text-[12.5px] text-danger-text min-h-[1em]">{error}</div>
-        <div className="flex flex-wrap justify-end gap-2 pr-0 sm:pr-72 lg:pr-80">
+        <div className="flex flex-wrap justify-end gap-2.5">
           {error.startsWith("This person is already registered") && <Button variant="secondary" disabled={saving} onClick={() => save(true)}>Save as a different person</Button>}
           <Button variant="secondary" onClick={reset}>Clear (Ctrl+N)</Button>
           <Button variant="action" disabled={saving || (!registerOnly && !visit.doctor) || (registerOnly && !!existing) || (!existing && (!patient.first_name || !patient.mobile))} onClick={() => save()}>

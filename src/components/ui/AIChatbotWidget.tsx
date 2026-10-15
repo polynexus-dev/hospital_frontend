@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { useMutation } from "@tanstack/react-query"
 import { postInteractiveChatAction } from "../../api/communications"
 import { useAuthStore } from "../../store/auth"
+import { useDraggable } from "../../hooks/useDraggable"
 
 interface ChatMessage {
   sender: "user" | "ai"
@@ -70,33 +71,105 @@ export function AIChatbotWidget() {
     triggerAction("free_text", text, { message: text })
   }
 
+  const { position, isDragging, hasMovedRef, onPointerDown, resetPosition } = useDraggable({
+    storageKey: "hms_ai_assistant_fab_pos_v2",
+  })
+
+  // Compute adaptive window coordinates when in custom dragged position
+  const getWindowStyle = () => {
+    if (!position || typeof window === "undefined") return undefined
+    const winW = typeof window !== "undefined" ? window.innerWidth : 1024
+    const winH = typeof window !== "undefined" ? window.innerHeight : 768
+    const drawerW = winW < 640 ? 320 : 384
+    const drawerH = 520
+
+    let left = position.x
+    if (left + drawerW > winW - 16) {
+      left = Math.max(16, winW - drawerW - 16)
+    }
+
+    let top = position.y - drawerH - 8
+    if (top < 16) {
+      top = Math.min(winH - drawerH - 16, position.y + 56)
+    }
+
+    return {
+      left: `${Math.round(left)}px`,
+      top: `${Math.round(top)}px`,
+      right: "auto",
+      bottom: "auto",
+    }
+  }
+
   return (
-    <div className="fixed float-above-bar right-6 z-50">
-      {/* Floating Toggle Button */}
+    <div
+      style={position ? (isOpen ? getWindowStyle() : { left: `${position.x}px`, top: `${position.y}px`, right: "auto", bottom: "auto" }) : undefined}
+      className={position ? "fixed z-50 touch-none select-none" : "fixed float-above-bar right-6 z-50 touch-none select-none"}
+    >
+      {/* Floating Round Icon Button - Draggable & Flexible */}
       {!isOpen && (
         <button
-          onClick={() => setIsOpen(true)}
+          onPointerDown={onPointerDown}
+          onClick={(e) => {
+            if (hasMovedRef.current) {
+              e.preventDefault()
+              e.stopPropagation()
+              return
+            }
+            setIsOpen(true)
+          }}
           aria-label="24x7 Hospital Assistant"
-          className="flex items-center gap-2.5 bg-brand hover:bg-brand-hover text-white font-semibold px-4 py-3 rounded-full shadow-lg transition-colors"
+          title="24x7 Hospital Assistant (AI Chatbot) • Drag to move anywhere"
+          className={`relative group w-12 h-12 rounded-full bg-gradient-to-tr from-brand-dark via-brand to-accent text-white shadow-xl hover:shadow-2xl hover:shadow-accent/30 flex items-center justify-center transition-transform duration-150 active:scale-95 border border-white/20 ${
+            isDragging ? "cursor-grabbing scale-110 shadow-2xl ring-2 ring-accent" : "cursor-grab hover:scale-110"
+          }`}
         >
-          <span className="w-2 h-2 rounded-full bg-white/80" />
-          <span className="text-[13px] hidden sm:inline">24x7 Hospital Assistant</span>
-          <span className="sm:hidden" aria-hidden="true">💬</span>
+          {/* Live pulsing indicator badge */}
+          <span className="absolute top-0 right-0 w-3 h-3 rounded-full bg-emerald-400 ring-2 ring-white animate-pulse pointer-events-none" />
+
+          {/* AI / Chat Sparkle Icon */}
+          <svg className="w-6 h-6 text-white group-hover:rotate-6 transition-transform pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+          </svg>
+
+          {/* Text for screen readers & test matchers */}
+          <span className="sr-only">24x7 Hospital Assistant</span>
+
+          {/* Hover Tooltip */}
+          <span className="absolute right-full mr-3 px-2.5 py-1 bg-slate-900/95 text-white text-xs font-semibold rounded-lg shadow-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none border border-slate-700/80 flex items-center gap-1.5">
+            <span>24x7 AI Assistant</span>
+            <span className="text-[10px] text-slate-400 font-normal">• Drag to move</span>
+          </span>
         </button>
       )}
 
-      {/* Floating Chat Drawer Window */}
+      {/* Floating Chat Drawer Window - Expands fluidly from icon position */}
       {isOpen && (
-        <div className="w-80 sm:w-96 bg-surface border border-border rounded-card shadow-lg flex flex-col h-[520px] overflow-hidden">
+        <div className="w-80 sm:w-96 bg-surface border border-border rounded-2xl shadow-2xl flex flex-col h-[520px] max-h-[85vh] overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-200">
           {/* Header */}
-          <div className="bg-brand text-white p-3.5 flex justify-between items-center">
-            <div>
-              <h3 className="font-semibold text-[13px]">24x7 Hospital Assistant</h3>
-              <span className="text-[10.5px] opacity-80 block">Instant OPD booking & information</span>
+          <div className="bg-brand text-white p-3.5 flex justify-between items-center shadow-xs">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse" />
+              <div>
+                <h3 className="font-semibold text-[13px]">24x7 Hospital Assistant</h3>
+                <span className="text-[10.5px] opacity-80 block">Instant OPD booking & information</span>
+              </div>
             </div>
-            <button onClick={() => setIsOpen(false)} className="text-white hover:opacity-75 text-lg px-2">
-              ✕
-            </button>
+            <div className="flex items-center gap-1">
+              {position && (
+                <button
+                  onClick={resetPosition}
+                  title="Reset to default bottom-right position"
+                  className="text-white/70 hover:text-white text-xs px-2 py-1 rounded hover:bg-white/10 transition-colors cursor-pointer"
+                  aria-label="Reset position"
+                >
+                  ↺ Reset
+                </button>
+              )}
+              <button onClick={() => setIsOpen(false)} className="text-white hover:opacity-75 text-lg px-2 cursor-pointer" aria-label="Close Assistant">
+                ✕
+              </button>
+            </div>
           </div>
 
           {/* Language Selector */}
