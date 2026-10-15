@@ -19,7 +19,7 @@ const TITLES = ["", "Mr", "Mrs", "Ms", "Master", "Baby", "Dr"]
 const PAYERS = [
   ["self", "Self-pay"], ["corporate", "Corporate"], ["tpa", "TPA"], ["insurance", "Insurance"], ["scheme", "Govt scheme"], ["health_camp", "Health camp"],
 ] as const
-const RATE_CATEGORIES = ["general", "private", "insurance", "corporate"]
+const RATE_CATEGORIES = ["general", "private", "insurance", "corporate", "staff"]
 const PAY_MODES = [["cash", "Cash"], ["upi", "UPI"], ["card", "Card"], ["bank_transfer", "Bank transfer"], ["cheque", "Cheque"], ["advance", "From advance"]] as const
 
 const input = "w-full h-8 px-2.5 border border-border-strong rounded-control text-[13px] bg-surface focus:border-brand outline-none"

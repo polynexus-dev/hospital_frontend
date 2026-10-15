@@ -4,6 +4,7 @@ import { extractApiError } from "../../api/client"
 import { triggerBlobDownload } from "../../api/client"
 import type { Bill, InsuranceClaim, Payment } from "../../types/api"
 import { BillAdjustModal } from "./BillAdjustModal"
+import { PayerSplitModal } from "./PayerSplitModal"
 
 
 export function BillingPage() {
@@ -35,6 +36,7 @@ export function BillingPage() {
 
   // Hold / category / credit note
   const [billToAdjust, setBillToAdjust] = useState<Bill | null>(null)
+  const [billForSplit, setBillForSplit] = useState<number | null>(null)
 
   // Claim Modal
   const [selectedBillForClaim, setSelectedBillForClaim] = useState<Bill | null>(null)
@@ -229,7 +231,10 @@ export function BillingPage() {
                     <td className="px-4 py-3 text-ink-2 dark:text-slate-300">
                       {b.patient_detail ? `${b.patient_detail.first_name} ${b.patient_detail.last_name}` : `Patient #${b.patient}`}
                     </td>
-                    <td className="px-4 py-3 font-bold text-ink dark:text-slate-100">₹{b.net_amount}</td>
+                    <td className="px-4 py-3 font-bold text-ink dark:text-slate-100">
+                      ₹{b.net_amount}
+                      {Number(b.non_payable_amount ?? 0) > 0 && <div className="text-xs font-medium text-warning-text">Patient ₹{b.non_payable_amount} not covered</div>}
+                    </td>
                     <td className="px-4 py-3">
                       <span
                         className={`px-2 py-0.5 text-xs font-semibold rounded-full capitalize ${
@@ -283,12 +288,20 @@ export function BillingPage() {
                       <button
                         onClick={() => {
                           setSelectedBillForClaim(b)
-                          setClaimAmt(b.net_amount)
+                          setClaimAmt(String((Number(b.net_amount) - Number(b.non_payable_amount ?? 0)).toFixed(2)))
                         }}
                         className="px-2 py-1 text-xs font-semibold bg-accent-tint text-accent-hover rounded hover:bg-accent/25"
                       >
                         + Claim
                       </button>
+                      {["insurance", "corporate"].includes(b.patient_category ?? "") && (
+                        <button
+                          onClick={() => setBillForSplit(b.id)}
+                          className="px-2 py-1 text-xs font-semibold border border-border-strong rounded hover:bg-page"
+                        >
+                          Insurer split
+                        </button>
+                      )}
                       <button
                         onClick={() => setBillToAdjust(b)}
                         className="px-2 py-1 text-xs font-semibold border border-border-strong rounded hover:bg-page"
@@ -373,6 +386,7 @@ export function BillingPage() {
         </div>
       )}
 
+      {billForSplit !== null && <PayerSplitModal billId={billForSplit} onClose={() => setBillForSplit(null)} />}
       {billToAdjust && <BillAdjustModal bill={billToAdjust} onClose={() => setBillToAdjust(null)} onChanged={loadData} />}
 
       {/* New Bill Modal */}

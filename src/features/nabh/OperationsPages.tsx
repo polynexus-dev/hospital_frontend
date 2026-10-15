@@ -4,6 +4,9 @@ import { BedBoard } from "./BedBoard"
 import { LabSettingsPanel, labTestsResource } from "../diagnostics/LabSetup"
 import { AccountsSettingsPanel, DayBookPanel, VouchersPanel } from "../finance/Books"
 import { CustomerInvoicesPanel, CustomerLedgerPanel, RecurringInvoicesPanel, customerReceiptsResource, customersResource } from "../finance/Receivables"
+import { OTTariffPanel } from "../finance/OTTariffPanel"
+import { CartPanel, ContractMisPanel, POTrackingPanel, RateContractsPanel } from "../inventory/ProcurementExtras"
+import { DependentsPanel, LeaveBalancesPanel, leaveTypesResource, overtimeResource } from "../hr/HRLeaveExtras"
 import { BedBillingPanel, DoctorPayoutsPanel, payoutDeductionHeadsResource, payoutRulesResource } from "./BillingExtras"
 import { consultationFeesResource, discountApprovalsResource, FrontDeskPolicyForm } from "../frontdesk/FrontDeskSettings"
 
@@ -159,7 +162,8 @@ export function AccountsPage() {
         { key: "payouts", label: "Doctor payouts", render: () => <DoctorPayoutsPanel /> },
         { key: "payout-rules", label: "Payout rules", resource: payoutRulesResource },
         { key: "payout-deductions", label: "Payout deductions", resource: payoutDeductionHeadsResource },
-        { key: "tariff", label: "Tariff", resource: { title: "Service tariff (rate master)", endpoint: "/finance/tariff/", createLabel: "Add service", columns: [col("code", "Code"), col("name", "Service"), col("department", "Dept"), col("rate", "Rate"), col("category_rates", "Category rates"), col("hsn_sac", "SAC/HSN"), col("gst_rate", "GST %")], fields: [{ key: "code", label: "Code", required: true }, { key: "name", label: "Name", required: true }, { key: "department", label: "Department" }, { key: "rate", label: "Base rate", type: "number", required: true }, { key: "category_rates", label: "Rates by patient category (JSON)", type: "json", placeholder: '{"private": 1500, "insurance": 1800, "corporate": 1350}' }, { key: "hsn_sac", label: "SAC / HSN", defaultValue: "9993" }, { key: "gst_rate", label: "GST %", type: "number", defaultValue: 0 }] } },
+        { key: "tariff", label: "Tariff", resource: { title: "Service tariff (rate master)", endpoint: "/finance/tariff/", createLabel: "Add service", columns: [col("code", "Code"), col("name", "Service"), col("department", "Dept"), col("rate", "Rate"), col("category_rates", "Category rates"), col("hsn_sac", "SAC/HSN"), col("gst_rate", "GST %")], fields: [{ key: "code", label: "Code", required: true }, { key: "name", label: "Name", required: true }, { key: "department", label: "Department" }, { key: "rate", label: "Base rate", type: "number", required: true }, { key: "category_rates", label: "Rates by patient category (JSON)", type: "json", placeholder: '{"private": 1500, "insurance": 1800, "corporate": 1350, "staff": 750}' }, { key: "hsn_sac", label: "SAC / HSN", defaultValue: "9993" }, { key: "gst_rate", label: "GST %", type: "number", defaultValue: 0 }] } },
+        { key: "ot-tariff", label: "OT tariff", render: () => <OTTariffPanel /> },
         { key: "consultation-fees", label: "Consultation fees", resource: consultationFeesResource },
         { key: "front-desk-rules", label: "Front-desk rules", render: () => <FrontDeskPolicyForm /> },
         { key: "discount-approvals", label: "Discount approvals", resource: discountApprovalsResource },
@@ -194,8 +198,12 @@ export function ProcurementPage() {
   return (
     <ModuleHub
       title="Procurement & Stores"
-      subtitle="NABH FPM.1 — approval rules, indents, goods receipt with discrepancy flags, inter-store transfers, supplier scorecards"
+      subtitle="NABH FPM.1 — approval rules, indents, goods receipt with discrepancy flags, inter-store transfers, supplier scorecards; rate contracts, PO sanction & delivery tracking, cart"
       tabs={[
+        { key: "cart", label: "Cart", render: () => <CartPanel /> },
+        { key: "po-tracking", label: "PO sanction & delivery", render: () => <POTrackingPanel /> },
+        { key: "rate-contracts", label: "Rate contracts", render: () => <RateContractsPanel /> },
+        { key: "contract-mis", label: "Contract MIS", render: () => <ContractMisPanel /> },
         {
           key: "grn",
           label: "Goods receipt",
@@ -237,13 +245,17 @@ export function HRNabhPage() {
           label: "Payroll",
           resource: {
             title: "Payroll runs", endpoint: "/hr/payroll-runs/", createLabel: "Run payroll",
-            description: "Paid days = month days − absences − unpaid leave. Approval must be by someone other than the preparer.",
+            description: "Paid days = month days − absences − unpaid leave. Approved overtime is paid and counts towards the ESI wage (ESI eligibility is judged on the regular gross). Approval must be by someone other than the preparer.",
             columns: [col("month", "Month"), col("total_gross", "Gross"), col("total_net", "Net"), { key: "status", label: "Status" }],
             fields: [{ key: "month", label: "Month (any date in it)", type: "date", required: true }],
             actions: [{ label: "Payslips", path: "payslips/", method: "get" }, { label: "Approve", path: "approve/", tone: "primary", show: (r) => r.status === "draft" }, { label: "Share payslips", path: "share_payslips/", show: (r) => r.status !== "draft" }],
           },
         },
-        { key: "salary", label: "Salary structures", resource: { title: "Salary structures", endpoint: "/hr/salary-structures/", createLabel: "Set salary", columns: [col("employee_code", "Code"), col("employee_name", "Employee"), col("basic", "Basic"), col("hra", "HRA"), col("special_allowance", "Special"), col("monthly_tds", "TDS")], fields: [emp, { key: "basic", label: "Basic", type: "number", required: true }, { key: "hra", label: "HRA", type: "number" }, { key: "special_allowance", label: "Special allowance", type: "number" }, { key: "other_allowances", label: "Other allowances", type: "number" }, { key: "pf_applicable", label: "PF applicable", type: "boolean", defaultValue: true }, { key: "esi_applicable", label: "ESI applicable", type: "boolean", defaultValue: true }, { key: "professional_tax", label: "Monthly PT", type: "number", defaultValue: 200 }, { key: "monthly_tds", label: "Monthly TDS", type: "number" }] } },
+        { key: "salary", label: "Salary structures", resource: { title: "Salary structures", endpoint: "/hr/salary-structures/", createLabel: "Set salary", columns: [col("employee_code", "Code"), col("employee_name", "Employee"), col("basic", "Basic"), col("hra", "HRA"), col("special_allowance", "Special"), col("monthly_tds", "TDS")], fields: [emp, { key: "basic", label: "Basic", type: "number", required: true }, { key: "hra", label: "HRA", type: "number" }, { key: "special_allowance", label: "Special allowance", type: "number" }, { key: "other_allowances", label: "Other allowances", type: "number" }, { key: "pf_applicable", label: "PF applicable", type: "boolean", defaultValue: true }, { key: "esi_applicable", label: "ESI applicable", type: "boolean", defaultValue: true }, { key: "professional_tax", label: "Monthly PT", type: "number", defaultValue: 200 }, { key: "monthly_tds", label: "Monthly TDS", type: "number" }, { key: "overtime_hourly_rate", label: "Overtime rate / hour (0 = twice the ordinary rate)", type: "number", defaultValue: 0 }] } },
+        { key: "leave-types", label: "Leave types", resource: leaveTypesResource },
+        { key: "leave-balances", label: "Leave balances", render: () => <LeaveBalancesPanel /> },
+        { key: "overtime", label: "Overtime", resource: overtimeResource },
+        { key: "dependents", label: "Staff & dependents", render: () => <DependentsPanel /> },
         { key: "roster", label: "Roster publishing", resource: { title: "Published rosters", endpoint: "/hr/roster-publications/", createLabel: "Publish roster", description: "Duty rules are checked on publish; each rostered staff member is notified of their shifts.", columns: [col("period_start", "From"), col("period_end", "To"), col("published_at", "Published"), col("notified_count", "Staff notified"), { key: "violations", label: "Rule violations", render: (r) => (r.violations ?? []).length || "None" }], fields: [{ key: "department", label: "Department (blank = all)", type: "fk", source: "/departments/" }, { key: "period_start", label: "From", type: "date", required: true }, { key: "period_end", label: "To", type: "date", required: true }, { key: "override", label: "Publish despite rule violations", type: "boolean" }] } },
         { key: "duty", label: "Duty rules", resource: { title: "Duty rules", endpoint: "/hr/duty-rules/", createLabel: "Add rule", columns: [col("name", "Rule"), col("applies_to_designation", "Applies to"), col("max_shifts_per_week", "Max shifts/wk"), col("max_consecutive_nights", "Max nights"), col("min_rest_hours_between_shifts", "Min rest h")], fields: [{ key: "name", label: "Name", required: true }, { key: "applies_to_designation", label: "Designation contains" }, { key: "max_shifts_per_week", label: "Max shifts / week", type: "number", defaultValue: 6 }, { key: "max_consecutive_nights", label: "Max consecutive nights", type: "number", defaultValue: 3 }, { key: "min_rest_hours_between_shifts", label: "Min rest hours", type: "number", defaultValue: 12 }] } },
         { key: "appraisals", label: "Appraisals", resource: { title: "Performance appraisals", endpoint: "/hr/appraisals/", createLabel: "New appraisal", columns: [col("employee_name", "Employee"), col("period", "Period"), col("overall_rating", "Overall"), col("employee_acknowledged_at", "Acknowledged")], fields: [emp, { key: "period", label: "Period", required: true, placeholder: "FY2025-26" }, { key: "ratings", label: "Ratings 1–5 (JSON)", type: "json", required: true, placeholder: '{"clinical": 4, "communication": 5, "teamwork": 4}' }, { key: "strengths", label: "Strengths", type: "textarea" }, { key: "improvement_areas", label: "Improvement areas", type: "textarea" }, { key: "goals", label: "Goals", type: "textarea" }], actions: [{ label: "Acknowledge", path: "acknowledge/", show: (r) => !r.employee_acknowledged_at }] } },

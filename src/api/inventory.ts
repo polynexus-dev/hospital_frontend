@@ -32,11 +32,11 @@ export function listPurchaseOrders(params: Record<string, string> = {}) {
   return api.get<Paginated<PurchaseOrder>>(`/inventory/purchase-orders/${qs ? `?${qs}` : ""}`)
 }
 
-export function createPurchaseOrder(data: { po_number: string; vendor_name: string }) {
+export function createPurchaseOrder(data: { po_number: string; vendor_name?: string; vendor?: number | null }) {
   return api.post<PurchaseOrder>("/inventory/purchase-orders/", data)
 }
 
-export function addPOItem(poId: number, data: { item: number; ordered_quantity: number; unit_cost: number }) {
+export function addPOItem(poId: number, data: { item: number; ordered_quantity: number; unit_cost?: number | string; rate_override_reason?: string }) {
   return api.post<POItem>(`/inventory/purchase-orders/${poId}/add-item/`, data)
 }
 

@@ -797,6 +797,8 @@ export interface OperativeNote {
   finalized_by: number | null
 }
 
+export type AnaesthesiaRow = Record<string, string | number | null>
+
 export interface AnaesthesiaRecord {
   id: number
   ot_schedule: number
@@ -805,6 +807,18 @@ export interface AnaesthesiaRecord {
   anaesthetist: number
   finalized_at: string | null
   finalized_by: number | null
+  asa_grade?: string
+  airway_device?: string
+  induction_at?: string | null
+  reversal_at?: string | null
+  vitals?: AnaesthesiaRow[]
+  drugs?: AnaesthesiaRow[]
+  fluids?: AnaesthesiaRow[]
+  estimated_blood_loss_ml?: number | null
+  urine_output_ml?: number | null
+  complications?: string
+  recovery_aldrete_score?: number | null
+  shifted_to?: string
 }
 
 export interface ConsumableUsage {
@@ -828,9 +842,14 @@ export interface OTSchedule {
   operation_theatre_room: string
   surgeon: number
   surgeon_detail?: Doctor
+  assistant_surgeon?: number | null
+  assistant_surgeon_name?: string
   anaesthetist: number | null
   scheduled_start: string
   scheduled_end: string
+  status?: "scheduled" | "in_progress" | "completed" | "cancelled"
+  cancellation_reason?: string
+  charges_posted_at?: string | null
   operative_note?: OperativeNote
   anaesthesia_record?: AnaesthesiaRecord
   consumable_usages?: ConsumableUsage[]
@@ -848,6 +867,54 @@ export interface SurgeryRequest {
   schedule?: OTSchedule
   preop_checklist?: PreOpChecklist
   created_at: string
+  priority?: string
+  surgery_grade?: number | null
+  surgery_grade_name?: string
+  encounter_type?: "" | OTEncounter
+  encounter?: OTEncounter
+}
+
+export type OTEncounter = "opd" | "ipd" | "emergency"
+
+export interface OTBoardCase {
+  id: number
+  surgery_request: number
+  room: string
+  status: string
+  scheduled_start: string
+  scheduled_end: string
+  actual_start: string | null
+  actual_end: string | null
+  patient_name: string
+  patient_uhid: string | null
+  procedure: string
+  encounter: OTEncounter
+  encounter_overridden: boolean
+  priority: string
+  grade: string
+  surgeon: string
+  assistant: string
+  anaesthetist: string
+  cancellation_reason: string
+  charges_posted_at: string | null
+}
+
+export interface OTBoard {
+  date: string
+  rooms: string[]
+  cases: OTBoardCase[]
+  counts: Record<OTEncounter, number>
+}
+
+export interface OTCharges {
+  grade: string | null
+  room_category: string
+  problem: string
+  lines: { component: string; description: string; amount: string | number; doctor: number | null }[]
+  total: string | number
+  bill: number | null
+  bill_number: string | null
+  bill_net_amount: string | number | null
 }
 
 // --- ICU ---
@@ -988,8 +1055,13 @@ export interface LeaveRequest {
   employee: number
   employee_code: string
   leave_type: string
+  leave_type_master?: number | null
   start_date: string
   end_date: string
+  half_day?: boolean
+  days?: string
+  reason?: string
+  short_balance?: boolean
   status: "pending" | "approved" | "rejected"
   approved_by: number | null
   approved_by_name?: string
@@ -1046,6 +1118,7 @@ export interface Bill {
   on_hold?: boolean
   hold_reason?: string
   held_at?: string | null
+  non_payable_amount?: string
   items?: BillItem[]
   payments?: Payment[]
   insurance_claim?: InsuranceClaim
@@ -1084,14 +1157,25 @@ export interface POItem {
   ordered_quantity: number
   received_quantity: number
   unit_cost: string
+  contract_line?: number | null
+  contract_number?: string
+  contract_rate?: string | null
+  rate_override_reason?: string
+  deliveries?: { due_date: string; quantity: number }[]
 }
 
 export interface PurchaseOrder {
   id: number
   po_number: string
+  vendor?: number | null
   vendor_name: string
   status: "draft" | "submitted" | "received" | "cancelled"
   ordered_at: string
+  expected_delivery?: string | null
+  approved_by?: number | null
+  approved_by_name?: string
+  approved_at?: string | null
+  total_value?: number | string
   po_items?: POItem[]
 }
 

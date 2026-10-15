@@ -10,6 +10,7 @@ export interface TPACompany {
   email: string
   claim_submission_email: string
   avg_tat_days: number
+  nhcx_participant_code?: string
   is_active: boolean
   created_at: string
 }
@@ -27,6 +28,9 @@ export interface PreAuthRequest {
   checklist: Record<string, boolean>
   submitted_at: string
   approved_at?: string
+  open_queries?: number
+  diagnosis?: string
+  procedure_name?: string
 }
 
 export function listTPACompanies() {

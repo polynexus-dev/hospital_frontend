@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react"
 import { addPOItem, createItem, createItemCategory, createPurchaseOrder, createStockLevel, listItemCategories, listItems, listPurchaseOrders, listStockLevels, listStockTransactions, recordStockTransaction } from "../../api/inventory"
 import type { Item, ItemCategory, PurchaseOrder, StockLevel, StockTransaction } from "../../types/api"
+import { api, extractApiError } from "../../api/client"
+import { FieldInput } from "../../components/resource/ResourceTable"
 
 export function InventoryPage() {
   const [activeTab, setActiveTab] = useState<"items" | "stock" | "po" | "transactions">("items")
@@ -39,6 +41,8 @@ export function InventoryPage() {
 
   // Add Item to PO Modal
   const [selectedPo, setSelectedPo] = useState<PurchaseOrder | null>(null)
+  const [overrideReason, setOverrideReason] = useState("")
+  const [contract, setContract] = useState<{ contract: string | null; rate?: string } | null>(null)
   const [poItemId, setPoItemId] = useState("")
   const [poQty, setPoQty] = useState("")
   const [poCost, setPoCost] = useState("")
@@ -133,15 +137,23 @@ export function InventoryPage() {
   const handleCreatePO = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      await createPurchaseOrder({ po_number: poNo, vendor_name: vendor })
+      await createPurchaseOrder({ po_number: poNo, vendor: vendor ? Number(vendor) : null })
       setShowPoModal(false)
       setPoNo("")
       setVendor("")
       loadData()
     } catch (err: any) {
-      alert("Failed to create PO: " + (err.response?.data?.detail || err.message))
+      alert("Failed to create PO: " + extractApiError(err))
     }
   }
+
+  // PRC-1: the vendor's rate-contract rate for the chosen item.
+  useEffect(() => {
+    setContract(null)
+    if (!selectedPo?.vendor || !poItemId) return
+    api.get<{ contract: string | null; rate?: string }>(`/inventory/rate-contracts/rate/?vendor=${selectedPo.vendor}&item=${poItemId}`).then(setContract).catch(() => setContract(null))
+  }, [selectedPo, poItemId])
+  const aboveContract = !!(contract?.rate && poCost && Number(poCost) > Number(contract.rate))
 
   const handleAddPoItem = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -150,14 +162,16 @@ export function InventoryPage() {
       await addPOItem(selectedPo.id, {
         item: Number(poItemId),
         ordered_quantity: Number(poQty),
-        unit_cost: Number(poCost),
+        ...(poCost ? { unit_cost: poCost } : {}),
+        ...(overrideReason ? { rate_override_reason: overrideReason } : {}),
       })
       setSelectedPo(null)
       setPoQty("")
       setPoCost("")
+      setOverrideReason("")
       loadData()
     } catch (err: any) {
-      alert("Failed to add PO item: " + (err.response?.data?.detail || err.message))
+      alert("Failed to add PO item: " + extractApiError(err))
     }
   }
 
@@ -630,15 +644,9 @@ export function InventoryPage() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Vendor Name</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. MedSurge Pharma Ltd"
-                  value={vendor}
-                  onChange={(e) => setVendor(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border rounded-lg dark:bg-slate-900 dark:border-slate-700"
-                />
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Vendor</label>
+                <FieldInput field={{ key: "vendor", label: "Vendor", type: "fk", source: "/finance/vendors/?is_active=true", required: true }} value={vendor} onChange={(v) => setVendor(v ? String(v) : "")} />
+                <p className="text-xs text-ink-4 mt-1">Lines take this vendor's rate-contract rate where there is one.</p>
               </div>
               <div className="flex justify-end gap-2">
                 <button type="button" onClick={() => setShowPoModal(false)} className="px-4 py-2 text-sm text-ink-4">
@@ -690,13 +698,26 @@ export function InventoryPage() {
                   <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Unit Cost (₹)</label>
                   <input
                     type="number"
-                    required
+                    step="0.01"
+                    required={!contract?.rate}
+                    placeholder={contract?.rate ? `Contract ₹${contract.rate}` : ""}
                     value={poCost}
                     onChange={(e) => setPoCost(e.target.value)}
                     className="w-full px-3 py-2 text-sm border rounded-lg dark:bg-slate-900 dark:border-slate-700"
                   />
                 </div>
               </div>
+              {contract?.rate ? (
+                <p className="text-xs text-ink-3">Rate contract {contract.contract}: ₹{contract.rate}. Leave the cost blank to use it.</p>
+              ) : poItemId ? (
+                <p className="text-xs text-ink-4">No rate contract with this vendor for the item.</p>
+              ) : null}
+              {aboveContract && (
+                <div>
+                  <label className="block text-xs font-medium text-warning-text mb-1" htmlFor="rate-override">Above the contract rate — reason</label>
+                  <input id="rate-override" required value={overrideReason} onChange={(e) => setOverrideReason(e.target.value)} className="w-full px-3 py-2 text-sm border rounded-lg dark:bg-slate-900 dark:border-slate-700" />
+                </div>
+              )}
               <div className="flex justify-end gap-2">
                 <button type="button" onClick={() => setSelectedPo(null)} className="px-4 py-2 text-sm text-ink-4">
                   Cancel

@@ -41,9 +41,12 @@ export function listLeaveRequests() {
 
 export function createLeaveRequest(data: {
   employee: number
-  leave_type: string
+  leave_type?: string
+  leave_type_master?: number
   start_date: string
   end_date: string
+  half_day?: boolean
+  reason?: string
 }) {
   return api.post<LeaveRequest>("/hr/leave-requests/", data)
 }

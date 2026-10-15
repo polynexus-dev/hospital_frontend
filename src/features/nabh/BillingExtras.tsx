@@ -350,7 +350,7 @@ export const payoutRulesResource = {
     { key: "doctor_department", label: "Doctor's department (blank = any)", type: "fk" as const, source: "/departments/" },
     { key: "tariff", label: "Service (blank = any)", type: "fk" as const, source: "/finance/tariff/", sourceLabel: (r: any) => `${r.code} — ${r.name}` },
     { key: "service_department", label: "Service department (tariff department, blank = any)" },
-    { key: "patient_category", label: "Patient category", type: "select" as const, options: opts("general", "private", "insurance", "corporate") },
+    { key: "patient_category", label: "Patient category", type: "select" as const, options: opts("general", "private", "insurance", "corporate", "staff") },
     { key: "basis", label: "Basis", type: "select" as const, options: [{ value: "percent", label: "% of net amount" }, { value: "fixed", label: "Fixed ₹ per unit" }], defaultValue: "percent", required: true },
     { key: "value", label: "Value (% or ₹)", type: "number" as const, required: true },
     { key: "deduct_medicine_cost", label: "Exclude medicine purchase cost (% rules, admission bills)", type: "boolean" as const, defaultValue: false, help: "The share is worked out after taking off what the hospital paid for medicines dispensed during the stay" },

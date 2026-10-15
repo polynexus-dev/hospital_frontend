@@ -22,6 +22,7 @@ import { triggerBlobDownload } from "../../api/client"
 import type { AppointmentStatus, Channel, ConsentOptOut, Patient } from "../../types/api"
 import { useAuthStore } from "../../store/auth"
 import { PatientHeaderCards } from "../clinical/PatientHeaderCards"
+import { StaffRateTag } from "../hr/StaffRateTag"
 import { PatientHistoryCard } from "../clinical/PatientHistoryCard"
 
 
@@ -831,6 +832,7 @@ export function PatientDetailPage() {
                 </div>
                 {patient.is_active ? <SuccessTag>Active patient</SuccessTag> : <NeutralTag>Inactive</NeutralTag>}
                 <NeutralTag>{(patient.preferred_language || "en").toUpperCase()}</NeutralTag>
+                <StaffRateTag patientId={patient.id} />
               </div>
               <div className="text-[12.5px] text-ink-4 mt-1">
                 MRN #{patient.id} · Registered {new Date(patient.created_at).toLocaleDateString()}

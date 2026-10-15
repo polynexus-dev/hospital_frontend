@@ -6,6 +6,9 @@ import { NeutralTag, SuccessTag } from "../../components/ui/Pill"
 import { LoadingState } from "../../components/ui/QueryStates"
 import { listPreAuthRequests, listTPACompanies, listClaims, updateClaim } from "../../api/tpa"
 import type { Claim } from "../../api/tpa"
+import { api, extractApiError } from "../../api/client"
+import { CaseThreadModal, InsuranceInbox, MailboxCard, NHCXSetupCard, NonPayablePanel, PreAuthFormModal } from "./InsuranceExtras"
+import type { CaseRef } from "./InsuranceExtras"
 
 const INR = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })
 
@@ -67,7 +70,20 @@ function SettleClaimRow({ claim }: { claim: Claim }) {
 }
 
 export function TPAPage() {
-  const [activeTab, setActiveTab] = useState<"desk" | "claims" | "directory">("desk")
+  const [activeTab, setActiveTab] = useState<"inbox" | "desk" | "claims" | "directory" | "non_payable" | "nhcx">("inbox")
+  const [thread, setThread] = useState<CaseRef | null>(null)
+  const [formFor, setFormFor] = useState<number | null>(null)
+  const queryClient = useQueryClient()
+  const setNhcxCode = async (id: number, current: string) => {
+    const code = window.prompt("NHCX participant code for this insurer / TPA", current)
+    if (code === null) return
+    try {
+      await api.patch(`/tpa/companies/${id}/`, { nhcx_participant_code: code.trim() })
+      queryClient.invalidateQueries({ queryKey: ["tpa-companies"] })
+    } catch (e) {
+      alert(extractApiError(e))
+    }
+  }
 
   const { data: claimsData, isLoading: isClaimsLoading } = useQuery({
     queryKey: ["preauth-claims"],
@@ -116,9 +132,12 @@ export function TPAPage() {
       {/* Tabs */}
       <div className="flex border-b border-border dark:border-slate-800 gap-6">
         {[
+          { key: "inbox", label: "Insurance Inbox" },
           { key: "desk", label: "Pre-Auth Claims Desk" },
           { key: "claims", label: "Settlement Tracker" },
           { key: "directory", label: "Insurer & TPA Directory" },
+          { key: "non_payable", label: "Non-payable Items" },
+          { key: "nhcx", label: "Mailbox & NHCX" },
         ].map((tab) => (
           <button
             key={tab.key}
@@ -133,6 +152,12 @@ export function TPAPage() {
           </button>
         ))}
       </div>
+
+      {activeTab === "inbox" && <InsuranceInbox />}
+      {activeTab === "non_payable" && <NonPayablePanel />}
+      {activeTab === "nhcx" && <div className="space-y-6"><MailboxCard /><NHCXSetupCard /></div>}
+      {thread && <CaseThreadModal target={thread} onClose={() => { setThread(null); queryClient.invalidateQueries({ queryKey: ["preauth-claims"] }); queryClient.invalidateQueries({ queryKey: ["tpa-claims"] }) }} />}
+      {formFor !== null && <PreAuthFormModal preauthId={formFor} onClose={() => setFormFor(null)} onSaved={() => queryClient.invalidateQueries({ queryKey: ["preauth-claims"] })} />}
 
       {/* TAB 1: CLAIMS DESK */}
       {activeTab === "desk" && (
@@ -149,6 +174,7 @@ export function TPAPage() {
                   <th className="px-6 py-3 font-semibold">Claimed / Approved</th>
                   <th className="px-6 py-3 font-semibold">Checklist</th>
                   <th className="px-6 py-3 font-semibold">Status</th>
+                  <th className="px-6 py-3 font-semibold">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border dark:divide-slate-800">
@@ -171,7 +197,14 @@ export function TPAPage() {
                         <span className="text-ink-5">Pending</span>
                       )}
                     </td>
-                    <td className="px-6 py-4">{getStatusBadge(c.status)}</td>
+                    <td className="px-6 py-4">
+                      {getStatusBadge(c.status)}
+                      {(c.open_queries ?? 0) > 0 && <span className="block mt-1 text-xs font-semibold text-warning-text">{c.open_queries} open quer{c.open_queries === 1 ? "y" : "ies"}</span>}
+                    </td>
+                    <td className="px-6 py-4 space-y-1">
+                      <button onClick={() => setFormFor(c.id)} className="block text-[11.5px] font-semibold text-brand hover:underline">Pre-auth form / NHCX</button>
+                      <button onClick={() => setThread({ type: "pre_auth", id: c.id, label: `Pre-auth #${c.id} · ${c.patient_name} · ${c.tpa_name}` })} className="block text-[11.5px] font-semibold text-brand hover:underline">Correspondence</button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -213,8 +246,9 @@ export function TPAPage() {
                       {INR.format(Number(c.outstanding_amount))}
                     </td>
                     <td className="px-6 py-4"><ClaimStatusBadge status={c.status} /></td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 space-y-1">
                       {c.status !== "settled" && c.status !== "rejected" && <SettleClaimRow claim={c} />}
+                      <button onClick={() => setThread({ type: "claim", id: c.id, label: `${c.claim_number || `Claim #${c.id}`} · ${c.patient_name} · ${c.tpa_name}` })} className="block text-[11.5px] font-semibold text-brand hover:underline">Correspondence</button>
                     </td>
                   </tr>
                 ))}
@@ -249,6 +283,10 @@ export function TPAPage() {
                   <p>Contact Officer: <span className="font-semibold text-ink-2 dark:text-slate-200">{tpa.contact_person || "desk"}</span></p>
                   <p>Desk Phone: <span className="font-mono text-ink-2 dark:text-slate-200">{tpa.phone}</span></p>
                   <p>Pre-Auth Email: <span className="font-mono text-success dark:text-emerald-400">{tpa.claim_submission_email || tpa.email}</span></p>
+                  <p>
+                    NHCX code: <span className="font-mono text-ink-2 dark:text-slate-200">{tpa.nhcx_participant_code || "not set"}</span>{" "}
+                    <button onClick={() => setNhcxCode(tpa.id, tpa.nhcx_participant_code ?? "")} className="font-semibold text-brand hover:underline">Edit</button>
+                  </p>
                 </div>
               </Card>
             ))

@@ -32,6 +32,11 @@ export interface DispenseRecord {
   quantity: number
   dispensed_by: number | null
   dispensed_at: string
+  patient?: number | null
+  bill?: number | null
+  bill_number?: string
+  amount?: string | null
+  billing_note?: string
 }
 
 export interface StockAdjustment {
@@ -59,8 +64,12 @@ export function listDispenseRecords(params: Record<string, string> = {}) {
   return api.get<Paginated<DispenseRecord>>(`/pharmacy/dispense-records/${qs ? `?${qs}` : ""}`)
 }
 
-export function dispenseMedicine(payload: { batch: number; quantity: number; prescription?: number }) {
+export function dispenseMedicine(payload: { batch: number; quantity: number; prescription?: number; patient?: number | null; bill?: boolean; no_charge_reason?: string }) {
   return api.post<DispenseRecord>("/pharmacy/dispense-records/", payload)
+}
+
+export function billDispense(id: number) {
+  return api.post<DispenseRecord>(`/pharmacy/dispense-records/${id}/bill/`, {})
 }
 
 export function createStockAdjustment(payload: { batch: number; adjustment_type: string; quantity_delta: number; reason?: string }) {

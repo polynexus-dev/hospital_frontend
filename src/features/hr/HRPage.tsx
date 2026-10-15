@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react"
-import { approveLeaveRequest, createAttendance, createEmployee, createLeaveRequest, createShift, linkEmployeeUser, listAttendance, listEmployees, listLeaveRequests, listShifts, rejectLeaveRequest } from "../../api/hr"
+import { approveLeaveRequest, createAttendance, createEmployee, createShift, linkEmployeeUser, listAttendance, listEmployees, listLeaveRequests, listShifts, rejectLeaveRequest } from "../../api/hr"
 import type { Attendance, Employee, LeaveRequest, Shift } from "../../types/api"
+import { LeaveApplyModal } from "./LeaveApplyModal"
 
 export function HRPage() {
   const [activeTab, setActiveTab] = useState<"employees" | "attendance" | "leaves" | "shifts">("employees")
@@ -27,10 +28,6 @@ export function HRPage() {
 
   // Leave Modal
   const [showLeaveModal, setShowLeaveModal] = useState(false)
-  const [leaveEmpId, setLeaveEmpId] = useState("")
-  const [leaveType, setLeaveType] = useState("Casual Leave")
-  const [startDate, setStartDate] = useState("")
-  const [endDate, setEndDate] = useState("")
 
   // Shift Modal
   const [showShiftModal, setShowShiftModal] = useState(false)
@@ -103,22 +100,6 @@ export function HRPage() {
       loadData()
     } catch (err: any) {
       alert("Failed to record attendance: " + (err.response?.data?.detail || err.message))
-    }
-  }
-
-  const handleCreateLeave = async (e: React.FormEvent) => {
-    e.preventDefault()
-    try {
-      await createLeaveRequest({
-        employee: Number(leaveEmpId),
-        leave_type: leaveType,
-        start_date: startDate,
-        end_date: endDate,
-      })
-      setShowLeaveModal(false)
-      loadData()
-    } catch (err: any) {
-      alert("Failed to apply leave: " + (err.response?.data?.detail || err.message))
     }
   }
 
@@ -330,6 +311,7 @@ export function HRPage() {
                   <th className="px-4 py-3">Employee</th>
                   <th className="px-4 py-3">Leave Type</th>
                   <th className="px-4 py-3">Dates</th>
+                  <th className="px-4 py-3">Days</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
@@ -337,7 +319,7 @@ export function HRPage() {
               <tbody className="divide-y divide-border dark:divide-slate-700">
                 {leaves.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-ink-4">
+                    <td colSpan={6} className="px-4 py-8 text-center text-ink-4">
                       No leave requests.
                     </td>
                   </tr>
@@ -345,9 +327,16 @@ export function HRPage() {
                   leaves.map((l) => (
                     <tr key={l.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
                       <td className="px-4 py-3 font-medium text-ink dark:text-slate-100">{l.employee_code}</td>
-                      <td className="px-4 py-3 text-ink-2 dark:text-slate-300">{l.leave_type}</td>
+                      <td className="px-4 py-3 text-ink-2 dark:text-slate-300">
+                        {l.leave_type}
+                        {l.reason ? <div className="text-xs text-ink-4">{l.reason}</div> : null}
+                      </td>
                       <td className="px-4 py-3 text-ink-4">
-                        {l.start_date} to {l.end_date}
+                        {l.start_date === l.end_date ? l.start_date : `${l.start_date} to ${l.end_date}`}{l.half_day ? " (half day)" : ""}
+                      </td>
+                      <td className="px-4 py-3 text-ink-2 dark:text-slate-300">
+                        {l.days ? Number(l.days) : "—"}
+                        {l.short_balance && <div className="text-xs font-semibold text-warning-text">Over balance</div>}
                       </td>
                       <td className="px-4 py-3 capitalize font-semibold text-ink dark:text-slate-200">{l.status}</td>
                       <td className="px-4 py-3 text-right space-x-2">
@@ -542,65 +531,7 @@ export function HRPage() {
       )}
 
       {/* Leave Modal */}
-      {showLeaveModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-800 max-w-md w-full rounded-xl p-6 space-y-4">
-            <h2 className="text-lg font-bold text-ink dark:text-slate-100">Apply Leave Request</h2>
-            <form onSubmit={handleCreateLeave} className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Employee ID</label>
-                <input
-                  type="number"
-                  required
-                  value={leaveEmpId}
-                  onChange={(e) => setLeaveEmpId(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border rounded-lg dark:bg-slate-900 dark:border-slate-700"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Leave Type</label>
-                <input
-                  type="text"
-                  required
-                  value={leaveType}
-                  onChange={(e) => setLeaveType(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border rounded-lg dark:bg-slate-900 dark:border-slate-700"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Start Date</label>
-                  <input
-                    type="date"
-                    required
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full px-3 py-2 text-sm border rounded-lg dark:bg-slate-900 dark:border-slate-700"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">End Date</label>
-                  <input
-                    type="date"
-                    required
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full px-3 py-2 text-sm border rounded-lg dark:bg-slate-900 dark:border-slate-700"
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setShowLeaveModal(false)} className="px-4 py-2 text-sm text-ink-4">
-                  Cancel
-                </button>
-                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-accent rounded-lg">
-                  Submit Leave Request
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {showLeaveModal && <LeaveApplyModal onClose={() => setShowLeaveModal(false)} onSaved={loadData} />}
 
       {/* Shift Modal */}
       {showShiftModal && (

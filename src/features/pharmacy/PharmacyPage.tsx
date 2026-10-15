@@ -4,8 +4,10 @@ import { Card, CardHeader, Eyebrow } from "../../components/ui/Card"
 import { Button } from "../../components/ui/Button"
 import { Pill } from "../../components/ui/Pill"
 import { LoadingState } from "../../components/ui/QueryStates"
-import { ApiError } from "../../api/client"
-import { dispenseMedicine, listDispenseRecords, listMedicineBatches, listMedicines, type Medicine, type MedicineBatch } from "../../api/pharmacy"
+import { ApiError, extractApiError } from "../../api/client"
+import { billDispense, dispenseMedicine, listDispenseRecords, listMedicineBatches, listMedicines, type Medicine, type MedicineBatch } from "../../api/pharmacy"
+import { FieldInput } from "../../components/resource/ResourceTable"
+import { patientField } from "../nabh/fields"
 
 const inputClass = "h-8 px-2.5 border border-border-strong rounded-control text-[12.5px]"
 
@@ -61,9 +63,19 @@ export function PharmacyPage() {
         <CardHeader><Eyebrow>Recent dispensing</Eyebrow></CardHeader>
         <div className="flex flex-col gap-1.5">
           {recentDispenses.slice(0, 10).map((d) => (
-            <div key={d.id} className="text-[12.5px] flex items-center justify-between">
-              <span>{d.quantity} × {d.medicine_name}</span>
-              <span className="text-ink-5">{new Date(d.dispensed_at).toLocaleString()}</span>
+            <div key={d.id} className="text-[12.5px] flex items-center justify-between gap-3">
+              <span>
+                {d.quantity} × {d.medicine_name}
+                <span className="block text-[11.5px] text-ink-4">
+                  {d.bill_number ? `Bill ${d.bill_number} · ₹${Number(d.amount ?? 0).toLocaleString("en-IN")}` : d.billing_note || "Not billed"}
+                </span>
+              </span>
+              <span className="flex items-center gap-2 text-ink-5 shrink-0">
+                {!d.bill && d.patient && !d.billing_note?.startsWith("Issued without charge") && (
+                  <button className="text-[11.5px] font-semibold text-brand" onClick={() => billDispense(d.id).then(() => queryClient.invalidateQueries({ queryKey: ["dispense-records"] })).catch((e) => alert(extractApiError(e)))}>Bill now</button>
+                )}
+                {new Date(d.dispensed_at).toLocaleString()}
+              </span>
             </div>
           ))}
           {recentDispenses.length === 0 && <div className="text-[12.5px] text-ink-4">Nothing dispensed yet.</div>}
@@ -87,10 +99,13 @@ function DispenseModal({ medicine, onClose, onDispensed }: { medicine: Medicine;
 
   const [batchId, setBatchId] = useState(0)
   const [quantity, setQuantity] = useState(1)
+  const [patient, setPatient] = useState<unknown>(null)
+  const [free, setFree] = useState(false)
+  const [freeReason, setFreeReason] = useState("")
   const [error, setError] = useState<string | null>(null)
 
   const dispenseMutation = useMutation({
-    mutationFn: () => dispenseMedicine({ batch: batchId, quantity }),
+    mutationFn: () => dispenseMedicine({ batch: batchId, quantity, patient: patient ? Number(patient) : null, ...(free ? { bill: false, no_charge_reason: freeReason } : {}) }),
     onSuccess: onDispensed,
     onError: (err: unknown) => {
       const detail = err instanceof ApiError ? (err.body as { detail?: string } | null)?.detail : undefined
@@ -114,13 +129,26 @@ function DispenseModal({ medicine, onClose, onDispensed }: { medicine: Medicine;
           </select>
           <input
             type="number" min={1} max={selectedBatch?.quantity_available ?? undefined}
-            className={`${inputClass} w-full`} value={quantity}
+            className={`${inputClass} w-full`} value={quantity} aria-label="Quantity"
             onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
           />
+          <div>
+            <div className="text-[11.5px] font-semibold text-ink-3 mb-1">Patient (charged to their bill; blank = counter sale)</div>
+            <FieldInput field={patientField(false)} value={patient} onChange={setPatient} />
+          </div>
+          {selectedBatch && (
+            <div className="text-[12px] text-ink-3">MRP ₹{Number(selectedBatch.mrp ?? 0).toLocaleString("en-IN")} each · ₹{(Number(selectedBatch.mrp ?? 0) * quantity).toLocaleString("en-IN")} incl. GST</div>
+          )}
+          {Boolean(patient) && (
+            <label className="flex items-center gap-2 text-[12.5px]">
+              <input type="checkbox" checked={free} onChange={(e) => setFree(e.target.checked)} /> Issue without charge
+            </label>
+          )}
+          {free && <input className={`${inputClass} w-full`} placeholder="Why (e.g. part of the package)" aria-label="No-charge reason" value={freeReason} onChange={(e) => setFreeReason(e.target.value)} />}
         </div>
         <div className="flex justify-end gap-2 pt-3.5">
           <Button variant="secondary" onClick={onClose}>Cancel</Button>
-          <Button variant="primary" onClick={() => dispenseMutation.mutate()} disabled={!batchId || quantity < 1 || dispenseMutation.isPending}>
+          <Button variant="primary" onClick={() => dispenseMutation.mutate()} disabled={!batchId || quantity < 1 || (free && !freeReason.trim()) || dispenseMutation.isPending}>
             {dispenseMutation.isPending ? "Dispensing…" : "Dispense"}
           </Button>
         </div>

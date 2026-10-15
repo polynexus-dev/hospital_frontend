@@ -7,7 +7,7 @@ import type { Bill } from "../../types/api"
 const inputCls = "w-full px-3 py-2 text-sm border border-border-strong dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900"
 const btn = "px-3 py-1.5 text-sm font-semibold rounded-lg disabled:opacity-50"
 const inr = (n: number | string) => `₹${Number(n).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-const CATEGORIES = ["general", "private", "insurance", "corporate"]
+const CATEGORIES = ["general", "private", "insurance", "corporate", "staff"]
 
 type Tab = "hold" | "category" | "credit"
 
