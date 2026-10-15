@@ -108,7 +108,18 @@ export function OTPage() {
       setReqEncounter("")
       loadData()
     } catch (err: any) {
-      alert("Failed to create surgery request: " + (err.response?.data?.detail || err.message))
+      const data = err.response?.data
+      let detail = err.message
+      if (data) {
+        if (typeof data === "string") detail = data
+        else if (data.detail) detail = data.detail
+        else {
+          detail = Object.entries(data)
+            .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : v}`)
+            .join(" | ")
+        }
+      }
+      alert("Failed to create surgery request: " + detail)
     }
   }
 
@@ -455,7 +466,7 @@ export function OTPage() {
       {/* New Request Modal */}
       {showReqModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-800 max-w-md w-full rounded-xl p-6 space-y-4">
+          <div className="bg-white dark:bg-slate-800 max-w-md w-full rounded-xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
             <h2 className="text-lg font-bold text-ink dark:text-slate-100">Create Surgery Request</h2>
             <form onSubmit={handleCreateRequest} className="space-y-4">
               <div>

@@ -490,7 +490,7 @@ export function OPDRegistrationPage() {
       {/* Save bar: part of the page (so it fits whatever the sidebar does), stuck to the bottom of the screen */}
       <div ref={saveBar} className="sticky bottom-0 -mx-5 -mb-5 mt-auto z-10 bg-surface border-t border-border px-5 py-2.5 flex flex-wrap items-center justify-between gap-3">
         <div className="text-[12.5px] text-danger-text min-h-[1em]">{error}</div>
-        <div className="flex flex-wrap justify-end gap-2">
+        <div className="flex flex-wrap justify-end gap-2 pr-0 sm:pr-72 lg:pr-80">
           {error.startsWith("This person is already registered") && <Button variant="secondary" disabled={saving} onClick={() => save(true)}>Save as a different person</Button>}
           <Button variant="secondary" onClick={reset}>Clear (Ctrl+N)</Button>
           <Button variant="action" disabled={saving || (!registerOnly && !visit.doctor) || (registerOnly && !!existing) || (!existing && (!patient.first_name || !patient.mobile))} onClick={() => save()}>

@@ -478,21 +478,32 @@ export function Shell() {
           )}
         </div>
 
-        <div className="px-3.5 py-3 border-t border-border-soft flex items-center gap-[9px]">
-          <Avatar name={user?.email ?? "?"} size={26} />
-          <div className="min-w-0 flex-1">
-            <div className="text-[12px] font-semibold truncate">{user?.first_name || user?.email}</div>
-            <div className="text-[10.5px] text-ink-6 truncate">{user?.role_name ?? ""}</div>
+        <div className="px-3.5 py-3 border-t border-border-soft flex flex-col gap-2.5 bg-surface/40">
+          <div className="flex items-center gap-[9px]">
+            <Avatar name={user?.email ?? "?"} size={28} />
+            <div className="min-w-0 flex-1">
+              <div className="text-[12px] font-semibold truncate text-ink">{user?.first_name || user?.email}</div>
+              <div className="text-[10.5px] text-ink-6 truncate">{user?.role_name ?? "Hospital Operations"}</div>
+            </div>
+            <button
+              type="button"
+              onClick={() => i18n.changeLanguage(i18n.language === "mr" ? "en" : "mr")}
+              className="md:hidden text-[11px] font-semibold px-1.5 py-0.5 border border-border rounded text-ink-3"
+            >
+              {i18n.language === "mr" ? "EN" : "मराठी"}
+            </button>
           </div>
           <button
             type="button"
-            onClick={() => i18n.changeLanguage(i18n.language === "mr" ? "en" : "mr")}
-            className="md:hidden text-[11px] font-semibold px-1.5 py-0.5 border border-border rounded text-ink-3"
+            onClick={handleLogout}
+            title={t("common.logout")}
+            className="w-full flex items-center justify-center gap-2 px-2.5 py-1.5 rounded-control text-xs font-semibold text-danger-text hover:text-white bg-danger-tint hover:bg-danger border border-danger/25 transition-all cursor-pointer shadow-2xs"
+            aria-label="Logout"
           >
-            {i18n.language === "mr" ? "EN" : "मराठी"}
-          </button>
-          <button onClick={handleLogout} title={t("common.logout")} className="text-ink-5 hover:text-danger-text text-[11px]">
-            ⏻
+            <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            <span>{t("common.logout") || "Log Out"}</span>
           </button>
         </div>
       </div>
@@ -669,7 +680,6 @@ export function Shell() {
           {!!pendingCallbacks?.count && (
             <button
               onClick={() => navigate("/callbacks")}
-
               className="flex items-center gap-2 h-8 px-3 rounded-control text-xs font-bold text-warning-text bg-warning-bg dark:bg-amber-950/40 border border-warning/30 dark:border-amber-800 animate-pulse"
             >
               <span className="w-2 h-2 rounded-full bg-warning" />
@@ -678,6 +688,19 @@ export function Shell() {
             </button>
           )}
 
+          {/* Quick Header Logout Button */}
+          <button
+            type="button"
+            onClick={handleLogout}
+            title={t("common.logout") || "Log Out"}
+            className="h-8 px-2.5 border border-border text-ink-3 hover:text-danger-text hover:bg-danger-tint/30 hover:border-danger/30 rounded-control text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
+            aria-label="Log Out"
+          >
+            <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            <span className="hidden xl:inline">{t("common.logout") || "Log Out"}</span>
+          </button>
         </div>
 
         {/* Global Toast Notification */}
@@ -721,8 +744,8 @@ export function Shell() {
         <IdleLock />
         <LicenseBanner />
         <WebChatAlerts />
-        {/* Dynamic Outlet with Compact Mode Class */}
-        <div className={`flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-3 sm:p-5 ${isCompactMode ? "text-[12px] p-3 gap-2" : ""}`}>
+        {/* Dynamic Outlet with Compact Mode Class and Bottom Padding to clear FAB buttons */}
+        <div className={`flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-3 sm:p-5 pb-20 sm:pb-24 ${isCompactMode ? "text-[12px] p-3 gap-2 pb-20 sm:pb-24" : ""}`}>
           <Outlet />
         </div>
       </div>

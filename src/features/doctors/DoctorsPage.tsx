@@ -491,14 +491,15 @@ function DoctorLeaveModal({ doctor, onClose }: { doctor: Doctor; onClose: () => 
       onClose()
     },
     onError: (err: any) => {
-      showToast(err?.message || "Failed to update doctor leave.", "error")
+      const msg = err?.response?.data?.detail || err?.response?.data?.message || err?.message || "Failed to update doctor leave."
+      showToast(msg, "error")
     },
   })
 
   return (
     <div className="fixed inset-0 bg-black/45 backdrop-blur-xs flex items-center justify-center z-50 p-4" onClick={onClose}>
       <div
-        className="bg-surface border border-border-strong rounded-xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+        className="bg-surface border border-border-strong rounded-xl w-full max-w-md shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-5 py-4 border-b border-border flex items-center justify-between bg-page/50">

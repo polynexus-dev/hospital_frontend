@@ -8,7 +8,7 @@ import { ErrorState, EmptyState, LoadingState } from "../../components/ui/QueryS
 import { createRole, getRolePermissions, getUserPermissions, listRoles, listUsers, setRolePermissions, setUserPermissions, updateUser } from "../../api/accounts"
 import { listAuditLogs } from "../../api/core"
 import { integrationHealth } from "../../api/integrations"
-import { API_BASE_URL, ApiError } from "../../api/client"
+import { ApiError, api, triggerBlobDownload } from "../../api/client"
 import type { AuditLog, Role, User } from "../../types/api"
 import type { Tone } from "../../components/ui/tone"
 import { EmergencyAccessTab } from "./EmergencyAccessTab"
@@ -131,16 +131,28 @@ export function AdminPage() {
     enabled: activeTab === "integrations",
   })
 
-  const handleCsvExport = (modelName: string) => {
-    setExportingModel(modelName)
-    window.open(`${API_BASE_URL}/export/${modelName}/`, "_blank")
-    setTimeout(() => setExportingModel(null), 1000)
+  const handleCsvExport = async (modelName: string) => {
+    try {
+      setExportingModel(modelName)
+      const blob = await api.getBlob(`/export/${modelName}/`)
+      triggerBlobDownload(blob, `${modelName}_export_${new Date().toISOString().slice(0, 10)}.csv`)
+    } catch (err: any) {
+      alert("Failed to export CSV: " + (err.message || "Unknown error"))
+    } finally {
+      setExportingModel(null)
+    }
   }
 
-  const handleFhirExport = (resourceType: string) => {
-    setExportingModel(`fhir_${resourceType}`)
-    window.open(`${API_BASE_URL}/export/fhir/${resourceType}/`, "_blank")
-    setTimeout(() => setExportingModel(null), 1000)
+  const handleFhirExport = async (resourceType: string) => {
+    try {
+      setExportingModel(`fhir_${resourceType}`)
+      const blob = await api.getBlob(`/export/fhir/${resourceType}/`)
+      triggerBlobDownload(blob, `fhir_${resourceType}_${new Date().toISOString().slice(0, 10)}.json`)
+    } catch (err: any) {
+      alert("Failed to export FHIR bundle: " + (err.message || "Unknown error"))
+    } finally {
+      setExportingModel(null)
+    }
   }
 
   const users = usersData?.results ?? []
@@ -179,12 +191,12 @@ export function AdminPage() {
 
   return (
     <div className="flex flex-col gap-3.5">
-      <div className="flex items-center gap-1 border-b border-border">
+      <div className="flex items-center gap-1 border-b border-border overflow-x-auto whitespace-nowrap pb-px">
         {TABS.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`-mb-px px-3 py-2.5 text-[13px] font-semibold border-b-2 transition-colors ${
+            className={`-mb-px px-3 py-2.5 text-[13px] font-semibold border-b-2 transition-colors shrink-0 ${
               activeTab === tab.key
                 ? "border-brand text-brand"
                 : "border-transparent text-ink-4 hover:text-ink-2"
