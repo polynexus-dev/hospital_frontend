@@ -9,6 +9,7 @@ import {
   advanceBalance, checkDuplicates, listApprovers, listDistricts, listOptions, listStates, lookupPincode, previewVisit, printDocument, registerVisit,
 } from "../../api/frontdesk"
 import type { DuplicateMatch, PinLookup, RegistrationResult } from "../../api/frontdesk"
+import { BillHoldBadge } from "../billing/BillHoldBadge"
 
 // OPD front desk (NABH AAC.1/AAC.2, FPM.3): find or register the patient,
 // open the visit, bill and take payment in one save. Keyboard-first:
@@ -291,6 +292,7 @@ export function OPDRegistrationPage() {
           {existing ? (
             <div className="flex items-center gap-2 text-[13px]">
               <Pill tone="info">Returning: {existing.full_name} · {existing.uhid}</Pill>
+              <BillHoldBadge patientId={existing.id} />
               <Button size="sm" variant="ghost" onClick={() => setExisting(null)}>Register someone new instead</Button>
             </div>
           ) : <Pill tone="neutral">New patient</Pill>}

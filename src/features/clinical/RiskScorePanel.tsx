@@ -151,7 +151,7 @@ export const interventionBundlesResource = {
   endpoint: "/clinical/intervention-bundles/", createLabel: "Add checklist",
   columns: [{ key: "tool", label: "Tool" }, { key: "risk_level", label: "Level" }, { key: "items", label: "Items", render: (r: any) => (r.items ?? []).join(" · ") }, { key: "is_active", label: "Active" }],
   fields: [
-    { key: "tool", label: "Tool", type: "select" as const, required: true, options: ["morse_fall", "humpty_dumpty", "braden", "caprini", "news2", "vulnerability"] },
+    { key: "tool", label: "Tool", type: "select" as const, required: true, options: ["morse_fall", "humpty_dumpty", "braden", "caprini", "news2", "vulnerability", "numeric_pain"] },
     { key: "risk_level", label: "Risk level", required: true },
     { key: "items", label: "Items (JSON list)", type: "json" as const, required: true, placeholder: '["Bed in lowest position", "Call bell within reach"]' },
     { key: "is_active", label: "Active", type: "boolean" as const, defaultValue: true },

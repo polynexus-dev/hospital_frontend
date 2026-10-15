@@ -1,22 +1,23 @@
 import { useEffect, useState } from "react"
 import { api, extractApiError } from "../../api/client"
 import type { Bill } from "../../types/api"
+import { useAuthStore } from "../../store/auth"
 
-// Hold / release, change patient category (re-price), and credit notes for one bill.
+// Hold / release, lock / unlock (final bill), change patient category (re-price), and credit notes for one bill.
 
 const inputCls = "w-full px-3 py-2 text-sm border border-border-strong dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900"
 const btn = "px-3 py-1.5 text-sm font-semibold rounded-lg disabled:opacity-50"
 const inr = (n: number | string) => `₹${Number(n).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 const CATEGORIES = ["general", "private", "insurance", "corporate", "staff"]
 
-type Tab = "hold" | "category" | "credit"
+type Tab = "hold" | "lock" | "category" | "credit"
 
 interface Preview { net_before: string; net_after: string; lines: { item: number; description: string; quantity: number; old_rate: string; new_rate: string }[] }
 interface HoldEvent { action: string; reason: string; by: string; at: string }
 interface CreditNote { id: number; note_number: string; reason: string; total_amount: string; settlement: string; refund_amount: string; created_at: string; created_by_name: string }
 
 export function BillAdjustModal({ bill, onClose, onChanged }: { bill: Bill; onClose: () => void; onChanged: () => void }) {
-  const [tab, setTab] = useState<Tab>(bill.on_hold ? "hold" : "credit")
+  const [tab, setTab] = useState<Tab>(bill.is_locked ? "lock" : bill.on_hold ? "hold" : "credit")
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -45,17 +46,22 @@ export function BillAdjustModal({ bill, onClose, onChanged }: { bill: Bill; onCl
             <div className="text-sm text-ink-4">Net {inr(current.net_amount)} · {current.status.replace("_", " ")} · category {current.patient_category}</div>
           </div>
           {current.on_hold && <span className="text-xs font-semibold px-2 py-1 rounded-full bg-warning-bg text-warning-text">On hold</span>}
+          {current.is_locked && <span className="text-xs font-semibold px-2 py-1 rounded-full bg-chip-bg text-ink-2">🔒 Locked</span>}
         </div>
         <div className="flex gap-1.5" role="tablist">
-          {([["credit", "Credit note"], ["category", "Change category"], ["hold", current.on_hold ? "Release hold" : "Put on hold"]] as [Tab, string][]).map(([k, label]) => (
+          {([["credit", "Credit note"], ["category", "Change category"], ["hold", current.on_hold ? "Release hold" : "Put on hold"], ["lock", current.is_locked ? "Unlock" : "Lock bill"]] as [Tab, string][]).map(([k, label]) => (
             <button key={k} role="tab" aria-selected={tab === k} onClick={() => { setTab(k); setError(null); setNotice(null) }}
               className={`text-[12.5px] font-semibold px-3 py-1.5 rounded-lg ${tab === k ? "bg-brand text-white" : "border border-border-strong"}`}>{label}</button>
           ))}
         </div>
-        {current.on_hold && tab !== "hold" && (
+        {current.on_hold && tab !== "hold" && tab !== "lock" && (
           <div className="text-sm text-warning-text">On hold: {current.hold_reason}. Release it before changing the bill.</div>
         )}
+        {current.is_locked && tab !== "lock" && (
+          <div className="text-sm text-ink-3">This bill is locked (final). Unlock it before changing it; payments of any balance are still accepted.</div>
+        )}
         {tab === "hold" && <HoldTab bill={current} busy={busy} run={run} setBill={setCurrent} setNotice={setNotice} />}
+        {tab === "lock" && <LockTab bill={current} busy={busy} run={run} setBill={setCurrent} setNotice={setNotice} />}
         {tab === "category" && <CategoryTab bill={current} busy={busy} run={run} setBill={setCurrent} setNotice={setNotice} />}
         {tab === "credit" && <CreditTab bill={current} busy={busy} run={run} setBill={setCurrent} setNotice={setNotice} />}
         {notice && <div className="text-sm text-success-text" role="status">{notice}</div>}
@@ -101,9 +107,44 @@ function HoldTab({ bill, busy, run, setBill, setNotice }: TabProps) {
       </button>
       {history.length > 0 && (
         <ul className="text-[12.5px] text-ink-3 space-y-0.5 border-t border-border pt-2">
-          {history.map((h, i) => <li key={i}>{new Date(h.at).toLocaleString("en-IN")} · {h.action === "hold" ? "Held" : "Released"} by {h.by || "system"}: {h.reason}</li>)}
+          {history.map((h, i) => <li key={i}>{new Date(h.at).toLocaleString("en-IN")} · {EVENT_LABEL[h.action] ?? h.action} by {h.by || "system"}: {h.reason}</li>)}
         </ul>
       )}
+    </div>
+  )
+}
+
+const EVENT_LABEL: Record<string, string> = { hold: "Held", release: "Released", lock: "Locked", unlock: "Unlocked" }
+
+function LockTab({ bill, busy, run, setBill, setNotice }: TabProps) {
+  const perms = useAuthStore((s) => s.user?.permissions ?? [])
+  const canLock = perms.includes("billing.lock_bill")
+  const canUnlock = perms.includes("billing.unlock_bill")
+  const [text, setText] = useState("")
+  const submit = () => run(async () => {
+    const path = bill.is_locked ? "unlock" : "lock"
+    const updated = await api.post<Bill>(`/billing/bills/${bill.id}/${path}/`, bill.is_locked ? { reason: text } : { note: text })
+    setBill(updated)
+    setText("")
+    setNotice(bill.is_locked ? "Unlocked." : "The bill is locked (final).")
+  })
+  if (bill.is_locked && !canUnlock) {
+    return <div className="text-sm text-ink-3">Locked by {bill.locked_by_name || "—"}{bill.locked_at ? ` on ${new Date(bill.locked_at).toLocaleString("en-IN")}` : ""}. Only billing managers can unlock it.</div>
+  }
+  if (!bill.is_locked && !canLock) return <div className="text-sm text-ink-3">You don't have permission to lock bills.</div>
+  return (
+    <div className="space-y-3">
+      <p className="text-sm text-ink-3">
+        {bill.is_locked
+          ? `Locked by ${bill.locked_by_name || "—"}${bill.locked_at ? ` on ${new Date(bill.locked_at).toLocaleString("en-IN")}` : ""}. Unlocking lets the bill be changed again and is recorded.`
+          : "Locking makes this the final bill: no charges, discounts, credit notes, re-pricing or edits until it is unlocked. Payments of any balance are still accepted. A hold on the bill is released. An admitted patient's running bill can be locked after discharge."}
+      </p>
+      <label className="text-xs font-semibold text-ink-3 block">{bill.is_locked ? "Why is it being reopened?" : "Note (optional)"}
+        <input className={`${inputCls} mt-1`} value={text} onChange={(e) => setText(e.target.value)} placeholder={bill.is_locked ? "e.g. Insurer revised the approval" : "e.g. Final bill after discharge"} />
+      </label>
+      <button disabled={busy || (bill.is_locked && !text.trim())} onClick={submit} className={`${btn} ${bill.is_locked ? "border border-border-strong" : "bg-ink text-white"}`}>
+        {bill.is_locked ? "Unlock bill" : "Lock bill"}
+      </button>
     </div>
   )
 }

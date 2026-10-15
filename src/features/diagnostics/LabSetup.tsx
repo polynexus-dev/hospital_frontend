@@ -27,6 +27,7 @@ export function LabSettingsPanel() {
         auto_dispatch: s.auto_dispatch, dispatch_channels: s.dispatch_channels,
         dispatch_times: times.split(",").map((t) => t.trim()).filter(Boolean),
         dispatch_delay_minutes: s.dispatch_delay_minutes, merge_window_minutes: s.merge_window_minutes, split_by_department: s.split_by_department,
+        dispatch_outsourced: s.dispatch_outsourced, merge_dispatch_reports: s.merge_dispatch_reports,
       })
       setS(saved)
       setTimes(saved.dispatch_times.join(", "))
@@ -60,6 +61,12 @@ export function LabSettingsPanel() {
         </div>
         <label className="text-sm flex items-center gap-2">
           <input type="checkbox" checked={s.auto_dispatch} onChange={(e) => set({ auto_dispatch: e.target.checked })} /> Send verified reports automatically
+        </label>
+        <label className="text-sm flex items-center gap-2">
+          <input type="checkbox" checked={s.dispatch_outsourced} onChange={(e) => set({ dispatch_outsourced: e.target.checked })} /> Also send reports that include outsourced tests (untick to review and send those by hand)
+        </label>
+        <label className="text-sm flex items-center gap-2">
+          <input type="checkbox" checked={s.merge_dispatch_reports} onChange={(e) => set({ merge_dispatch_reports: e.target.checked })} /> Merge a patient's reports sent together into one PDF, grouped by department
         </label>
         <div className="grid md:grid-cols-3 gap-4">
           <div className="text-xs font-semibold text-ink-3">Send by

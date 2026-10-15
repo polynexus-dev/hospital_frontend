@@ -17,6 +17,8 @@ export function HRPage() {
   const [showEmpModal, setShowEmpModal] = useState(false)
   const [empCode, setEmpCode] = useState("")
   const [empDesignation, setEmpDesignation] = useState("")
+  const [empPrefix, setEmpPrefix] = useState("")
+  const [empMarital, setEmpMarital] = useState("")
   const [empType, setEmpType] = useState<Employee["employment_type"]>("permanent")
 
   // Link User Modal
@@ -74,6 +76,8 @@ export function HRPage() {
       await createEmployee({
         employee_code: empCode,
         designation: empDesignation,
+        name_prefix: empPrefix,
+        marital_status: empMarital,
         employment_type: empType,
       })
       setShowEmpModal(false)
@@ -442,6 +446,20 @@ export function HRPage() {
                   className="w-full px-3 py-2 text-sm border rounded-lg dark:bg-slate-900 dark:border-slate-700"
                   placeholder="EMP-101"
                 />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Prefix (printed on the payslip)</label>
+                <select value={empPrefix} onChange={(e) => setEmpPrefix(e.target.value)} className="w-full px-3 py-2 text-sm border rounded-lg dark:bg-slate-900 dark:border-slate-700">
+                  <option value="">—</option>
+                  {["Mr.", "Ms.", "Mrs.", "Dr.", "Prof."].map((p) => <option key={p} value={p}>{p}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Marital status (dependent policy)</label>
+                <select value={empMarital} onChange={(e) => setEmpMarital(e.target.value)} className="w-full px-3 py-2 text-sm border rounded-lg dark:bg-slate-900 dark:border-slate-700">
+                  <option value="">—</option>
+                  {[["single", "Single"], ["married", "Married"], ["widowed", "Widowed"], ["divorced", "Divorced"]].map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                </select>
               </div>
               <div>
                 <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Designation</label>

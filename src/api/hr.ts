@@ -9,6 +9,8 @@ export function listEmployees(params: Record<string, string> = {}) {
 export function createEmployee(data: {
   employee_code: string
   designation: string
+  name_prefix?: string
+  marital_status?: string
   employment_type?: Employee["employment_type"]
   department?: number
   bank_account_number?: string

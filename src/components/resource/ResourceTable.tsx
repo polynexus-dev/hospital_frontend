@@ -9,7 +9,7 @@ export { fmt, StatusPill }
 // filters + create form + per-row workflow actions, all against one DRF
 // endpoint. Domain rules stay on the backend; this only renders them.
 
-export type FieldType = "text" | "textarea" | "number" | "date" | "datetime" | "select" | "boolean" | "json" | "fk" | "multifk"
+export type FieldType = "text" | "textarea" | "number" | "date" | "datetime" | "select" | "boolean" | "json" | "fk" | "multifk" | "file"
 
 export interface FieldDef {
   key: string
@@ -123,8 +123,21 @@ function FkSelect({ field, value, onChange, multi }: { field: FieldDef; value: u
   )
 }
 
+/** A body with a File in it goes as multipart form data, everything else as JSON. */
+function postBody(body?: Row): [unknown, { isFormData: true }?] {
+  if (!body || !Object.values(body).some((v) => v instanceof File)) return [body ?? {}]
+  const fd = new FormData()
+  for (const [k, v] of Object.entries(body)) {
+    if (v === null || v === undefined || v === "") continue
+    fd.append(k, v instanceof File ? v : typeof v === "object" ? JSON.stringify(v) : String(v))
+  }
+  return [fd, { isFormData: true }]
+}
+
 export function FieldInput({ field, value, onChange }: { field: FieldDef; value: unknown; onChange: (v: unknown) => void }) {
   const t = field.type ?? "text"
+  if (t === "file")
+    return <input type="file" className="text-sm" required={field.required} onChange={(e) => onChange(e.target.files?.[0] ?? null)} aria-label={field.label} />
   if (t === "textarea") return <textarea className={inputCls} rows={3} value={String(value ?? "")} onChange={(e) => onChange(e.target.value)} required={field.required} placeholder={field.placeholder} />
   if (t === "boolean")
     return (
@@ -293,7 +306,9 @@ export function ResourceTable({ config }: { config: ResourceConfig }) {
     const url = action.url && row ? action.url(row) : collection ? `${base}${action.path}` : `${base}${row!.id}/${action.path}`
     try {
       if (action.download) {
-        const blob = await api.getBlob(url)
+        // prompt values (e.g. a month) go along as query parameters on a download
+        const params = new URLSearchParams(Object.entries(body ?? {}).filter(([, v]) => v !== "" && v != null).map(([k, v]) => [k, String(v)]))
+        const blob = await api.getBlob(params.toString() ? `${url}${url.includes("?") ? "&" : "?"}${params}` : url)
         triggerBlobDownload(blob, action.download)
         return
       }
@@ -304,7 +319,7 @@ export function ResourceTable({ config }: { config: ResourceConfig }) {
             ? await api.delete<any>(url)
             : action.method === "patch"
               ? await api.patch<any>(url, body ?? {})
-              : await api.post<any>(url, body ?? {})
+              : await api.post<any>(url, ...postBody(body))
       setNotice(`${action.label}: done`)
       if (action.openUrlFrom && res?.[action.openUrlFrom]) window.open(res[action.openUrlFrom], "_blank", "noopener")
       else if (action.method === "get") setDetail(res)

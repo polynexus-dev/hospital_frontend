@@ -11,6 +11,7 @@ import { createRadiologyOrder, listRadiologyOrders, listRadiologyProcedures, typ
 import { LabOrderDetailPanel } from "./LabOrderDetailPanel"
 import { LabWorklist } from "./LabWorklist"
 import { RadiologyOrderDetailPanel } from "./RadiologyOrderDetailPanel"
+import { PatientLabStatusModal } from "./PatientLabStatusModal"
 
 const LAB_STATUS_TONE: Record<LabOrderStatus, Tone> = {
   ordered: "neutral", sample_collected: "info", processing: "info", resulted: "warn", verified: "ok",
@@ -34,12 +35,17 @@ export function DiagnosticsPage() {
   const [selectedRadOrderId, setSelectedRadOrderId] = useState<number | null>(null)
   const [labView, setLabView] = useState<"orders" | "worklist">("orders")
   const [labDept, setLabDept] = useState("")
+  const [processing, setProcessing] = useState("")
+  const [statusPatient, setStatusPatient] = useState<number | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
 
   const patientsQuery = useQuery({ queryKey: ["patients-dropdown"], queryFn: () => listPatients() })
   const labTestsQuery = useQuery({ queryKey: ["lab-tests"], queryFn: () => listLabTests() })
   const proceduresQuery = useQuery({ queryKey: ["radiology-procedures"], queryFn: () => listRadiologyProcedures() })
-  const labOrdersQuery = useQuery({ queryKey: ["lab-orders", labDept], queryFn: () => listLabOrders(labDept ? { department: labDept } : {}) })
+  const labOrdersQuery = useQuery({
+    queryKey: ["lab-orders", labDept, processing],
+    queryFn: () => listLabOrders({ ...(labDept ? { department: labDept } : {}), ...(processing ? { processing } : {}) }),
+  })
   const radOrdersQuery = useQuery({ queryKey: ["radiology-orders"], queryFn: () => listRadiologyOrders() })
 
   const patients = patientsQuery.data?.results ?? []
@@ -119,6 +125,13 @@ export function DiagnosticsPage() {
               {LAB_DEPARTMENTS.map((d) => <option key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</option>)}
             </select>
           )}
+          {labView === "orders" && (
+            <div className="flex gap-1" role="group" aria-label="Processing">
+              {[["", "All"], ["not_started", "Not started"], ["in_process", "In process"], ["results_ready", "Results ready"]].map(([v, l]) => (
+                <button key={v} className={`text-[12px] font-semibold px-2.5 py-1 rounded-control ${processing === v ? "bg-brand text-white" : "bg-surface border border-border-strong"}`} onClick={() => setProcessing(v)}>{l}</button>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -129,17 +142,24 @@ export function DiagnosticsPage() {
           <CardHeader><Eyebrow>Lab orders</Eyebrow></CardHeader>
           <div className="flex flex-col gap-1.5">
             {labOrders.map((order) => (
-              <button key={order.id} className="flex items-center justify-between gap-2 text-left px-2.5 py-2 rounded-control hover:bg-page text-[12.5px]" onClick={() => setSelectedLabOrderId(order.id)}>
+              <div key={order.id} role="button" tabIndex={0} className="flex items-center justify-between gap-2 text-left px-2.5 py-2 rounded-control hover:bg-page text-[12.5px] cursor-pointer" onClick={() => setSelectedLabOrderId(order.id)} onKeyDown={(e) => e.key === "Enter" && setSelectedLabOrderId(order.id)}>
                 <span>
-                  {order.patient_name} · {order.ordered_tests.length} test{order.ordered_tests.length === 1 ? "" : "s"}
+                  {order.patient_name}
+                  <button className="ml-1 text-[11px] font-semibold text-brand" title="Pending investigations" onClick={(e) => { e.stopPropagation(); setStatusPatient(order.patient) }}>⌕ status</button>
+                  {" · "}{order.ordered_tests.length} test{order.ordered_tests.length === 1 ? "" : "s"}
                   {order.order_number && <span className="text-ink-5"> · {order.order_number}</span>}
                   {order.department && <span className="text-ink-5"> · {order.department}</span>}
                 </span>
                 <span className="flex items-center gap-1.5 shrink-0">
                   {order.dispatched_at && <span className="text-[11px] text-success-text font-semibold">Sent</span>}
+                  {order.processing_state && order.status !== "verified" && (
+                    <span className={`text-[11px] font-semibold ${order.processing_state === "results_ready" ? "text-success-text" : order.processing_state === "in_process" ? "text-warning-text" : "text-danger-text"}`}>
+                      {order.processing_state.replace("_", " ")}
+                    </span>
+                  )}
                   <Pill tone={LAB_STATUS_TONE[order.status]}>{order.status.replace("_", " ")}</Pill>
                 </span>
-              </button>
+              </div>
             ))}
             {labOrders.length === 0 && <div className="text-[12.5px] text-ink-4">No lab orders yet.</div>}
           </div>
@@ -228,6 +248,7 @@ export function DiagnosticsPage() {
           <RadiologyOrderDetailPanel order={selectedRadOrder} />
         </OrderDetailModal>
       )}
+      {statusPatient && <PatientLabStatusModal patientId={statusPatient} onClose={() => setStatusPatient(null)} onOpenOrder={(id) => { setStatusPatient(null); setSelectedLabOrderId(id) }} />}
     </div>
   )
 }

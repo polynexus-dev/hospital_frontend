@@ -14,6 +14,7 @@ import {
 } from "../../api/ipd"
 import { addNursingNote, listNursingNotes, listMedicationAdministrations, recordMedicationAdministration } from "../../api/nursing"
 import { BedChargesCard } from "../nabh/BillingExtras"
+import { BillHoldBadge } from "../billing/BillHoldBadge"
 
 const inputClass = "w-full h-8 px-2.5 border border-border-strong rounded-control text-[12.5px]"
 const textareaClass = "w-full border border-border rounded-control p-2 text-[12.5px] leading-relaxed outline-none focus:border-brand"
@@ -92,6 +93,7 @@ export function AdmissionDetailPanel({ admission, onDischarged }: { admission: A
 
   return (
     <div className="space-y-4">
+      <BillHoldBadge patientId={admission.patient} />
       {admission.package_name && (
         <div className="text-[12.5px] rounded-control border border-border bg-page px-3 py-2 space-y-1">
           <div className="font-semibold">Package: {admission.package_name}</div>

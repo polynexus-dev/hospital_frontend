@@ -19,8 +19,10 @@ import { AnaesthesiaRecordModal } from "./AnaesthesiaRecordModal"
 import { EncounterPill } from "./encounter"
 import { OTBoard } from "./OTBoard"
 import { OTChargesModal } from "./OTChargesModal"
+import { PreOpInvestigationsModal } from "./PreOpInvestigationsModal"
 import { viewRecord } from "../../store/recordViewer"
 import { Pager } from "../../components/ui/Pager"
+import { UpdatedBy } from "./UpdatedBy"
 
 const gradeField = { key: "surgery_grade", label: "Surgery grade", type: "fk" as const, source: "/finance/surgery-grades/?is_active=true", sourceLabel: (r: any) => `${r.name} (${r.code})` }
 const STATUS_LABEL: Record<string, string> = { scheduled: "Scheduled", in_progress: "In progress", completed: "Completed", cancelled: "Cancelled" }
@@ -43,6 +45,7 @@ export function OTPage() {
 
   // PreOp Checklist Modal
   const [preOpReq, setPreOpReq] = useState<SurgeryRequest | null>(null)
+  const [workupReq, setWorkupReq] = useState<SurgeryRequest | null>(null)
   const [consentObtained, setConsentObtained] = useState(true)
   const [fastingConfirmed, setFastingConfirmed] = useState(true)
   const [siteMarked, setSiteMarked] = useState(true)
@@ -339,7 +342,7 @@ export function OTPage() {
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 capitalize font-semibold text-brand dark:text-indigo-400">{r.status}</td>
+                    <td className="px-4 py-3 capitalize font-semibold text-brand dark:text-indigo-400">{r.status}<UpdatedBy name={r.updated_by_name} at={r.updated_at} className="normal-case font-normal" /></td>
                     <td className="px-4 py-3 text-right space-x-2">
                       {!r.preop_checklist && (
                         <button
@@ -349,6 +352,12 @@ export function OTPage() {
                           + PreOp Safety
                         </button>
                       )}
+                      <button
+                        onClick={() => setWorkupReq(r)}
+                        className="px-2.5 py-1 text-xs font-semibold border border-border-strong rounded hover:bg-page"
+                      >
+                        Pre-op tests
+                      </button>
                       {r.status === "requested" && (
                         <button
                           onClick={() => setSelectedReq(r)}
@@ -410,13 +419,17 @@ export function OTPage() {
                     <td className="px-4 py-3 text-xs">
                       <span className="font-semibold text-ink-2 dark:text-slate-200">{STATUS_LABEL[s.status ?? "scheduled"] ?? s.status}</span>
                       {s.status === "cancelled" && s.cancellation_reason ? <div className="text-ink-4">{s.cancellation_reason}</div> : null}
+                      <UpdatedBy name={s.updated_by_name} at={s.updated_at} />
                       {s.charges_posted_at ? <div className="text-success-text">Charges posted</div> : null}
                     </td>
                     <td className="px-4 py-3">
                       {s.operative_note ? (
-                        <span className="text-xs px-2 py-0.5 bg-success-bg text-success-text rounded-full">
-                          {s.operative_note.finalized_at ? "Finalized" : "Draft"}
-                        </span>
+                        <>
+                          <span className="text-xs px-2 py-0.5 bg-success-bg text-success-text rounded-full">
+                            {s.operative_note.finalized_at ? "Finalized" : "Draft"}
+                          </span>
+                          <UpdatedBy name={s.operative_note.updated_by_name} at={s.operative_note.updated_at} />
+                        </>
                       ) : (
                         <span className="text-xs text-slate-400">Pending</span>
                       )}
@@ -539,6 +552,7 @@ export function OTPage() {
       )}
 
       {/* PreOp Modal */}
+      {workupReq && <PreOpInvestigationsModal request={workupReq} onClose={() => setWorkupReq(null)} />}
       {preOpReq && (
         <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-800 max-w-md w-full rounded-xl p-6 space-y-4">

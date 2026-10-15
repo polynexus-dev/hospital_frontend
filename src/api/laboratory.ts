@@ -32,6 +32,7 @@ export interface LabOrder {
   department?: string
   dispatched_at?: string | null
   dispatch_due_at?: string | null
+  processing_state?: "not_started" | "in_process" | "results_ready"
 }
 
 export interface PlacedLabOrder extends LabOrder {
@@ -84,6 +85,8 @@ export interface LabSettings {
   dispatch_delay_minutes: number
   merge_window_minutes: number
   split_by_department: boolean
+  dispatch_outsourced: boolean
+  merge_dispatch_reports: boolean
 }
 
 export const LAB_DEPARTMENTS = ["hematology", "biochemistry", "microbiology", "serology", "pathology", "other"]

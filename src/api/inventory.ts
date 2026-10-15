@@ -5,7 +5,7 @@ export function listItemCategories() {
   return api.get<Paginated<ItemCategory>>("/inventory/categories/")
 }
 
-export function createItemCategory(data: { name: string; code: string }) {
+export function createItemCategory(data: { name: string; code: string; parent?: number | null }) {
   return api.post<ItemCategory>("/inventory/categories/", data)
 }
 

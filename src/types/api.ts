@@ -776,6 +776,9 @@ export interface EDVisit {
 
 // --- OT ---
 export interface PreOpChecklist {
+  updated_by?: number | null
+  updated_by_name?: string
+  updated_at?: string
   id: number
   surgery_request: number
   consent_obtained: boolean
@@ -786,6 +789,9 @@ export interface PreOpChecklist {
 }
 
 export interface OperativeNote {
+  updated_by?: number | null
+  updated_by_name?: string
+  updated_at?: string
   id: number
   ot_schedule: number
   procedure_performed: string
@@ -800,6 +806,9 @@ export interface OperativeNote {
 export type AnaesthesiaRow = Record<string, string | number | null>
 
 export interface AnaesthesiaRecord {
+  updated_by?: number | null
+  updated_by_name?: string
+  updated_at?: string
   id: number
   ot_schedule: number
   anaesthesia_type: string
@@ -837,6 +846,9 @@ export interface ImplantUsage {
 }
 
 export interface OTSchedule {
+  updated_by?: number | null
+  updated_by_name?: string
+  updated_at?: string
   id: number
   surgery_request: number
   operation_theatre_room: string
@@ -857,6 +869,9 @@ export interface OTSchedule {
 }
 
 export interface SurgeryRequest {
+  updated_by?: number | null
+  updated_by_name?: string
+  updated_at?: string
   id: number
   patient: number
   patient_detail?: Patient
@@ -1031,6 +1046,7 @@ export interface Employee {
   user: number | null
   user_detail?: User
   employee_code: string
+  name_prefix?: string
   department: number | null
   department_detail?: Department
   designation: string
@@ -1125,6 +1141,9 @@ export interface Bill {
   bill_number?: string
   patient_category?: string
   on_hold?: boolean
+  is_locked?: boolean
+  locked_at?: string | null
+  locked_by_name?: string
   hold_reason?: string
   held_at?: string | null
   non_payable_amount?: string
@@ -1137,6 +1156,7 @@ export interface ItemCategory {
   id: number
   name: string
   code: string
+  parent?: number | null
 }
 
 export interface Item {

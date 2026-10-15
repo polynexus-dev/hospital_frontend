@@ -311,6 +311,7 @@ export function BillingPage() {
                       {b.on_hold && (
                         <span className="ml-1.5 px-2 py-0.5 text-xs font-semibold rounded-full bg-warning-bg text-warning-text" title={b.hold_reason}>On hold</span>
                       )}
+                      {b.is_locked && <span className="ml-1.5 px-2 py-0.5 text-xs font-semibold rounded-full bg-chip-bg text-ink-2" title="Final bill">🔒 Locked</span>}
                     </td>
                     <td className="px-4 py-3 text-right space-x-1 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                       <button
@@ -322,8 +323,8 @@ export function BillingPage() {
                       </button>
                       <button
                         onClick={() => setSelectedBillForAddItem(b)}
-                        disabled={b.on_hold}
-                        title={b.on_hold ? `On hold: ${b.hold_reason}` : undefined}
+                        disabled={b.on_hold || b.is_locked}
+                        title={b.on_hold ? `On hold: ${b.hold_reason}` : b.is_locked ? "Locked (final bill)" : undefined}
                         className="px-2 py-1 text-xs font-semibold bg-brand-tint text-brand-dark rounded hover:bg-brand-border"
                       >
                         + Add Item

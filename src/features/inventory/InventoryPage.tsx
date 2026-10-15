@@ -19,6 +19,7 @@ export function InventoryPage() {
   const [showCatModal, setShowCatModal] = useState(false)
   const [catName, setCatName] = useState("")
   const [catCode, setCatCode] = useState("")
+  const [catParent, setCatParent] = useState("")
 
   // New Item Modal
   const [showItemModal, setShowItemModal] = useState(false)
@@ -92,10 +93,11 @@ export function InventoryPage() {
   const handleCreateCategory = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      await createItemCategory({ name: catName, code: catCode })
+      await createItemCategory({ name: catName, code: catCode, parent: catParent ? Number(catParent) : null })
       setShowCatModal(false)
       setCatName("")
       setCatCode("")
+      setCatParent("")
       loadData()
     } catch (err: any) {
       alert("Failed to create category: " + (err.response?.data?.detail || err.message))
@@ -482,6 +484,13 @@ export function InventoryPage() {
                   onChange={(e) => setCatCode(e.target.value)}
                   className="w-full px-3 py-2 text-sm border rounded-lg dark:bg-slate-900 dark:border-slate-700"
                 />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-ink-2 dark:text-slate-300 mb-1">Sub-category of (optional)</label>
+                <select value={catParent} onChange={(e) => setCatParent(e.target.value)} className="w-full px-3 py-2 text-sm border rounded-lg dark:bg-slate-900 dark:border-slate-700">
+                  <option value="">— top-level category —</option>
+                  {categories.filter((c) => !c.parent).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
               </div>
               <div className="flex justify-end gap-2">
                 <button type="button" onClick={() => setShowCatModal(false)} className="px-4 py-2 text-sm text-ink-4">

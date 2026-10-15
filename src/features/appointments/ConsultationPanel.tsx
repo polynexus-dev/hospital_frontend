@@ -16,6 +16,8 @@ import {
 } from "../../api/opd"
 import { SpecialtyAssessmentSection } from "../nabh/ClinicalTemplates"
 import { PatientHeaderCards } from "../clinical/PatientHeaderCards"
+import { BillHoldBadge } from "../billing/BillHoldBadge"
+import { TriageCard } from "./TriageCard"
 
 const inputClass = "w-full h-8 px-2.5 border border-border-strong rounded-control text-[12.5px]"
 const textareaClass = "w-full border border-border rounded-control p-2 text-[12.5px] leading-relaxed outline-none focus:border-brand"
@@ -106,7 +108,9 @@ export function ConsultationPanel({ appointmentId }: { appointmentId: number }) 
 
   return (
     <div className="space-y-4 border-t border-border-soft pt-3 mt-1">
+      <BillHoldBadge patientId={encounter.patient} />
       <PatientHeaderCards patientId={encounter.patient} />
+      <TriageCard encounterId={encounter.id} />
       <div>
         <div className="text-[11px] font-semibold uppercase tracking-[.04em] text-ink-4 mb-1.5">Vitals</div>
         {latestVitals && (

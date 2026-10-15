@@ -72,6 +72,7 @@ export function BillDrawer({
           <>
             <StatusPill value={bill.status} />
             {bill.on_hold && <span className="px-2 py-0.5 text-xs font-semibold rounded bg-warning-bg text-warning-text" title={bill.hold_reason}>On hold</span>}
+            {bill.is_locked && <span className="px-2 py-0.5 text-xs font-semibold rounded bg-chip-bg text-ink-2" title={`Locked by ${bill.locked_by_name || ""}`}>🔒 Locked</span>}
             {bill.is_interim && <span className="px-2 py-0.5 text-xs font-semibold rounded bg-chip-bg text-ink-2">Interim</span>}
             {bill.admission && <span className="px-2 py-0.5 text-xs font-semibold rounded bg-brand-tint text-brand-dark">IPD · admission #{bill.admission}</span>}
             {bill.patient_category && <span className="px-2 py-0.5 text-xs font-semibold rounded bg-chip-bg text-ink-2 capitalize">{bill.patient_category.replace(/_/g, " ")}</span>}
@@ -82,10 +83,10 @@ export function BillDrawer({
         bill && (
           <>
             <button className={`${btn} bg-chip-bg dark:bg-slate-700 text-ink dark:text-slate-200 hover:bg-border-soft`} onClick={() => onDownload(bill)}>📄 PDF</button>
-            <button className={`${btn} bg-brand-tint text-brand-dark hover:bg-brand-border disabled:opacity-50`} disabled={bill.on_hold} onClick={() => onAddItem(bill)}>+ Add item</button>
+            <button className={`${btn} bg-brand-tint text-brand-dark hover:bg-brand-border disabled:opacity-50`} disabled={bill.on_hold || bill.is_locked} onClick={() => onAddItem(bill)}>+ Add item</button>
             <button className={`${btn} bg-success-bg text-success-text hover:bg-success/25 disabled:opacity-50`} disabled={bill.on_hold || balance <= 0} onClick={() => onPay(bill)}>+ Pay</button>
             {!claim && <button className={`${btn} bg-accent-tint text-accent-hover hover:bg-accent/25`} onClick={() => onClaim(bill)}>+ Claim</button>}
-            <button className={`${btn} border border-border-strong hover:bg-page`} onClick={() => onAdjust(bill)}>Hold / credit / category</button>
+            <button className={`${btn} border border-border-strong hover:bg-page`} onClick={() => onAdjust(bill)}>Hold / lock / credit / category</button>
           </>
         )
       }

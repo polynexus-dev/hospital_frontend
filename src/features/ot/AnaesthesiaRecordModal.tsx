@@ -4,6 +4,7 @@ import { createAnaesthesiaRecord, downloadAnaesthesiaChart, finalizeAnaesthesiaR
 import { FieldInput } from "../../components/resource/ResourceTable"
 import type { AnaesthesiaRecord, AnaesthesiaRow, OTSchedule } from "../../types/api"
 import { userField } from "../nabh/fields"
+import { UpdatedBy } from "./UpdatedBy"
 
 // Anaesthesia record: vitals many times over the case, drugs, fluids and
 // recovery — and the printable chart (MedNet "anaesthesia chart print").
@@ -229,6 +230,7 @@ export function AnaesthesiaRecordModal({ schedule, onClose, onSaved }: { schedul
         <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
           {error && <span className="mr-auto text-sm text-danger-text">{error}</span>}
           {notice && !error && <span className="mr-auto text-sm text-success-text">{notice}</span>}
+          {!error && !notice && <UpdatedBy name={rec.updated_by_name} at={rec.updated_at} className="mr-auto" />}
           <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-ink-4">Close</button>
           <button type="button" disabled={busy} onClick={print} className="px-4 py-2 text-sm font-medium rounded-lg border border-border-strong dark:border-slate-600 disabled:opacity-50">Print chart</button>
           {!locked && <button type="button" disabled={busy} onClick={finalize} className="px-4 py-2 text-sm font-medium rounded-lg bg-brand-tint text-brand-dark disabled:opacity-50">Finalise</button>}

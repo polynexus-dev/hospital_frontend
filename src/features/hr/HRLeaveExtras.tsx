@@ -181,12 +181,37 @@ export function DependentsPanel() {
           employeeField(),
           patientField(),
           { key: "relationship", label: "Relationship", type: "select", options: [{ value: "spouse", label: "Spouse" }, { value: "child", label: "Child" }, { value: "parent", label: "Parent" }, { value: "parent_in_law", label: "Parent-in-law" }, { value: "sibling", label: "Sibling" }, { value: "other", label: "Other" }], required: true },
-          { key: "valid_until", label: "Covered until (blank = no end)", type: "date" },
+          { key: "valid_until", label: "Covered until (blank = the relation's age limit, if any)", type: "date" },
+          { key: "is_married", label: "Married", type: "boolean", defaultValue: false },
           { key: "is_active", label: "Active", type: "boolean", defaultValue: true },
         ],
         actions: [
           { label: "End cover", method: "patch", path: "", tone: "danger", show: (r) => r.is_active && !r.valid_until, url: (r) => `/hr/dependents/${r.id}/`,
             prompt: [{ key: "valid_until", label: "Staff rate until (last covered day)", type: "date", required: true }] },
+        ],
+      }} />
+      <ResourceTable config={{
+        title: "Dependent policy — how many per employee",
+        description: "The most specific matching row applies (blank = any). No rows = no limit.",
+        endpoint: "/hr/dependent-allowances/", createLabel: "Add rule",
+        columns: [col("employment_type", "Employment"), col("marital_status", "Marital status"), col("gender", "Gender"), col("max_dependents", "Max dependents")],
+        fields: [
+          { key: "employment_type", label: "Employment type (blank = any)", type: "select", options: [{ value: "", label: "Any" }, { value: "permanent", label: "Permanent" }, { value: "contract", label: "Contract" }, { value: "visiting", label: "Visiting" }] },
+          { key: "marital_status", label: "Marital status (blank = any)", type: "select", options: [{ value: "", label: "Any" }, { value: "single", label: "Single" }, { value: "married", label: "Married" }, { value: "widowed", label: "Widowed" }, { value: "divorced", label: "Divorced" }] },
+          { key: "gender", label: "Gender (blank = any)", type: "select", options: [{ value: "", label: "Any" }, { value: "male", label: "Male" }, { value: "female", label: "Female" }] },
+          { key: "max_dependents", label: "Max dependents", type: "number", required: true },
+        ],
+      }} />
+      <ResourceTable config={{
+        title: "Dependent policy — by relation",
+        description: "Age limit (cover ends on that birthday), unmarried only, and how many of the relation.",
+        endpoint: "/hr/dependent-relation-rules/", createLabel: "Add relation rule",
+        columns: [col("relationship", "Relationship"), col("max_age", "Age limit"), col("unmarried_only", "Unmarried only"), col("max_count", "Max")],
+        fields: [
+          { key: "relationship", label: "Relationship", type: "select", required: true, options: [{ value: "spouse", label: "Spouse" }, { value: "child", label: "Child" }, { value: "parent", label: "Parent" }, { value: "parent_in_law", label: "Parent-in-law" }, { value: "sibling", label: "Sibling" }, { value: "other", label: "Other" }] },
+          { key: "max_age", label: "Age limit (years, blank = none)", type: "number" },
+          { key: "unmarried_only", label: "Unmarried only", type: "boolean", defaultValue: false },
+          { key: "max_count", label: "At most (blank = no limit)", type: "number" },
         ],
       }} />
     </div>

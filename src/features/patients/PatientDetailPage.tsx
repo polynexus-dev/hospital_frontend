@@ -22,6 +22,8 @@ import { triggerBlobDownload } from "../../api/client"
 import type { AppointmentStatus, Channel, ConsentOptOut, Patient } from "../../types/api"
 import { useAuthStore } from "../../store/auth"
 import { PatientHeaderCards } from "../clinical/PatientHeaderCards"
+import { BillHoldBadge } from "../billing/BillHoldBadge"
+import { InsurancePoliciesCard } from "./InsurancePoliciesCard"
 import { StaffRateTag } from "../hr/StaffRateTag"
 import { PatientHistoryCard } from "../clinical/PatientHistoryCard"
 
@@ -890,6 +892,7 @@ export function PatientDetailPage() {
         </div>
       </Card>
 
+      <BillHoldBadge patientId={patient.id} />
       <PatientHeaderCards patientId={patient.id} />
 
       {/* Account + Linked people */}
@@ -901,6 +904,7 @@ export function PatientDetailPage() {
         <RecallCard patient={patient} />
         <CrmAcquisitionCard patient={patient} />
       </div>
+      <InsurancePoliciesCard patientId={patient.id} />
 
       {/* Tabs */}
       <div className="flex items-center gap-1 border-b border-border">

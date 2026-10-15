@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react"
-import { api, extractApiError } from "../../api/client"
+import { api, extractApiError, triggerBlobDownload } from "../../api/client"
 import { FieldInput, ResourceTable } from "../../components/resource/ResourceTable"
 import { col, doctorField } from "../nabh/fields"
+import { BillHoldBadge } from "../billing/BillHoldBadge"
 
 // MedNet M2.22 insurance parity: the insurance inbox and per-case
 // correspondence (INS-1), the pre-auth form + NHCX bundle (INS-2), and
@@ -377,6 +378,7 @@ export function PreAuthFormModal({ preauthId, onClose, onSaved }: { preauthId: n
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="text-lg font-bold">Pre-auth #{pa.id} — {pa.patient_name}</h2>
+            <BillHoldBadge patientId={pa.patient} />
             <p className="text-sm text-ink-4">{pa.tpa_name} · policy {pa.policy_number}</p>
           </div>
           <button onClick={onClose} className="text-ink-4 text-xl leading-none" aria-label="Close">×</button>
@@ -436,9 +438,64 @@ export function PreAuthFormModal({ preauthId, onClose, onSaved }: { preauthId: n
   )
 }
 
+interface ImportResult { added: number; already_on_list: number; errors: { row: number; item: string; error: string }[]; total_items: number }
+
+/** Excel / CSV upload of non-covered items into a list (MedNet M2.22 pharmacy setup). */
+function NonPayableImport() {
+  const [list, setList] = useState<unknown>(null)
+  const [file, setFile] = useState<File | null>(null)
+  const [replace, setReplace] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [result, setResult] = useState<ImportResult | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const run = async () => {
+    if (!list || !file) return
+    setBusy(true); setError(null); setResult(null)
+    try {
+      const fd = new FormData()
+      fd.append("file", file)
+      if (replace) fd.append("replace", "1")
+      setResult(await api.post<ImportResult>(`/tpa/non-payable-lists/${list}/import/`, fd, { isFormData: true }))
+    } catch (e) { setError(extractApiError(e)) } finally { setBusy(false) }
+  }
+  const template = async () => {
+    try { triggerBlobDownload(await api.getBlob("/tpa/non-payable-lists/import-template/"), "non-payable-items-template.xlsx") } catch (e) { setError(extractApiError(e)) }
+  }
+  return (
+    <section className="bg-white dark:bg-slate-800 rounded-xl border border-border dark:border-slate-700 p-5 space-y-3" aria-label="Import non-payable items">
+      <div>
+        <h2 className="text-lg font-bold">Import items from Excel</h2>
+        <p className="text-sm text-ink-4">Columns: Item, Type (medicine / service / keyword — blank works it out), Group (I, II, III, IV or other), Note. Medicines are matched by name, services by code or name; anything else becomes a keyword.</p>
+      </div>
+      <div className="flex flex-wrap items-end gap-3">
+        <label className="text-xs font-semibold text-ink-3 min-w-64">List
+          <div className="mt-1"><FieldInput field={{ key: "list", label: "List", type: "fk", source: "/tpa/non-payable-lists/" }} value={list} onChange={setList} /></div>
+        </label>
+        <input type="file" accept=".xlsx,.csv" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="text-sm" aria-label="Spreadsheet" />
+        <label className="flex items-center gap-1.5 text-sm"><input type="checkbox" checked={replace} onChange={(e) => setReplace(e.target.checked)} /> Replace the list's items</label>
+        <button onClick={run} disabled={!list || !file || busy} className="px-4 py-2 text-sm font-semibold rounded-lg bg-brand text-white disabled:opacity-50">{busy ? "Importing…" : "Import"}</button>
+        <button onClick={template} className="px-3 py-2 text-sm font-semibold rounded-lg border border-border-strong">Download template</button>
+      </div>
+      {error && <div className="text-sm text-danger-text">{error}</div>}
+      {result && (
+        <div className="text-sm space-y-1">
+          <div className="text-success-text">Added {result.added} · already on the list {result.already_on_list} · list now has {result.total_items} items.</div>
+          {result.errors.length > 0 && (
+            <ul className="text-danger-text list-disc pl-5">
+              {result.errors.slice(0, 20).map((e) => <li key={e.row}>Row {e.row} ({e.item}): {e.error}</li>)}
+              {result.errors.length > 20 && <li>…and {result.errors.length - 20} more</li>}
+            </ul>
+          )}
+        </div>
+      )}
+    </section>
+  )
+}
+
 export function NonPayablePanel() {
   return (
     <div className="space-y-6">
+      <NonPayableImport />
       <ResourceTable config={{
         title: "Non-payable item lists",
         description: "Items insurers don't pay for (e.g. the IRDAI list). A list with no insurer applies to every insurer. Matching lines on insurance bills are charged to the patient; the rest is claimable.",

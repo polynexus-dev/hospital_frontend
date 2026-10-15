@@ -9,6 +9,7 @@ import { billDispense, dispenseMedicine, listDispenseRecords, listMedicineBatche
 import { FieldInput } from "../../components/resource/ResourceTable"
 import { patientField } from "../nabh/fields"
 import { viewRecord } from "../../store/recordViewer"
+import { BillHoldBadge } from "../billing/BillHoldBadge"
 
 const inputClass = "h-8 px-2.5 border border-border-strong rounded-control text-[12.5px]"
 
@@ -136,6 +137,7 @@ function DispenseModal({ medicine, onClose, onDispensed }: { medicine: Medicine;
           <div>
             <div className="text-[11.5px] font-semibold text-ink-3 mb-1">Patient (charged to their bill; blank = counter sale)</div>
             <FieldInput field={patientField(false)} value={patient} onChange={setPatient} />
+            <BillHoldBadge patientId={patient ? Number(patient) : null} className="mt-1.5" />
           </div>
           {selectedBatch && (
             <div className="text-[12px] text-ink-3">MRP ₹{Number(selectedBatch.mrp ?? 0).toLocaleString("en-IN")} each · ₹{(Number(selectedBatch.mrp ?? 0) * quantity).toLocaleString("en-IN")} incl. GST</div>
