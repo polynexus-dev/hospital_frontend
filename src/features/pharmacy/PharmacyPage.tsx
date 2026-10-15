@@ -8,6 +8,7 @@ import { ApiError, extractApiError } from "../../api/client"
 import { billDispense, dispenseMedicine, listDispenseRecords, listMedicineBatches, listMedicines, type Medicine, type MedicineBatch } from "../../api/pharmacy"
 import { FieldInput } from "../../components/resource/ResourceTable"
 import { patientField } from "../nabh/fields"
+import { viewRecord } from "../../store/recordViewer"
 
 const inputClass = "h-8 px-2.5 border border-border-strong rounded-control text-[12.5px]"
 
@@ -63,7 +64,7 @@ export function PharmacyPage() {
         <CardHeader><Eyebrow>Recent dispensing</Eyebrow></CardHeader>
         <div className="flex flex-col gap-1.5">
           {recentDispenses.slice(0, 10).map((d) => (
-            <div key={d.id} className="text-[12.5px] flex items-center justify-between gap-3">
+            <div onClick={(ev) => viewRecord(ev, d, { subtitle: "Dispense" })} title="Click to view details" key={d.id} className="text-[12.5px] flex items-center justify-between gap-3 cursor-pointer hover:bg-page/60">
               <span>
                 {d.quantity} × {d.medicine_name}
                 <span className="block text-[11.5px] text-ink-4">

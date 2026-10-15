@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { api, extractApiError } from "../../api/client"
+import { viewRecord } from "../../store/recordViewer"
 
 // Structured assessment templates: the builder where hospitals make their own
 // (or adapt the pre-built specialty library), and the form that renders any
@@ -444,7 +445,7 @@ export function ClinicalTemplatesPage() {
             {templatesQuery.isLoading ? (
               <tr><td colSpan={6} className="px-4 py-8 text-center text-ink-4">Loading…</td></tr>
             ) : rows.map((t) => (
-              <tr key={t.id} className={t.is_active ? "" : "opacity-50"}>
+              <tr key={t.id} onClick={(ev) => viewRecord(ev, t, { subtitle: "Clinical template" })} title="Click to view details" className={`cursor-pointer hover:bg-page/50 ${t.is_active ? "" : "opacity-50"}`}>
                 <td className="px-4 py-3 font-medium">{t.name}</td>
                 <td className="px-4 py-3">{categoryLabel(t.category)}</td>
                 <td className="px-4 py-3 uppercase text-xs">{t.setting === "both" ? "OPD & IPD" : t.setting}</td>

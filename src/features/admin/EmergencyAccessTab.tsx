@@ -6,6 +6,7 @@ import { Pill } from "../../components/ui/Pill"
 import { ErrorState, EmptyState, LoadingState } from "../../components/ui/QueryStates"
 import { listEmergencyAccessLogs, markEmergencyAccessReviewed } from "../../api/core"
 import type { EmergencyAccessLog } from "../../types/api"
+import { viewRecord } from "../../store/recordViewer"
 
 function ReviewRow({ log }: { log: EmergencyAccessLog }) {
   const queryClient = useQueryClient()
@@ -17,7 +18,7 @@ function ReviewRow({ log }: { log: EmergencyAccessLog }) {
   })
 
   return (
-    <div className="grid grid-cols-[1.1fr_1.1fr_1.4fr_1.6fr_0.9fr_1.6fr] gap-2.5 py-2.5 border-b border-border-faint items-center text-[13px] min-w-[1100px]">
+    <div onClick={(ev) => viewRecord(ev, log, { subtitle: "Emergency access log" })} title="Click to view details" className="grid grid-cols-[1.1fr_1.1fr_1.4fr_1.6fr_0.9fr_1.6fr] gap-2.5 py-2.5 border-b border-border-faint items-center text-[13px] min-w-[1100px] cursor-pointer hover:bg-page/60">
       <div className="font-mono text-[12px] text-ink-3">{new Date(log.accessed_at).toLocaleString()}</div>
       <div className="text-ink-3 truncate">{log.actor_email ?? "unknown"}</div>
       <div className="text-ink-2 truncate">{log.model_name} #{log.object_id}</div>

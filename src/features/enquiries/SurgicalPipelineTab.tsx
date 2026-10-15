@@ -11,6 +11,7 @@ import { Button } from "../../components/ui/Button"
 import { Card } from "../../components/ui/Card"
 import { Pill } from "../../components/ui/Pill"
 import { showToast } from "../../components/ui/Toast"
+import { viewRecord } from "../../store/recordViewer"
 
 interface Props {
   onNewEstimate: () => void
@@ -238,7 +239,7 @@ export function SurgicalPipelineTab({ onNewEstimate }: Props) {
               </thead>
               <tbody className="divide-y divide-border-faint dark:divide-slate-800">
                 {estimates.map((item) => (
-                  <tr key={item.id} className="hover:bg-page/60 dark:hover:bg-slate-800/40">
+                  <tr key={item.id} onClick={(ev) => viewRecord(ev, item, { subtitle: "Surgical pipeline" })} title="Click to view details" className="hover:bg-page/60 dark:hover:bg-slate-800/40 cursor-pointer">
                     <td className="py-3 px-4">
                       <div className="font-bold text-ink dark:text-white">
                         {item.patient_name || "Prospective Patient"}

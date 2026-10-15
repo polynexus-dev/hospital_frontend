@@ -3,6 +3,8 @@ import { addPOItem, createItem, createItemCategory, createPurchaseOrder, createS
 import type { Item, ItemCategory, PurchaseOrder, StockLevel, StockTransaction } from "../../types/api"
 import { api, extractApiError } from "../../api/client"
 import { FieldInput } from "../../components/resource/ResourceTable"
+import { viewRecord } from "../../store/recordViewer"
+import { Pager } from "../../components/ui/Pager"
 
 export function InventoryPage() {
   const [activeTab, setActiveTab] = useState<"items" | "stock" | "po" | "transactions">("items")
@@ -54,21 +56,27 @@ export function InventoryPage() {
   const [txQty, setTxQty] = useState("")
   const [txRef, setTxRef] = useState("")
 
+  const [pages, setPages] = useState<Record<string, number>>({})
+  const [counts, setCounts] = useState<Record<string, number>>({})
+  const pageOf = (k: string) => ({ page: String(pages[k] ?? 1) })
+  const goTo = (k: string) => (n: number) => setPages((s) => ({ ...s, [k]: n }))
+
   const loadData = async () => {
     try {
       setLoading(true)
       const [cRes, iRes, sRes, pRes, tRes] = await Promise.all([
         listItemCategories(),
-        listItems(),
-        listStockLevels(),
-        listPurchaseOrders(),
-        listStockTransactions(),
+        listItems(pageOf("items")),
+        listStockLevels(pageOf("stock")),
+        listPurchaseOrders(pageOf("po")),
+        listStockTransactions(pageOf("transactions")),
       ])
       setCategories(cRes.results)
       setItems(iRes.results)
       setStockLevels(sRes.results)
       setOrders(pRes.results)
       setTransactions(tRes.results)
+      setCounts({ items: iRes.count, stock: sRes.count, po: pRes.count, transactions: tRes.count })
     } catch (err) {
       console.error(err)
     } finally {
@@ -78,7 +86,8 @@ export function InventoryPage() {
 
   useEffect(() => {
     loadData()
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pages])
 
   const handleCreateCategory = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -237,7 +246,7 @@ export function InventoryPage() {
               : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
-          Item Catalog ({items.length})
+          Item Catalog ({counts.items ?? items.length})
         </button>
         <button
           onClick={() => setActiveTab("stock")}
@@ -247,7 +256,7 @@ export function InventoryPage() {
               : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
-          Stock Levels ({stockLevels.length})
+          Stock Levels ({counts.stock ?? stockLevels.length})
         </button>
         <button
           onClick={() => setActiveTab("po")}
@@ -257,7 +266,7 @@ export function InventoryPage() {
               : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
-          Purchase Orders ({orders.length})
+          Purchase Orders ({counts.po ?? orders.length})
         </button>
         <button
           onClick={() => setActiveTab("transactions")}
@@ -267,13 +276,14 @@ export function InventoryPage() {
               : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
-          Stock Movements ({transactions.length})
+          Stock Movements ({counts.transactions ?? transactions.length})
         </button>
       </div>
 
       {loading ? (
         <div className="py-12 text-center text-ink-4">Loading inventory data...</div>
       ) : activeTab === "items" ? (
+        <div className="space-y-3">
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-hidden">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
@@ -294,7 +304,7 @@ export function InventoryPage() {
                 </tr>
               ) : (
                 items.map((i) => (
-                  <tr key={i.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
+                  <tr key={i.id} onClick={(ev) => viewRecord(ev, i, { subtitle: "Inventory item" })} title="Click to view details" className="hover:bg-page/50 dark:hover:bg-slate-700/50 cursor-pointer">
                     <td className="px-4 py-3 font-semibold text-brand">{i.code}</td>
                     <td className="px-4 py-3 font-medium text-ink dark:text-slate-100">{i.name}</td>
                     <td className="px-4 py-3 text-ink-4">{i.category_name || `Cat #${i.category}`}</td>
@@ -306,7 +316,10 @@ export function InventoryPage() {
             </tbody>
           </table>
         </div>
+        <Pager page={pages.items ?? 1} count={counts.items ?? 0} onPage={goTo("items")} />
+        </div>
       ) : activeTab === "stock" ? (
+        <div className="space-y-3">
         <div className="space-y-4">
           <div className="flex justify-end">
             <button
@@ -336,7 +349,7 @@ export function InventoryPage() {
                   </tr>
                 ) : (
                   stockLevels.map((s) => (
-                    <tr key={s.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
+                    <tr key={s.id} onClick={(ev) => viewRecord(ev, s, { subtitle: "Stock level" })} title="Click to view details" className="hover:bg-page/50 dark:hover:bg-slate-700/50 cursor-pointer">
                       <td className="px-4 py-3 font-medium">{s.item_name || `Item #${s.item}`}</td>
                       <td className="px-4 py-3 text-xs font-semibold text-ink-2">{s.batch_number}</td>
                       <td className="px-4 py-3 font-bold text-success">{s.quantity_on_hand}</td>
@@ -349,7 +362,10 @@ export function InventoryPage() {
             </table>
           </div>
         </div>
+        <Pager page={pages.stock ?? 1} count={counts.stock ?? 0} onPage={goTo("stock")} />
+        </div>
       ) : activeTab === "po" ? (
+        <div className="space-y-3">
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-hidden">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
@@ -370,7 +386,7 @@ export function InventoryPage() {
                 </tr>
               ) : (
                 orders.map((po) => (
-                  <tr key={po.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
+                  <tr key={po.id} onClick={(ev) => viewRecord(ev, po, { subtitle: "Purchase order" })} title="Click to view details" className="hover:bg-page/50 dark:hover:bg-slate-700/50 cursor-pointer">
                     <td className="px-4 py-3 font-semibold text-brand">{po.po_number}</td>
                     <td className="px-4 py-3 font-medium text-ink dark:text-slate-100">{po.vendor_name}</td>
                     <td className="px-4 py-3 capitalize text-xs font-semibold text-success">{po.status}</td>
@@ -389,7 +405,10 @@ export function InventoryPage() {
             </tbody>
           </table>
         </div>
+        <Pager page={pages.po ?? 1} count={counts.po ?? 0} onPage={goTo("po")} />
+        </div>
       ) : (
+        <div className="space-y-3">
         <div className="space-y-4">
           <div className="flex justify-end">
             <button
@@ -419,7 +438,7 @@ export function InventoryPage() {
                   </tr>
                 ) : (
                   transactions.map((tx) => (
-                    <tr key={tx.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
+                    <tr key={tx.id} onClick={(ev) => viewRecord(ev, tx, { subtitle: "Stock transaction" })} title="Click to view details" className="hover:bg-page/50 dark:hover:bg-slate-700/50 cursor-pointer">
                       <td className="px-4 py-3 font-medium">{tx.item_name || `Item #${tx.item}`}</td>
                       <td className="px-4 py-3 capitalize text-xs font-semibold">{tx.transaction_type}</td>
                       <td className="px-4 py-3 font-bold">{tx.quantity}</td>
@@ -431,6 +450,8 @@ export function InventoryPage() {
               </tbody>
             </table>
           </div>
+        </div>
+        <Pager page={pages.transactions ?? 1} count={counts.transactions ?? 0} onPage={goTo("transactions")} />
         </div>
       )}
 

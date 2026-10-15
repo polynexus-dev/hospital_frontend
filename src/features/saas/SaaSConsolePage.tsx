@@ -32,6 +32,7 @@ import { PermissionMatrixModal } from "../admin/PermissionMatrixModal"
 import { LicenseGeneratorModal } from "./LicenseGeneratorModal"
 import { LicencesTab } from "./LicencesTab"
 import { TenantOnboardModal } from "./TenantOnboardModal"
+import { viewRecord } from "../../store/recordViewer"
 
 
 type TabKey = "overview" | "subscriptions" | "invoices" | "usage" | "licences" | "tickets"
@@ -1116,7 +1117,7 @@ export function SaaSConsolePage() {
             {usage.isLoading && <LoadingState />}
             {usage.isError && <ErrorState />}
             {filteredUsage.map((u) => (
-              <div key={u.id} className="grid grid-cols-[1.4fr_1fr_0.8fr_0.9fr_0.8fr_0.8fr] gap-2.5 py-2.5 border-b border-border-faint items-center text-[13px] min-w-[900px]">
+              <div onClick={(ev) => viewRecord(ev, u, { subtitle: "User" })} title="Click to view details" key={u.id} className="grid grid-cols-[1.4fr_1fr_0.8fr_0.9fr_0.8fr_0.8fr] gap-2.5 py-2.5 border-b border-border-faint items-center text-[13px] min-w-[900px] cursor-pointer hover:bg-page/60">
                 <div className="font-semibold truncate">{u.hospital_name ?? u.hospital}</div>
                 <div className="text-ink-4 text-[12px]">{formatDate(u.period_start)}</div>
                 <div className="tabular-nums">{u.active_staff_count}</div>

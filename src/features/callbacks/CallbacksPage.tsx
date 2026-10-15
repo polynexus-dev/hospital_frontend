@@ -12,6 +12,7 @@ import { createEnquiry } from "../../api/enquiries"
 import { listUsers } from "../../api/accounts"
 import { slaInfo } from "../../lib/sla"
 import type { CallbackTask } from "../../types/api"
+import { viewRecord } from "../../store/recordViewer"
 
 export function CallbacksPage() {
   const queryClient = useQueryClient()
@@ -80,7 +81,7 @@ export function CallbacksPage() {
           {openQueue.map((task) => {
             const sla = slaInfo(task.sla_due_at, task.status === "done")
             return (
-              <div key={task.id} className="grid grid-cols-[1.3fr_0.9fr_1.1fr_0.6fr_0.9fr_0.8fr_1.5fr] gap-2.5 py-2.5 border-b border-border-faint items-center text-[13px] min-w-[880px]">
+              <div onClick={(ev) => viewRecord(ev, task, { subtitle: "Callback" })} title="Click to view details" key={task.id} className="grid grid-cols-[1.3fr_0.9fr_1.1fr_0.6fr_0.9fr_0.8fr_1.5fr] gap-2.5 py-2.5 border-b border-border-faint items-center text-[13px] min-w-[880px] cursor-pointer hover:bg-page/60">
                 <div className="font-mono text-[12.5px]">{task.phone_number}</div>
                 <div className="text-ink-3 text-[12.5px]">{new Date(task.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
                 <div className="text-ink-3 text-[12.5px] truncate">
@@ -164,7 +165,7 @@ function LiveQueueCard() {
       {live.isLoading && <LoadingState />}
       {live.isError && <div className="px-3.5 py-3 text-[12.5px] text-danger-text">{extractApiError(live.error)}</div>}
       {waiting.map((w) => (
-        <div key={w.id} className="px-3.5 py-2.5 border-b border-border-faint flex items-center gap-3 text-[13px]">
+        <div onClick={(ev) => viewRecord(ev, w, { subtitle: "Waitlist entry" })} title="Click to view details" key={w.id} className="px-3.5 py-2.5 border-b border-border-faint flex items-center gap-3 text-[13px] cursor-pointer hover:bg-page/60">
           <div className="w-7 h-7 rounded-full bg-brand-tint text-brand font-semibold flex items-center justify-center flex-none">{w.position}</div>
           <div className="min-w-0 flex-1">
             <div className="font-mono text-[12.5px]">{w.caller}{w.patient_name && <span className="font-sans font-semibold ml-2">{w.patient_name}</span>}</div>

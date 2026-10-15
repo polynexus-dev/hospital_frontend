@@ -5,6 +5,7 @@ import { Button } from "../../components/ui/Button"
 import { api, extractApiError } from "../../api/client"
 import { getLicenseStatus } from "../../api/licensing"
 import type { Paginated } from "../../types/api"
+import { viewRecord } from "../../store/recordViewer"
 
 interface Ticket {
   id: number
@@ -73,7 +74,7 @@ export function SupportCard() {
           <thead className="text-left text-[11px] uppercase text-ink-4"><tr><th className="py-1">#</th><th>Subject</th><th>Priority</th><th>Status</th><th>Raised</th></tr></thead>
           <tbody>
             {rows.map((t) => (
-              <tr key={t.id} className="border-t border-border align-top">
+              <tr key={t.id} onClick={(ev) => viewRecord(ev, t, { subtitle: "Support ticket" })} title="Click to view details" className="border-t border-border align-top cursor-pointer">
                 <td className="py-1.5">{t.id}</td>
                 <td>{t.subject}{t.resolution_notes && <div className="text-[12px] text-ink-4">{t.resolution_notes}</div>}</td>
                 <td>{t.priority}</td>

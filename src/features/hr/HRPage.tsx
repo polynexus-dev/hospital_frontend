@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react"
 import { approveLeaveRequest, createAttendance, createEmployee, createShift, linkEmployeeUser, listAttendance, listEmployees, listLeaveRequests, listShifts, rejectLeaveRequest } from "../../api/hr"
 import type { Attendance, Employee, LeaveRequest, Shift } from "../../types/api"
 import { LeaveApplyModal } from "./LeaveApplyModal"
+import { viewRecord } from "../../store/recordViewer"
+import { Pager } from "../../components/ui/Pager"
 
 export function HRPage() {
   const [activeTab, setActiveTab] = useState<"employees" | "attendance" | "leaves" | "shifts">("employees")
@@ -35,19 +37,25 @@ export function HRPage() {
   const [shiftDate, setShiftDate] = useState("")
   const [shiftType, setShiftType] = useState<Shift["shift_type"]>("morning")
 
+  const [pages, setPages] = useState<Record<string, number>>({})
+  const [counts, setCounts] = useState<Record<string, number>>({})
+  const pageOf = (k: string) => ({ page: String(pages[k] ?? 1) })
+  const goTo = (k: string) => (n: number) => setPages((s) => ({ ...s, [k]: n }))
+
   const loadData = async () => {
     try {
       setLoading(true)
       const [empRes, attRes, lRes, sRes] = await Promise.all([
-        listEmployees(),
-        listAttendance(),
-        listLeaveRequests(),
-        listShifts(),
+        listEmployees(pageOf("employees")),
+        listAttendance(pageOf("attendance")),
+        listLeaveRequests(pageOf("leaves")),
+        listShifts(pageOf("shifts")),
       ])
       setEmployees(empRes.results)
       setAttendance(attRes.results)
       setLeaves(lRes.results)
       setShifts(sRes.results)
+      setCounts({ employees: empRes.count, attendance: attRes.count, leaves: lRes.count, shifts: sRes.count })
     } catch (err) {
       console.error(err)
     } finally {
@@ -57,7 +65,8 @@ export function HRPage() {
 
   useEffect(() => {
     loadData()
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pages])
 
   const handleCreateEmployee = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -167,7 +176,7 @@ export function HRPage() {
               : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
-          Staff Directory ({employees.length})
+          Staff Directory ({counts.employees ?? employees.length})
         </button>
         <button
           onClick={() => setActiveTab("attendance")}
@@ -177,7 +186,7 @@ export function HRPage() {
               : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
-          Attendance ({attendance.length})
+          Attendance ({counts.attendance ?? attendance.length})
         </button>
         <button
           onClick={() => setActiveTab("leaves")}
@@ -187,7 +196,7 @@ export function HRPage() {
               : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
-          Leave Requests ({leaves.length})
+          Leave Requests ({counts.leaves ?? leaves.length})
         </button>
         <button
           onClick={() => setActiveTab("shifts")}
@@ -197,13 +206,14 @@ export function HRPage() {
               : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
-          Shift Roster ({shifts.length})
+          Shift Roster ({counts.shifts ?? shifts.length})
         </button>
       </div>
 
       {loading ? (
         <div className="py-12 text-center text-ink-4">Loading HR records...</div>
       ) : activeTab === "employees" ? (
+        <div className="space-y-3">
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-hidden">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
@@ -225,7 +235,7 @@ export function HRPage() {
                 </tr>
               ) : (
                 employees.map((e) => (
-                  <tr key={e.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
+                  <tr key={e.id} onClick={(ev) => viewRecord(ev, e, { subtitle: "Employee" })} title="Click to view details" className="hover:bg-page/50 dark:hover:bg-slate-700/50 cursor-pointer">
                     <td className="px-4 py-3 font-bold text-accent dark:text-teal-400">{e.employee_code}</td>
                     <td className="px-4 py-3 font-medium text-ink dark:text-slate-100">{e.designation}</td>
                     <td className="px-4 py-3 capitalize text-xs font-semibold text-ink-3">{e.employment_type}</td>
@@ -255,7 +265,10 @@ export function HRPage() {
             </tbody>
           </table>
         </div>
+        <Pager page={pages.employees ?? 1} count={counts.employees ?? 0} onPage={goTo("employees")} />
+        </div>
       ) : activeTab === "attendance" ? (
+        <div className="space-y-3">
         <div className="space-y-4">
           <div className="flex justify-end">
             <button
@@ -283,7 +296,7 @@ export function HRPage() {
                   </tr>
                 ) : (
                   attendance.map((a) => (
-                    <tr key={a.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
+                    <tr key={a.id} onClick={(ev) => viewRecord(ev, a, { subtitle: "Attendance" })} title="Click to view details" className="hover:bg-page/50 dark:hover:bg-slate-700/50 cursor-pointer">
                       <td className="px-4 py-3 font-medium text-ink dark:text-slate-100">{a.employee_code}</td>
                       <td className="px-4 py-3 text-ink-4">{a.date}</td>
                       <td className="px-4 py-3 capitalize font-semibold text-accent">{a.status}</td>
@@ -294,7 +307,10 @@ export function HRPage() {
             </table>
           </div>
         </div>
+        <Pager page={pages.attendance ?? 1} count={counts.attendance ?? 0} onPage={goTo("attendance")} />
+        </div>
       ) : activeTab === "leaves" ? (
+        <div className="space-y-3">
         <div className="space-y-4">
           <div className="flex justify-end">
             <button
@@ -325,7 +341,7 @@ export function HRPage() {
                   </tr>
                 ) : (
                   leaves.map((l) => (
-                    <tr key={l.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
+                    <tr key={l.id} onClick={(ev) => viewRecord(ev, l, { subtitle: "Leave request" })} title="Click to view details" className="hover:bg-page/50 dark:hover:bg-slate-700/50 cursor-pointer">
                       <td className="px-4 py-3 font-medium text-ink dark:text-slate-100">{l.employee_code}</td>
                       <td className="px-4 py-3 text-ink-2 dark:text-slate-300">
                         {l.leave_type}
@@ -364,7 +380,10 @@ export function HRPage() {
             </table>
           </div>
         </div>
+        <Pager page={pages.leaves ?? 1} count={counts.leaves ?? 0} onPage={goTo("leaves")} />
+        </div>
       ) : (
+        <div className="space-y-3">
         <div className="space-y-4">
           <div className="flex justify-end">
             <button
@@ -392,7 +411,7 @@ export function HRPage() {
                   </tr>
                 ) : (
                   shifts.map((s) => (
-                    <tr key={s.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
+                    <tr key={s.id} onClick={(ev) => viewRecord(ev, s, { subtitle: "Shift" })} title="Click to view details" className="hover:bg-page/50 dark:hover:bg-slate-700/50 cursor-pointer">
                       <td className="px-4 py-3 font-medium text-ink dark:text-slate-100">{s.employee_code}</td>
                       <td className="px-4 py-3 text-ink-4">{s.shift_date}</td>
                       <td className="px-4 py-3 capitalize font-semibold text-accent">{s.shift_type}</td>
@@ -402,6 +421,8 @@ export function HRPage() {
               </tbody>
             </table>
           </div>
+        </div>
+        <Pager page={pages.shifts ?? 1} count={counts.shifts ?? 0} onPage={goTo("shifts")} />
         </div>
       )}
 

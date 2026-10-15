@@ -1082,6 +1082,13 @@ export interface BillItem {
   unit_price: string
   total_price: string
   source?: string
+  hsn_sac?: string
+  gst_rate?: string
+  tax_amount?: string
+  service_date?: string | null
+  doctor?: number | null
+  non_payable?: boolean
+  non_payable_reason?: string
 }
 
 export interface Payment {
@@ -1106,8 +1113,10 @@ export interface InsuranceClaim {
 export interface Bill {
   id: number
   patient: number
-  patient_detail?: { first_name: string; last_name: string; mobile: string }
+  patient_detail?: { id?: number; first_name: string; last_name: string; mobile: string; [key: string]: unknown }
   admission: number | null
+  is_interim?: boolean
+  tax_amount?: string
   total_amount: string
   discount_amount: string
   net_amount: string

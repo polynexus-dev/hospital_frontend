@@ -21,6 +21,7 @@ import {
   type DoctorInput,
 } from "../../api/doctors"
 import type { Doctor, Department, SlotTemplate } from "../../types/api"
+import { viewRecord } from "../../store/recordViewer"
 
 const COMMON_SPECIALITIES = [
   "General Medicine",
@@ -1447,7 +1448,7 @@ export function DoctorsPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {filteredDoctors.map((doc) => (
-                  <tr key={doc.id} className="hover:bg-page/50 transition-colors">
+                  <tr key={doc.id} onClick={(ev) => viewRecord(ev, doc, { subtitle: "Doctor" })} title="Click to view details" className="hover:bg-page/50 transition-colors cursor-pointer">
                     {/* Physician */}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">

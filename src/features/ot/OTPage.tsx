@@ -19,6 +19,8 @@ import { AnaesthesiaRecordModal } from "./AnaesthesiaRecordModal"
 import { EncounterPill } from "./encounter"
 import { OTBoard } from "./OTBoard"
 import { OTChargesModal } from "./OTChargesModal"
+import { viewRecord } from "../../store/recordViewer"
+import { Pager } from "../../components/ui/Pager"
 
 const gradeField = { key: "surgery_grade", label: "Surgery grade", type: "fk" as const, source: "/finance/surgery-grades/?is_active=true", sourceLabel: (r: any) => `${r.name} (${r.code})` }
 const STATUS_LABEL: Record<string, string> = { scheduled: "Scheduled", in_progress: "In progress", completed: "Completed", cancelled: "Cancelled" }
@@ -70,12 +72,18 @@ export function OTPage() {
   const [implantName, setImplantName] = useState("")
   const [implantSerial, setImplantSerial] = useState("")
 
+  const [pages, setPages] = useState<Record<string, number>>({})
+  const [counts, setCounts] = useState<Record<string, number>>({})
+  const pageOf = (k: string) => ({ page: String(pages[k] ?? 1) })
+  const goTo = (k: string) => (n: number) => setPages((s) => ({ ...s, [k]: n }))
+
   const loadData = async () => {
     try {
       setLoading(true)
-      const [reqRes, schedRes] = await Promise.all([listSurgeryRequests(), listOTSchedules()])
+      const [reqRes, schedRes] = await Promise.all([listSurgeryRequests(pageOf("requests")), listOTSchedules(pageOf("schedules"))])
       setRequests(reqRes.results)
       setSchedules(schedRes.results)
+      setCounts({ requests: reqRes.count, schedules: schedRes.count })
       setBoardKey((k) => k + 1)
     } catch (err) {
       console.error(err)
@@ -86,7 +94,8 @@ export function OTPage() {
 
   useEffect(() => {
     loadData()
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pages])
 
   const handleCreateRequest = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -269,7 +278,7 @@ export function OTPage() {
               : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
-          Surgery Requests ({requests.length})
+          Surgery Requests ({counts.requests ?? requests.length})
         </button>
         <button
           onClick={() => setActiveTab("schedules")}
@@ -279,7 +288,7 @@ export function OTPage() {
               : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
-          OT Schedules & Notes ({schedules.length})
+          OT Schedules & Notes ({counts.schedules ?? schedules.length})
         </button>
       </div>
 
@@ -288,6 +297,7 @@ export function OTPage() {
       ) : loading ? (
         <div className="py-12 text-center text-ink-4">Loading OT records...</div>
       ) : activeTab === "requests" ? (
+        <div className="space-y-3">
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-hidden">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
@@ -309,7 +319,7 @@ export function OTPage() {
                 </tr>
               ) : (
                 requests.map((r) => (
-                  <tr key={r.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
+                  <tr key={r.id} onClick={(ev) => viewRecord(ev, r, { subtitle: "Surgery request" })} title="Click to view details" className="hover:bg-page/50 dark:hover:bg-slate-700/50 cursor-pointer">
                     <td className="px-4 py-3 font-medium text-ink dark:text-slate-100">
                       {r.patient_detail ? `${r.patient_detail.first_name} ${r.patient_detail.last_name}` : `Patient #${r.patient}`}
                     </td>
@@ -354,7 +364,10 @@ export function OTPage() {
             </tbody>
           </table>
         </div>
+        <Pager page={pages.requests ?? 1} count={counts.requests ?? 0} onPage={goTo("requests")} />
+        </div>
       ) : (
+        <div className="space-y-3">
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-hidden">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
@@ -380,7 +393,7 @@ export function OTPage() {
                 schedules.map((s) => {
                   const req = requests.find((r) => r.id === s.surgery_request)
                   return (
-                  <tr key={s.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
+                  <tr key={s.id} onClick={(ev) => viewRecord(ev, s, { subtitle: "OT schedule" })} title="Click to view details" className="hover:bg-page/50 dark:hover:bg-slate-700/50 cursor-pointer">
                     <td className="px-4 py-3 font-semibold text-ink dark:text-slate-100">{s.operation_theatre_room}</td>
                     <td className="px-4 py-3 text-ink-2 dark:text-slate-300">
                       {req?.patient_detail ? `${req.patient_detail.first_name} ${req.patient_detail.last_name}` : `Request #${s.surgery_request}`}
@@ -460,6 +473,8 @@ export function OTPage() {
               )}
             </tbody>
           </table>
+        </div>
+        <Pager page={pages.schedules ?? 1} count={counts.schedules ?? 0} onPage={goTo("schedules")} />
         </div>
       )}
 

@@ -11,6 +11,7 @@ import {
 } from "../../api/saas"
 import { useAuthStore } from "../../store/auth"
 import type { LicenseRequest, SaaSStaff } from "../../types/api"
+import { viewRecord } from "../../store/recordViewer"
 
 function errorText(err: unknown) {
   if (err instanceof ApiError && err.body && typeof err.body === "object") {
@@ -107,7 +108,7 @@ export function LicenceRequestsPanel() {
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.id} className="border-b border-border-soft align-top">
+                <tr key={r.id} onClick={(ev) => viewRecord(ev, r, { subtitle: "Licence request" })} title="Click to view details" className="border-b border-border-soft align-top cursor-pointer">
                   <td className="py-2.5 pr-3 font-semibold">{r.hospital_name}</td>
                   <td className="py-2.5 pr-3 text-[12px]">{terms(r)}</td>
                   <td className="py-2.5 pr-3">
@@ -207,7 +208,7 @@ export function LicenceTeamPanel() {
               {rows.map((s) => {
                 const isOwner = s.saas_role === "saas_owner" || !s.saas_role
                 return (
-                  <tr key={s.id} className="border-b border-border-soft align-top">
+                  <tr key={s.id} onClick={(ev) => viewRecord(ev, s, { subtitle: "Licence team member" })} title="Click to view details" className="border-b border-border-soft align-top cursor-pointer">
                     <td className="py-2.5 pr-3 font-mono text-[12px]">{s.staff_code ?? "—"}</td>
                     <td className="py-2.5 pr-3">
                       <div className="font-semibold">{s.name || s.email}</div>

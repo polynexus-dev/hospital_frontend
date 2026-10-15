@@ -3,6 +3,7 @@ import { api, extractApiError } from "../../api/client"
 import { ModuleHub } from "../../components/resource/ModuleHub"
 import { col, opts } from "./fields"
 import { SSOSettings } from "./SSOSettings"
+import { viewRecord } from "../../store/recordViewer"
 
 function SecurityPolicyForm() {
   const [p, setP] = useState<Record<string, any> | null>(null)
@@ -53,7 +54,21 @@ function SecurityPolicyForm() {
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-border dark:border-slate-700 p-5 space-y-3">
         <h3 className="font-semibold">Auto screen lock</h3>
         {box("idle_lock_enabled", "Lock idle screens")}
-        {num("idle_lock_minutes", "Lock after (minutes of inactivity)")}
+        <label className="text-sm">
+          <span className="block text-xs font-semibold text-ink-3 mb-1">Lock after (minutes of inactivity)</span>
+          <input
+            type="number"
+            min={1}
+            max={120}
+            disabled={!p.idle_lock_enabled}
+            className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-slate-900 disabled:opacity-50"
+            value={p.idle_lock_minutes}
+            onChange={(e) => set("idle_lock_minutes", Number(e.target.value))}
+          />
+          <span className="block text-[11px] text-ink-4 mt-1">
+            1–120 minutes. 10–15 is usual for shared clinical workstations; NABH (DOM.4.b) leaves the time to your hospital's IT policy.
+          </span>
+        </label>
         <button onClick={save} className="mt-4 px-4 py-2 text-sm font-medium text-white bg-success hover:bg-success-text rounded-lg">Save policy</button>
         {msg && <div className="text-sm text-success-text">{msg}</div>}
         {err && <div className="text-sm text-danger-text">{err}</div>}
@@ -279,7 +294,7 @@ function BackupsTable() {
         <thead><tr className="text-xs text-ink-4 text-left"><th>Started</th><th>Kind</th><th>Status</th><th>Records</th><th>Size</th><th>Expires</th><th /></tr></thead>
         <tbody>
           {rows.map((b) => (
-            <tr key={b.id} className="border-t border-border-faint dark:border-slate-700">
+            <tr key={b.id} onClick={(ev) => viewRecord(ev, b, { subtitle: "Governance record" })} title="Click to view details" className="border-t border-border-faint dark:border-slate-700 cursor-pointer">
               <td className="py-2">{new Date(b.started_at).toLocaleString()}</td><td>{b.kind}</td><td>{b.status}</td><td>{b.record_count}</td>
               <td>{(b.size_bytes / 1024).toFixed(1)} KB</td><td>{b.expires_at ? new Date(b.expires_at).toLocaleDateString() : "—"}</td>
               <td className="text-right">

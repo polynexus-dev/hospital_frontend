@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { api, extractApiError } from "../../api/client"
 import { Button } from "../../components/ui/Button"
 import { showToast } from "../../components/ui/Toast"
+import { viewRecord } from "../../store/recordViewer"
 
 interface AdLeadsConfig {
   meta: { enabled: boolean; webhook_url: string; verify_token: string; page_id: string; app_secret_set: boolean; page_token_set: boolean }
@@ -112,7 +113,7 @@ export function AdLeadsModal({ open, onClose }: { open: boolean; onClose: () => 
                   <thead className="text-left text-[11px] uppercase text-ink-4"><tr><th className="py-1">When</th><th>From</th><th>Name</th><th>Campaign</th><th>Result</th></tr></thead>
                   <tbody>
                     {d.recent.map((r) => (
-                      <tr key={r.id} className="border-t border-border align-top">
+                      <tr key={r.id} onClick={(ev) => viewRecord(ev, r, { subtitle: "Ad lead" })} title="Click to view details" className="border-t border-border align-top cursor-pointer">
                         <td className="py-1.5">{new Date(r.received_at).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</td>
                         <td>{r.platform === "meta" ? "Meta" : "Google"}</td>
                         <td>{r.name || "—"}</td>

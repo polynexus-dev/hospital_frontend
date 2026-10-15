@@ -29,8 +29,9 @@ export function createOTSchedule(data: {
   return api.post<OTSchedule>("/ot/schedules/", data)
 }
 
-export function listOTSchedules() {
-  return api.get<Paginated<OTSchedule>>("/ot/schedules/")
+export function listOTSchedules(params: Record<string, string> = {}) {
+  const qs = new URLSearchParams(params).toString()
+  return api.get<Paginated<OTSchedule>>(`/ot/schedules/${qs ? `?${qs}` : ""}`)
 }
 
 export function createOperativeNote(data: {

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react"
 import { createBloodUnit, createDonor, createTransfusion, listBloodUnits, listCrossMatchRequests, listDonors } from "../../api/bloodbank"
 import type { BloodUnit, CrossMatchRequest, Donor } from "../../types/api"
+import { viewRecord } from "../../store/recordViewer"
+import { Pager } from "../../components/ui/Pager"
 
 export function BloodBankPage() {
   const [activeTab, setActiveTab] = useState<"units" | "donors" | "crossmatches">("units")
@@ -26,13 +28,19 @@ export function BloodBankPage() {
   const [transPatientId, setTransPatientId] = useState("")
   const [transNotes, setTransNotes] = useState("")
 
+  const [pages, setPages] = useState<Record<string, number>>({})
+  const [counts, setCounts] = useState<Record<string, number>>({})
+  const pageOf = (k: string) => ({ page: String(pages[k] ?? 1) })
+  const goTo = (k: string) => (n: number) => setPages((s) => ({ ...s, [k]: n }))
+
   const loadData = async () => {
     try {
       setLoading(true)
-      const [uRes, dRes, cmRes] = await Promise.all([listBloodUnits(), listDonors(), listCrossMatchRequests()])
+      const [uRes, dRes, cmRes] = await Promise.all([listBloodUnits(pageOf("units")), listDonors(pageOf("donors")), listCrossMatchRequests(pageOf("crossmatches"))])
       setUnits(uRes.results)
       setDonors(dRes.results)
       setCrossmatches(cmRes.results)
+      setCounts({ units: uRes.count, donors: dRes.count, crossmatches: cmRes.count })
     } catch (err) {
       console.error(err)
     } finally {
@@ -42,7 +50,8 @@ export function BloodBankPage() {
 
   useEffect(() => {
     loadData()
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pages])
 
   const handleCreateDonor = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -133,7 +142,7 @@ export function BloodBankPage() {
               : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
-          Blood Inventory ({units.length})
+          Blood Inventory ({counts.units ?? units.length})
         </button>
         <button
           onClick={() => setActiveTab("donors")}
@@ -143,7 +152,7 @@ export function BloodBankPage() {
               : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
-          Donors ({donors.length})
+          Donors ({counts.donors ?? donors.length})
         </button>
         <button
           onClick={() => setActiveTab("crossmatches")}
@@ -153,13 +162,14 @@ export function BloodBankPage() {
               : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
-          Cross-Match Requests ({crossmatches.length})
+          Cross-Match Requests ({counts.crossmatches ?? crossmatches.length})
         </button>
       </div>
 
       {loading ? (
         <div className="py-12 text-center text-ink-4">Loading Blood Bank records...</div>
       ) : activeTab === "units" ? (
+        <div className="space-y-3">
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-hidden">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
@@ -181,7 +191,7 @@ export function BloodBankPage() {
                 </tr>
               ) : (
                 units.map((u) => (
-                  <tr key={u.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
+                  <tr key={u.id} onClick={(ev) => viewRecord(ev, u, { subtitle: "Blood unit" })} title="Click to view details" className="hover:bg-page/50 dark:hover:bg-slate-700/50 cursor-pointer">
                     <td className="px-4 py-3 font-bold text-danger-text dark:text-rose-400">{u.blood_group}</td>
                     <td className="px-4 py-3 uppercase text-xs font-semibold text-ink-2 dark:text-slate-300">
                       {u.component.replace("_", " ")}
@@ -217,7 +227,10 @@ export function BloodBankPage() {
             </tbody>
           </table>
         </div>
+        <Pager page={pages.units ?? 1} count={counts.units ?? 0} onPage={goTo("units")} />
+        </div>
       ) : activeTab === "donors" ? (
+        <div className="space-y-3">
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-hidden">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
@@ -237,7 +250,7 @@ export function BloodBankPage() {
                 </tr>
               ) : (
                 donors.map((d) => (
-                  <tr key={d.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
+                  <tr key={d.id} onClick={(ev) => viewRecord(ev, d, { subtitle: "Blood donor" })} title="Click to view details" className="hover:bg-page/50 dark:hover:bg-slate-700/50 cursor-pointer">
                     <td className="px-4 py-3 font-medium text-ink dark:text-slate-100">{d.name}</td>
                     <td className="px-4 py-3 font-bold text-danger-text">{d.blood_group}</td>
                     <td className="px-4 py-3 text-ink-3 dark:text-slate-400">{d.phone || "N/A"}</td>
@@ -248,7 +261,10 @@ export function BloodBankPage() {
             </tbody>
           </table>
         </div>
+        <Pager page={pages.donors ?? 1} count={counts.donors ?? 0} onPage={goTo("donors")} />
+        </div>
       ) : (
+        <div className="space-y-3">
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-hidden">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
@@ -269,7 +285,7 @@ export function BloodBankPage() {
                 </tr>
               ) : (
                 crossmatches.map((cm) => (
-                  <tr key={cm.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
+                  <tr key={cm.id} onClick={(ev) => viewRecord(ev, cm, { subtitle: "Cross-match" })} title="Click to view details" className="hover:bg-page/50 dark:hover:bg-slate-700/50 cursor-pointer">
                     <td className="px-4 py-3 font-medium text-ink dark:text-slate-100">
                       {cm.patient_detail ? `${cm.patient_detail.first_name} ${cm.patient_detail.last_name}` : `Patient #${cm.patient}`}
                     </td>
@@ -282,6 +298,8 @@ export function BloodBankPage() {
               )}
             </tbody>
           </table>
+        </div>
+        <Pager page={pages.crossmatches ?? 1} count={counts.crossmatches ?? 0} onPage={goTo("crossmatches")} />
         </div>
       )}
 

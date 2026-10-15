@@ -1,5 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react"
 import { api, extractApiError, triggerBlobDownload } from "../../api/client"
+import { fmt, StatusPill } from "../record/format"
+import { RecordDrawer } from "../record/RecordDrawer"
+
+export { fmt, StatusPill }
 
 // Config-driven register screen used by the NABH modules: list + search +
 // filters + create form + per-row workflow actions, all against one DRF
@@ -64,27 +68,6 @@ export interface ResourceConfig {
 
 const inputCls =
   "w-full px-3 py-2 text-sm border border-border-strong dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-success"
-
-export function fmt(v: unknown): string {
-  if (v === null || v === undefined || v === "") return "—"
-  if (typeof v === "boolean") return v ? "Yes" : "No"
-  if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}T/.test(v)) return new Date(v).toLocaleString()
-  if (Array.isArray(v)) return v.length ? v.map((x) => (typeof x === "object" ? JSON.stringify(x) : String(x))).join(", ") : "—"
-  if (typeof v === "object") return JSON.stringify(v)
-  return String(v)
-}
-
-export function StatusPill({ value }: { value: unknown }) {
-  const v = String(value ?? "")
-  const tone = /critical|reject|fail|overdue|mismatch|breakdown|expired|recalled|cancel|death|severe|high|block|sentinel|wrong/i.test(v)
-    ? "bg-danger-bg text-danger-text dark:bg-rose-950 dark:text-rose-300"
-    : /pending|wait|draft|open|warning|moderate|partial|progress|scheduled|requested|suspected|medium/i.test(v)
-      ? "bg-warning-bg text-warning-text dark:bg-amber-950 dark:text-amber-300"
-      : /done|pass|paid|approved|complete|verified|active|granted|given|delivered|cleared|matched|eligible|success|normal|low|closed|available|in_use/i.test(v)
-        ? "bg-success-bg text-success-text dark:bg-emerald-950 dark:text-emerald-300"
-        : "bg-chip-bg text-ink-2 dark:bg-slate-800 dark:text-slate-300"
-  return <span className={`inline-block px-2 py-0.5 text-xs font-semibold rounded ${tone}`}>{v.replace(/_/g, " ") || "—"}</span>
-}
 
 function optionList(f: FieldDef) {
   return (f.options ?? []).map((o) => (typeof o === "string" ? { value: o, label: o.replace(/_/g, " ") } : o))
@@ -274,6 +257,7 @@ export function ResourceTable({ config }: { config: ResourceConfig }) {
   const [creating, setCreating] = useState(false)
   const [prompting, setPrompting] = useState<{ action: ActionDef; row?: Row; collection?: boolean } | null>(null)
   const [detail, setDetail] = useState<Row | null>(null)
+  const [viewing, setViewing] = useState<Row | null>(null)
 
   const query = useMemo(() => {
     const p = new URLSearchParams()
@@ -342,6 +326,30 @@ export function ResourceTable({ config }: { config: ResourceConfig }) {
   }
 
   const pages = Math.max(1, Math.ceil(count / 25))
+  const labels = useMemo(() => {
+    const l: Record<string, string> = {}
+    for (const f of [...(config.fields ?? []), ...config.columns]) l[f.key] = f.label
+    return l
+  }, [config.fields, config.columns])
+  const actionButtons = (row: Row) =>
+    config.actions?.filter((a) => !a.show || a.show(row)).map((a) => (
+      <button
+        key={a.label}
+        onClick={(e) => {
+          e.stopPropagation()
+          trigger(a, row)
+        }}
+        className={`px-2.5 py-1 text-xs font-semibold rounded-md ${
+          a.tone === "danger"
+            ? "bg-danger-bg text-danger-text hover:bg-danger-bg dark:bg-rose-950 dark:text-rose-300"
+            : a.tone === "primary"
+              ? "bg-success-bg text-success-text hover:bg-success-bg dark:bg-emerald-950 dark:text-emerald-300"
+              : "bg-chip-bg text-ink-2 hover:bg-border-soft dark:bg-slate-700 dark:text-slate-200"
+        }`}
+      >
+        {a.label}
+      </button>
+    ))
 
   return (
     <div className="space-y-4">
@@ -401,7 +409,12 @@ export function ResourceTable({ config }: { config: ResourceConfig }) {
               <tr><td colSpan={99} className="px-4 py-8 text-center text-ink-4">{config.emptyText ?? "No records yet."}</td></tr>
             ) : (
               rows.map((row) => (
-                <tr key={row.id ?? JSON.stringify(row)} className="hover:bg-page/50 dark:hover:bg-slate-700/50 align-top">
+                <tr
+                  key={row.id ?? JSON.stringify(row)}
+                  onClick={() => setViewing(row)}
+                  title="Click to view details"
+                  className="hover:bg-page/50 dark:hover:bg-slate-700/50 align-top cursor-pointer"
+                >
                   {config.columns.map((c) => (
                     <td key={c.key} className="px-4 py-3 text-ink-2 dark:text-slate-200 max-w-xs break-words">
                       {c.render ? c.render(row) : /status|severity|risk|result|stage|flag|match|harm/.test(c.key) ? <StatusPill value={row[c.key]} /> : fmt(row[c.key])}
@@ -409,21 +422,7 @@ export function ResourceTable({ config }: { config: ResourceConfig }) {
                   ))}
                   {config.actions?.length ? (
                     <td className="px-4 py-3 text-right whitespace-nowrap space-x-1">
-                      {config.actions.filter((a) => !a.show || a.show(row)).map((a) => (
-                        <button
-                          key={a.label}
-                          onClick={() => trigger(a, row)}
-                          className={`px-2.5 py-1 text-xs font-semibold rounded-md ${
-                            a.tone === "danger"
-                              ? "bg-danger-bg text-danger-text hover:bg-danger-bg dark:bg-rose-950 dark:text-rose-300"
-                              : a.tone === "primary"
-                                ? "bg-success-bg text-success-text hover:bg-success-bg dark:bg-emerald-950 dark:text-emerald-300"
-                                : "bg-chip-bg text-ink-2 hover:bg-border-soft dark:bg-slate-700 dark:text-slate-200"
-                          }`}
-                        >
-                          {a.label}
-                        </button>
-                      ))}
+                      {actionButtons(row)}
                     </td>
                   ) : null}
                 </tr>
@@ -465,13 +464,17 @@ export function ResourceTable({ config }: { config: ResourceConfig }) {
           }}
         />
       )}
-      {detail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4" onClick={() => setDetail(null)}>
-          <div className="w-full max-w-3xl max-h-[85vh] overflow-auto bg-white dark:bg-slate-800 rounded-xl p-6" onClick={(e) => e.stopPropagation()}>
-            <pre className="text-xs whitespace-pre-wrap text-ink-2 dark:text-slate-200">{JSON.stringify(detail, null, 2)}</pre>
-          </div>
-        </div>
+      {viewing && (
+        <RecordDrawer
+          record={viewing}
+          fetchUrl={viewing.id !== undefined ? `${base}${viewing.id}/` : undefined}
+          subtitle={config.title}
+          options={{ labels }}
+          actions={config.actions?.length ? actionButtons(viewing) : undefined}
+          onClose={() => setViewing(null)}
+        />
       )}
+      {detail && <RecordDrawer record={detail} title="Result" onClose={() => setDetail(null)} />}
     </div>
   )
 }

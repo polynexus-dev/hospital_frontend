@@ -5,6 +5,7 @@ import { Button } from "../../components/ui/Button"
 import { Card } from "../../components/ui/Card"
 import { Pill } from "../../components/ui/Pill"
 import { showToast } from "../../components/ui/Toast"
+import { viewRecord } from "../../store/recordViewer"
 
 interface Props {
   open: boolean
@@ -167,7 +168,7 @@ export function RecallHubModal({ open, onClose, onBookAppointment }: Props) {
                 </thead>
                 <tbody className="divide-y divide-border-faint dark:divide-slate-800">
                   {recalls.map((p) => (
-                    <tr key={p.id} className="hover:bg-page/50 dark:hover:bg-slate-800/30">
+                    <tr key={p.id} onClick={(ev) => viewRecord(ev, p, { subtitle: "Patient recall" })} title="Click to view details" className="hover:bg-page/50 dark:hover:bg-slate-800/30 cursor-pointer">
                       <td className="py-2.5 px-3">
                         <div className="font-bold text-ink dark:text-white">{p.full_name}</div>
                         <div className="text-[10px] font-mono text-accent dark:text-teal-400">{p.uhid || `ID: ${p.id}`}</div>

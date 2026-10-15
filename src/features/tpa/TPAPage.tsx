@@ -9,6 +9,7 @@ import type { Claim } from "../../api/tpa"
 import { api, extractApiError } from "../../api/client"
 import { CaseThreadModal, InsuranceInbox, MailboxCard, NHCXSetupCard, NonPayablePanel, PreAuthFormModal } from "./InsuranceExtras"
 import type { CaseRef } from "./InsuranceExtras"
+import { viewRecord } from "../../store/recordViewer"
 
 const INR = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })
 
@@ -179,7 +180,7 @@ export function TPAPage() {
               </thead>
               <tbody className="divide-y divide-border dark:divide-slate-800">
                 {claims.map((c) => (
-                  <tr key={c.id} className="hover:bg-page dark:hover:bg-slate-900/40">
+                  <tr key={c.id} onClick={(ev) => viewRecord(ev, c, { subtitle: "Pre-authorisation" })} title="Click to view details" className="hover:bg-page dark:hover:bg-slate-900/40 cursor-pointer">
                     <td className="px-6 py-4 font-bold text-ink dark:text-slate-100">
                       PreAuth #{c.id}
                       <span className="block text-xs font-normal text-ink-4">{c.patient_name}</span>
@@ -232,7 +233,7 @@ export function TPAPage() {
               </thead>
               <tbody className="divide-y divide-border dark:divide-slate-800">
                 {tpaClaims.map((c) => (
-                  <tr key={c.id} className="hover:bg-page dark:hover:bg-slate-900/40">
+                  <tr key={c.id} onClick={(ev) => viewRecord(ev, c, { subtitle: "TPA claim" })} title="Click to view details" className="hover:bg-page dark:hover:bg-slate-900/40 cursor-pointer">
                     <td className="px-6 py-4 font-bold text-ink dark:text-slate-100">
                       {c.claim_number || `Claim #${c.id}`}
                       <span className="block text-xs font-normal text-ink-4">{c.patient_name}</span>

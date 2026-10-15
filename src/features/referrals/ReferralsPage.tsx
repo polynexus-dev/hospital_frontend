@@ -15,6 +15,7 @@ import {
   type ReferringDoctor,
 } from "../../api/referrals"
 import { showToast } from "../../components/ui/Toast"
+import { viewRecord } from "../../store/recordViewer"
 
 
 export function ReferralsPage() {
@@ -200,7 +201,7 @@ export function ReferralsPage() {
               </thead>
               <tbody className="divide-y divide-border dark:divide-slate-800">
                 {allDoctors.map((doc) => (
-                  <tr key={doc.id} className="hover:bg-page dark:hover:bg-slate-900/40">
+                  <tr key={doc.id} onClick={(ev) => viewRecord(ev, doc, { subtitle: "Referring doctor" })} title="Click to view details" className="hover:bg-page dark:hover:bg-slate-900/40 cursor-pointer">
                     <td className="px-6 py-4 font-bold text-ink dark:text-slate-100">
                       {doc.name}
                       <span className="block text-xs font-normal text-slate-400">{doc.speciality}</span>

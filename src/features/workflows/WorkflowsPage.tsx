@@ -20,6 +20,7 @@ import type { TaskPriority } from "../../types/api"
 import { StepConfigEditor } from "./StepConfigEditor"
 import { WorkflowTemplates } from "./WorkflowTemplates"
 import { extractApiError } from "../../api/client"
+import { viewRecord } from "../../store/recordViewer"
 export function WorkflowsPage() {
   const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState<"builder" | "history" | "tasks">("builder")
@@ -534,7 +535,7 @@ export function WorkflowsPage() {
                     </tr>
                   ) : (
                     runs.map((r) => (
-                      <tr key={r.id} className="hover:bg-page/80 transition-colors">
+                      <tr key={r.id} onClick={(ev) => viewRecord(ev, r, { subtitle: "Workflow run" })} title="Click to view details" className="hover:bg-page/80 transition-colors cursor-pointer">
                         <td className="px-6 py-4 font-bold text-ink">#{r.id}</td>
                         <td className="px-6 py-4 font-semibold text-ink">{r.workflow_name || `Workflow #${r.workflow}`}</td>
                         <td className="px-6 py-4 text-ink-3">{r.trigger_event}</td>
@@ -598,7 +599,7 @@ export function WorkflowsPage() {
                       </tr>
                     ) : (
                       tasks.map((t) => (
-                        <tr key={t.id} className="hover:bg-page/80 transition-colors">
+                        <tr key={t.id} onClick={(ev) => viewRecord(ev, t, { subtitle: "Task" })} title="Click to view details" className="hover:bg-page/80 transition-colors cursor-pointer">
                           <td className="px-6 py-4">{getPriorityBadge(t.priority)}</td>
                           <td className="px-6 py-4">
                             <span className="font-semibold text-ink block">{t.title}</span>

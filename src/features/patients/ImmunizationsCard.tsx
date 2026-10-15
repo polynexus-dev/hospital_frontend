@@ -4,6 +4,7 @@ import { Card, Eyebrow } from "../../components/ui/Card"
 import { Button } from "../../components/ui/Button"
 import { api, extractApiError } from "../../api/client"
 import type { Paginated } from "../../types/api"
+import { viewRecord } from "../../store/recordViewer"
 
 interface Immunization {
   id: number
@@ -48,7 +49,7 @@ export function ImmunizationsCard({ patientId }: { patientId: number }) {
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.id} className="border-t border-border">
+              <tr key={r.id} onClick={(ev) => viewRecord(ev, r, { subtitle: "Immunization" })} title="Click to view details" className="border-t border-border cursor-pointer">
                 <td className="py-1.5">{r.vaccine}{r.adverse_event && <span className="text-danger-text"> · AEFI: {r.adverse_event}</span>}</td>
                 <td>{r.dose_number}</td>
                 <td>{r.administered_on}</td>

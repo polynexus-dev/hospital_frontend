@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react"
 import { admitEDVisitToIPD, createEDVisit, createTriage, listEDVisits } from "../../api/emergency"
 import type { EDVisit } from "../../types/api"
+import { viewRecord } from "../../store/recordViewer"
 
 export function EmergencyPage() {
   const [visits, setVisits] = useState<EDVisit[]>([])
@@ -153,7 +154,7 @@ export function EmergencyPage() {
                   </tr>
                 ) : (
                   visits.map((v) => (
-                    <tr key={v.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50 transition-colors">
+                    <tr key={v.id} onClick={(ev) => viewRecord(ev, v, { subtitle: "Emergency visit" })} title="Click to view details" className="hover:bg-page/50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer">
                       <td className="px-4 py-3 font-medium text-ink dark:text-slate-100">
                         {v.patient_detail ? `${v.patient_detail.first_name} ${v.patient_detail.last_name}` : `Patient #${v.patient}`}
                       </td>

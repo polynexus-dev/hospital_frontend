@@ -2,6 +2,7 @@ import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { api, extractApiError, triggerBlobDownload } from "../../api/client"
 import { Button } from "../../components/ui/Button"
+import { viewRecord } from "../../store/recordViewer"
 
 interface Row {
   id: number
@@ -166,7 +167,7 @@ export function EnquiryAgeingModal({ open, onClose }: { open: boolean; onClose: 
                 </thead>
                 <tbody>
                   {d.rows.map((r) => (
-                    <tr key={r.id} className="border-t border-border align-top">
+                    <tr key={r.id} onClick={(ev) => viewRecord(ev, r, { subtitle: "Enquiry" })} title="Click to view details" className="border-t border-border align-top cursor-pointer">
                       <td className="py-1.5">{r.id}</td>
                       <td>{r.name}</td>
                       <td>{r.source.replace("_", " ")}</td>

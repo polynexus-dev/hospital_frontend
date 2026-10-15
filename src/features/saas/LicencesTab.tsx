@@ -10,6 +10,7 @@ import { downloadLicense, downloadRevocationList, listAllLicenses, revokeLicense
 import { useAuthStore } from "../../store/auth"
 import type { OnPremiseLicense, SaaSHospital } from "../../types/api"
 import { LicenceRequestsPanel, LicenceTeamPanel } from "./LicenceControls"
+import { viewRecord } from "../../store/recordViewer"
 
 const STATUS_FILTERS = [
   { key: "", label: "All" },
@@ -169,7 +170,7 @@ function LicenceRegister({ canManage, isOwner, onRenew }: { canManage: boolean; 
                 const limit = lic.max_active_users || null
                 const overLimit = usage && limit !== null && usage.active_users > limit
                 return (
-                  <tr key={lic.id} className="border-b border-border-soft align-top">
+                  <tr key={lic.id} onClick={(ev) => viewRecord(ev, lic, { subtitle: "Licence" })} title="Click to view details" className="border-b border-border-soft align-top cursor-pointer">
                     <td className="py-2.5 pr-3 font-semibold">{lic.hospital_name}</td>
                     <td className="py-2.5 pr-3">
                       <div className="font-mono text-[12px]">{lic.license_id}</div>

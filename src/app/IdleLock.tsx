@@ -53,7 +53,19 @@ export function IdleLock() {
     }
   }, [policy, locked])
 
-  if (!locked || !user) return null
+  // policy switched off (or not loaded): never lock, and drop a lock left over from before
+  useEffect(() => {
+    if (policy && !policy.idle_lock_enabled && locked) {
+      setLocked(false)
+      try {
+        sessionStorage.removeItem(LOCK_KEY)
+      } catch {
+        // best effort
+      }
+    }
+  }, [policy, locked])
+
+  if (!locked || !user || !policy?.idle_lock_enabled) return null
 
   const unlock = async (e: React.FormEvent) => {
     e.preventDefault()

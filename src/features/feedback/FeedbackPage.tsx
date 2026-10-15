@@ -17,6 +17,7 @@ import {
 } from "../../api/feedback"
 import { showToast } from "../../components/ui/Toast"
 import type { Tone } from "../../components/ui/tone"
+import { viewRecord } from "../../store/recordViewer"
 
 const TABS: { key: "nps" | "reputation" | "complaints" | "recovery"; label: string }[] = [
   { key: "nps", label: "NPS Responses" },
@@ -232,9 +233,9 @@ export function FeedbackPage() {
             {!isNpsLoading &&
               !isNpsError &&
               npsResponses.map((res) => (
-                <div
+                <div onClick={(ev) => viewRecord(ev, res, { subtitle: "NPS response" })} title="Click to view details"
                   key={res.id}
-                  className="grid grid-cols-[0.6fr_0.9fr_0.8fr_2fr_0.8fr] gap-2.5 py-2.5 border-b border-border-faint items-center text-[13px] min-w-[760px]"
+                  className="grid grid-cols-[0.6fr_0.9fr_0.8fr_2fr_0.8fr] gap-2.5 py-2.5 border-b border-border-faint items-center text-[13px] min-w-[760px] cursor-pointer hover:bg-page/60"
                 >
                   <div className="font-semibold">{res.score}/10</div>
                   <div>
@@ -377,9 +378,9 @@ export function FeedbackPage() {
                 npsResponses
                   .filter((r) => r.category === "promoter")
                   .map((res) => (
-                    <div
+                    <div onClick={(ev) => viewRecord(ev, res, { subtitle: "Feedback response" })} title="Click to view details"
                       key={res.id}
-                      className="py-3 border-b border-border-faint last:border-b-0 flex items-center justify-between gap-3 text-xs"
+                      className="py-3 border-b border-border-faint last:border-b-0 flex items-center justify-between gap-3 text-xs cursor-pointer hover:bg-page/60"
                     >
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-2">
@@ -439,7 +440,7 @@ export function FeedbackPage() {
             )}
             {!isComplaintsLoading &&
               complaints.map((c) => (
-                <div key={c.id} className="py-3 border-b border-border-faint last:border-b-0">
+                <div onClick={(ev) => viewRecord(ev, c, { subtitle: "Complaint" })} title="Click to view details" key={c.id} className="py-3 border-b border-border-faint last:border-b-0 cursor-pointer hover:bg-page/60">
                   <div className="flex items-center justify-between gap-2">
                     <Pill tone={complaintTone[c.status]}>{c.status.toUpperCase()}</Pill>
                     <div className="text-[11.5px] text-ink-4">{new Date(c.created_at).toLocaleDateString()}</div>
@@ -468,7 +469,7 @@ export function FeedbackPage() {
             )}
             {!isRecoveryLoading &&
               recoveryTasks.map((t) => (
-                <div key={t.id} className="py-3 border-b border-border-faint last:border-b-0 flex items-center justify-between gap-3">
+                <div onClick={(ev) => viewRecord(ev, t, { subtitle: "Service recovery task" })} title="Click to view details" key={t.id} className="py-3 border-b border-border-faint last:border-b-0 flex items-center justify-between gap-3 cursor-pointer hover:bg-page/60">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <div className="text-[13px] font-semibold">Recovery task #{t.id}</div>

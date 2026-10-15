@@ -16,6 +16,7 @@ import {
   createCampRegistration,
   type CorporateClient,
   type Campaign, type PackageCategory } from "../../api/packages"
+import { viewRecord } from "../../store/recordViewer"
 
 const INR = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })
 const PCT = (n: number) => `${n >= 0 ? "+" : ""}${n.toFixed(0)}%`
@@ -638,7 +639,7 @@ export function PackagesPage() {
               </thead>
               <tbody className="divide-y divide-border dark:divide-slate-800">
                 {campaigns.map((c) => (
-                  <tr key={c.id} className="hover:bg-page dark:hover:bg-slate-900/40">
+                  <tr key={c.id} onClick={(ev) => viewRecord(ev, c, { subtitle: "Campaign" })} title="Click to view details" className="hover:bg-page dark:hover:bg-slate-900/40 cursor-pointer">
                     <td className="px-6 py-4 font-bold text-ink dark:text-slate-100">{c.name}</td>
                     <td className="px-6 py-4 text-xs uppercase font-semibold">{c.campaign_type.replace("_", " ")}</td>
                     <td className="px-6 py-4 text-xs font-mono">

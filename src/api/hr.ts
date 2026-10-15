@@ -1,8 +1,9 @@
 import { api } from "./client"
 import type { Attendance, Employee, LeaveRequest, Paginated, Shift } from "../types/api"
 
-export function listEmployees() {
-  return api.get<Paginated<Employee>>("/hr/employees/")
+export function listEmployees(params: Record<string, string> = {}) {
+  const qs = new URLSearchParams(params).toString()
+  return api.get<Paginated<Employee>>(`/hr/employees/${qs ? `?${qs}` : ""}`)
 }
 
 export function createEmployee(data: {
@@ -35,8 +36,9 @@ export function createAttendance(data: {
   return api.post<Attendance>("/hr/attendance/", data)
 }
 
-export function listLeaveRequests() {
-  return api.get<Paginated<LeaveRequest>>("/hr/leave-requests/")
+export function listLeaveRequests(params: Record<string, string> = {}) {
+  const qs = new URLSearchParams(params).toString()
+  return api.get<Paginated<LeaveRequest>>(`/hr/leave-requests/${qs ? `?${qs}` : ""}`)
 }
 
 export function createLeaveRequest(data: {
@@ -59,8 +61,9 @@ export function rejectLeaveRequest(id: number) {
   return api.post<LeaveRequest>(`/hr/leave-requests/${id}/reject/`)
 }
 
-export function listShifts() {
-  return api.get<Paginated<Shift>>("/hr/shifts/")
+export function listShifts(params: Record<string, string> = {}) {
+  const qs = new URLSearchParams(params).toString()
+  return api.get<Paginated<Shift>>(`/hr/shifts/${qs ? `?${qs}` : ""}`)
 }
 
 export function createShift(data: {

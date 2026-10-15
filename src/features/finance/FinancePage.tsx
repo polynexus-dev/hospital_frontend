@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react"
 import { approveExpense, createExpense, createReceivable, listExpenses, listLedger, listReceivables } from "../../api/finance"
 import type { Expense, LedgerEntry, Receivable } from "../../types/api"
+import { viewRecord } from "../../store/recordViewer"
+import { Pager } from "../../components/ui/Pager"
 
 export function FinancePage() {
   const [activeTab, setActiveTab] = useState<"ledger" | "expenses" | "receivables">("ledger")
@@ -22,13 +24,19 @@ export function FinancePage() {
   const [recAmount, setRecAmount] = useState("")
   const [recDueDate, setRecDueDate] = useState("")
 
+  const [pages, setPages] = useState<Record<string, number>>({})
+  const [counts, setCounts] = useState<Record<string, number>>({})
+  const pageOf = (k: string) => ({ page: String(pages[k] ?? 1) })
+  const goTo = (k: string) => (n: number) => setPages((s) => ({ ...s, [k]: n }))
+
   const loadData = async () => {
     try {
       setLoading(true)
-      const [lRes, eRes, rRes] = await Promise.all([listLedger(), listExpenses(), listReceivables()])
+      const [lRes, eRes, rRes] = await Promise.all([listLedger(pageOf("ledger")), listExpenses(pageOf("expenses")), listReceivables(pageOf("receivables"))])
       setLedger(lRes.results)
       setExpenses(eRes.results)
       setReceivables(rRes.results)
+      setCounts({ ledger: lRes.count, expenses: eRes.count, receivables: rRes.count })
     } catch (err) {
       console.error(err)
     } finally {
@@ -38,7 +46,8 @@ export function FinancePage() {
 
   useEffect(() => {
     loadData()
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pages])
 
   const handleCreateExpense = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -117,7 +126,7 @@ export function FinancePage() {
               : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
-          General Ledger ({ledger.length})
+          General Ledger ({counts.ledger ?? ledger.length})
         </button>
         <button
           onClick={() => setActiveTab("expenses")}
@@ -127,7 +136,7 @@ export function FinancePage() {
               : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
-          Expenses ({expenses.length})
+          Expenses ({counts.expenses ?? expenses.length})
         </button>
         <button
           onClick={() => setActiveTab("receivables")}
@@ -137,13 +146,14 @@ export function FinancePage() {
               : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
-          Receivables Aging ({receivables.length})
+          Receivables Aging ({counts.receivables ?? receivables.length})
         </button>
       </div>
 
       {loading ? (
         <div className="py-12 text-center text-ink-4">Loading financial records...</div>
       ) : activeTab === "ledger" ? (
+        <div className="space-y-3">
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-hidden">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
@@ -164,7 +174,7 @@ export function FinancePage() {
                 </tr>
               ) : (
                 ledger.map((l) => (
-                  <tr key={l.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
+                  <tr key={l.id} onClick={(ev) => viewRecord(ev, l, { subtitle: "Ledger entry" })} title="Click to view details" className="hover:bg-page/50 dark:hover:bg-slate-700/50 cursor-pointer">
                     <td className="px-4 py-3 font-semibold uppercase text-xs">
                       {l.entry_type === "revenue" ? (
                         <span className="text-success dark:text-emerald-400">Revenue</span>
@@ -182,7 +192,10 @@ export function FinancePage() {
             </tbody>
           </table>
         </div>
+        <Pager page={pages.ledger ?? 1} count={counts.ledger ?? 0} onPage={goTo("ledger")} />
+        </div>
       ) : activeTab === "expenses" ? (
+        <div className="space-y-3">
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-hidden">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
@@ -204,7 +217,7 @@ export function FinancePage() {
                 </tr>
               ) : (
                 expenses.map((e) => (
-                  <tr key={e.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
+                  <tr key={e.id} onClick={(ev) => viewRecord(ev, e, { subtitle: "Expense" })} title="Click to view details" className="hover:bg-page/50 dark:hover:bg-slate-700/50 cursor-pointer">
                     <td className="px-4 py-3 font-medium text-ink dark:text-slate-100">{e.category}</td>
                     <td className="px-4 py-3 text-ink-2 dark:text-slate-300">{e.paid_to}</td>
                     <td className="px-4 py-3 font-bold text-ink dark:text-slate-100">₹{e.amount}</td>
@@ -236,7 +249,10 @@ export function FinancePage() {
             </tbody>
           </table>
         </div>
+        <Pager page={pages.expenses ?? 1} count={counts.expenses ?? 0} onPage={goTo("expenses")} />
+        </div>
       ) : (
+        <div className="space-y-3">
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-hidden">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
@@ -257,7 +273,7 @@ export function FinancePage() {
                 </tr>
               ) : (
                 receivables.map((r) => (
-                  <tr key={r.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
+                  <tr key={r.id} onClick={(ev) => viewRecord(ev, r, { subtitle: "Receivable" })} title="Click to view details" className="hover:bg-page/50 dark:hover:bg-slate-700/50 cursor-pointer">
                     <td className="px-4 py-3 uppercase text-xs font-semibold text-ink-2 dark:text-slate-300">
                       {r.source_type.replace("_", " ")}
                     </td>
@@ -270,6 +286,8 @@ export function FinancePage() {
               )}
             </tbody>
           </table>
+        </div>
+        <Pager page={pages.receivables ?? 1} count={counts.receivables ?? 0} onPage={goTo("receivables")} />
         </div>
       )}
 

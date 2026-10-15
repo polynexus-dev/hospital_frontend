@@ -19,6 +19,7 @@ import { reminderDelivery } from "../../api/analytics"
 import { listPatients } from "../../api/patients"
 import type { Appointment, AppointmentStatus, Slot } from "../../types/api"
 import type { Tone } from "../../components/ui/tone"
+import { viewRecord } from "../../store/recordViewer"
 
 const STATUS_LABELS: Record<AppointmentStatus, string> = {
   booked: "Booked",
@@ -512,7 +513,7 @@ export function AppointmentsPage() {
                 </div>
                 <div className="text-[11.5px] text-ink-4 mt-1">Waiting ({queueQuery.data.waiting.length})</div>
                 {queueQuery.data.waiting.slice(0, 6).map((a) => (
-                  <div key={a.id} className="flex justify-between text-[12.5px]">
+                  <div onClick={(ev) => viewRecord(ev, a, { subtitle: "Queue token" })} title="Click to view details" key={a.id} className="flex justify-between text-[12.5px] cursor-pointer hover:bg-page/60">
                     <span>#{a.queue_token} {patientName(a.patient)}</span>
                   </div>
                 ))}
@@ -573,7 +574,7 @@ export function AppointmentsPage() {
                 <EmptyState message="No one waiting right now." />
               )}
               {waitlistEntries.map((w) => (
-                <div key={w.id} className="flex items-center gap-2 py-2.5 border-b border-border-faint last:border-b-0">
+                <div onClick={(ev) => viewRecord(ev, w, { subtitle: "Waitlist entry" })} title="Click to view details" key={w.id} className="flex items-center gap-2 py-2.5 border-b border-border-faint last:border-b-0 cursor-pointer hover:bg-page/60">
                   <div className="flex-1 min-w-0">
                     <div className="text-[12.5px] font-semibold truncate">{patientName(w.patient)}</div>
                     <div className="text-[11px] text-ink-4 truncate">

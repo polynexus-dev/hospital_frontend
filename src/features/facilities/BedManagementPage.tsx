@@ -44,6 +44,7 @@ import {
 import { listPatients } from "../../api/patients"
 import { listDoctors } from "../../api/appointments"
 import type { Tone } from "../../components/ui/tone"
+import { viewRecord } from "../../store/recordViewer"
 
 const BED_TYPES = [
   { value: "general", label: "General Ward Bed" },
@@ -1256,7 +1257,7 @@ export function BedManagementPage() {
                 const wardObj = roomObj ? wardMap.get(roomObj.ward) : null
 
                 return (
-                  <tr key={bed.id} className="hover:bg-page/50 transition-colors">
+                  <tr key={bed.id} onClick={(ev) => viewRecord(ev, bed, { subtitle: "Bed" })} title="Click to view details" className="hover:bg-page/50 transition-colors cursor-pointer">
                     <td className="py-3 px-4 font-mono font-semibold text-ink-3">#{bed.id}</td>
                     <td className="py-3 px-4 font-bold text-ink-1 flex items-center gap-2">
                       <RiHotelBedLine className="text-brand text-sm" />

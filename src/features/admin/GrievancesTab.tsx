@@ -7,6 +7,7 @@ import { ErrorState, EmptyState, LoadingState } from "../../components/ui/QueryS
 import { createGrievanceTicket, listGrievanceTickets, resolveGrievanceTicket } from "../../api/privacy"
 import type { GrievancePriority, GrievanceStatus, GrievanceTicket } from "../../types/api"
 import type { Tone } from "../../components/ui/tone"
+import { viewRecord } from "../../store/recordViewer"
 
 const STATUS_TONE: Record<GrievanceStatus, Tone> = {
   open: "warn",
@@ -76,7 +77,7 @@ function GrievanceRow({ ticket, onChanged }: { ticket: GrievanceTicket; onChange
   const resolve = useMutation({ mutationFn: () => resolveGrievanceTicket(ticket.id, resolution), onSuccess: onChanged })
 
   return (
-    <div className="py-2.5 border-b border-border-faint text-[13px] flex flex-col gap-1.5">
+    <div onClick={(ev) => viewRecord(ev, ticket, { subtitle: "Grievance" })} title="Click to view details" className="py-2.5 border-b border-border-faint text-[13px] flex flex-col gap-1.5 cursor-pointer hover:bg-page/60">
       <div className="grid grid-cols-[1.6fr_0.8fr_0.8fr_1.1fr_1.9fr] gap-2.5 items-center min-w-[900px]">
         <div className="font-semibold truncate">{ticket.subject}</div>
         <div><Pill tone={PRIORITY_TONE[ticket.priority]}>{ticket.priority}</Pill></div>

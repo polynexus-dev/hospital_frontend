@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react"
 import { createICUAdmission, createICUProgressNote, createVentilatorLog, finalizeICUProgressNote, listICUAdmissions } from "../../api/icu"
 import type { ICUAdmission } from "../../types/api"
+import { viewRecord } from "../../store/recordViewer"
 
 export function ICUPage() {
   const [admissions, setAdmissions] = useState<ICUAdmission[]>([])
@@ -125,9 +126,9 @@ export function ICUPage() {
             </div>
           ) : (
             admissions.map((icu) => (
-              <div
+              <div onClick={(ev) => viewRecord(ev, icu, { subtitle: "ICU admission" })} title="Click to view details"
                 key={icu.id}
-                className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-border dark:border-slate-700 shadow-sm space-y-4"
+                className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-border dark:border-slate-700 shadow-sm space-y-4 cursor-pointer hover:bg-page/60"
               >
                 <div className="flex justify-between items-start">
                   <div>

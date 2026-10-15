@@ -6,6 +6,29 @@ export function listBills(params: Record<string, string> = {}) {
   return api.get<Paginated<Bill>>(`/billing/bills/${qs ? `?${qs}` : ""}`)
 }
 
+export function getBill(billId: number) {
+  return api.get<Bill>(`/billing/bills/${billId}/`)
+}
+
+export interface BillCreditNote {
+  id: number
+  bill: number
+  note_number: string
+  reason: string
+  taxable_amount: string
+  tax_amount: string
+  total_amount: string
+  settlement: string
+  refund_amount: string
+  refund_method: string
+  created_at: string
+  created_by_name?: string
+}
+
+export function listBillCreditNotes(billId: number) {
+  return api.get<BillCreditNote[]>(`/billing/bills/${billId}/credit-notes/`)
+}
+
 export function createBill(data: { patient: number; admission?: number; discount_amount?: number }) {
   return api.post<Bill>("/billing/bills/", data)
 }

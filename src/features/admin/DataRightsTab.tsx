@@ -16,6 +16,7 @@ import {
 import { lookupPatientByMobile } from "../../api/patients"
 import type { DataRightsRequest, DataRightsRequestStatus, DataRightsRequestType, PatientLookup } from "../../types/api"
 import type { Tone } from "../../components/ui/tone"
+import { viewRecord } from "../../store/recordViewer"
 
 const STATUS_TONE: Record<DataRightsRequestStatus, Tone> = {
   submitted: "neutral",
@@ -189,7 +190,7 @@ function RequestRow({ request, onChanged }: { request: DataRightsRequest; onChan
   const canAct = request.status === "verified" || request.status === "in_progress"
 
   return (
-    <div className="py-2.5 border-b border-border-faint text-[13px] flex flex-col gap-1.5">
+    <div onClick={(ev) => viewRecord(ev, request, { subtitle: "Data rights request" })} title="Click to view details" className="py-2.5 border-b border-border-faint text-[13px] flex flex-col gap-1.5 cursor-pointer hover:bg-page/60">
       <div className="grid grid-cols-[1.3fr_1fr_1fr_1.1fr_2.4fr] gap-2.5 items-center min-w-[1000px]">
         <div className="font-semibold truncate">{request.patient_name || `Patient #${request.patient}`}</div>
         <div><NeutralTag>{REQUEST_TYPE_LABEL[request.request_type]}</NeutralTag></div>

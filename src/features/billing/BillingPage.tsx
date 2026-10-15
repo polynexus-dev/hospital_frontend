@@ -3,7 +3,10 @@ import { addBillItem, createBill, createInsuranceClaim, createPaymentLink, downl
 import { extractApiError } from "../../api/client"
 import { triggerBlobDownload } from "../../api/client"
 import type { Bill, InsuranceClaim, Payment } from "../../types/api"
+import { Pager } from "../../components/ui/Pager"
+import { StatusPill, dateTime, money } from "../../components/record/format"
 import { BillAdjustModal } from "./BillAdjustModal"
+import { BillDrawer } from "./BillDrawer"
 import { PayerSplitModal } from "./PayerSplitModal"
 
 
@@ -13,6 +16,15 @@ export function BillingPage() {
   const [payments, setPayments] = useState<Payment[]>([])
   const [claims, setClaims] = useState<InsuranceClaim[]>([])
   const [loading, setLoading] = useState(true)
+  const [counts, setCounts] = useState({ bills: 0, payments: 0, claims: 0 })
+  const [billsPage, setBillsPage] = useState(1)
+  const [paymentsPage, setPaymentsPage] = useState(1)
+  const [claimsPage, setClaimsPage] = useState(1)
+  const [billStatus, setBillStatus] = useState("")
+
+  // Bill detail drawer (opened from any tab)
+  const [openBill, setOpenBill] = useState<{ id: number; paymentId?: number } | null>(null)
+  const [drawerRefresh, setDrawerRefresh] = useState(0)
 
   // New Bill Modal
   const [showBillModal, setShowBillModal] = useState(false)
@@ -47,10 +59,16 @@ export function BillingPage() {
   const loadData = async () => {
     try {
       setLoading(true)
-      const [bRes, pRes, cRes] = await Promise.all([listBills(), listPayments(), listInsuranceClaims()])
+      const [bRes, pRes, cRes] = await Promise.all([
+        listBills({ page: String(billsPage), ...(billStatus ? { status: billStatus } : {}) }),
+        listPayments({ page: String(paymentsPage) }),
+        listInsuranceClaims({ page: String(claimsPage) }),
+      ])
       setBills(bRes.results)
       setPayments(pRes.results)
       setClaims(cRes.results)
+      setCounts({ bills: bRes.count, payments: pRes.count, claims: cRes.count })
+      setDrawerRefresh((k) => k + 1)
     } catch (err) {
       console.error(err)
     } finally {
@@ -60,7 +78,27 @@ export function BillingPage() {
 
   useEffect(() => {
     loadData()
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [billsPage, paymentsPage, claimsPage, billStatus])
+
+  const downloadPdf = async (b: Bill) => {
+    try {
+      const blob = await downloadBillPdf(b.id)
+      triggerBlobDownload(blob, `Bill_${b.bill_number || b.id}.pdf`)
+    } catch {
+      alert("Failed to download bill PDF.")
+    }
+  }
+
+  const openPay = (b: Bill) => {
+    setSelectedBillForPay(b)
+    setPayAmount(b.net_amount)
+  }
+
+  const openClaim = (b: Bill) => {
+    setSelectedBillForClaim(b)
+    setClaimAmt(String((Number(b.net_amount) - Number(b.non_payable_amount ?? 0)).toFixed(2)))
+  }
 
   const handleCreateBill = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -179,7 +217,7 @@ export function BillingPage() {
               : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
-          Bills & Invoices ({bills.length})
+          Bills & Invoices ({counts.bills})
         </button>
         <button
           onClick={() => setActiveTab("payments")}
@@ -189,7 +227,7 @@ export function BillingPage() {
               : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
-          Payment Transactions ({payments.length})
+          Payment Transactions ({counts.payments})
         </button>
         <button
           onClick={() => setActiveTab("claims")}
@@ -199,14 +237,34 @@ export function BillingPage() {
               : "border-transparent text-ink-4 hover:text-ink-2 dark:hover:text-slate-300"
           }`}
         >
-          TPA Insurance Claims ({claims.length})
+          TPA Insurance Claims ({counts.claims})
         </button>
       </div>
 
       {loading ? (
         <div className="py-12 text-center text-ink-4">Loading billing data...</div>
       ) : activeTab === "bills" ? (
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-hidden">
+        <div className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <select
+            value={billStatus}
+            onChange={(e) => {
+              setBillsPage(1)
+              setBillStatus(e.target.value)
+            }}
+            className="px-3 py-1.5 text-sm border border-border-strong dark:border-slate-600 rounded-control bg-white dark:bg-slate-900"
+            aria-label="Filter by status"
+          >
+            <option value="">All statuses</option>
+            <option value="draft">Draft</option>
+            <option value="unpaid">Unpaid</option>
+            <option value="partially_paid">Partially paid</option>
+            <option value="paid">Paid</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <span className="text-xs text-ink-4">Click a bill to see its items, payments and claim.</span>
+        </div>
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-x-auto">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
               <tr className="border-b border-border dark:border-slate-700 bg-page dark:bg-slate-900/50 text-xs font-semibold text-ink-4 uppercase">
@@ -226,13 +284,16 @@ export function BillingPage() {
                 </tr>
               ) : (
                 bills.map((b) => (
-                  <tr key={b.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
-                    <td className="px-4 py-3 font-semibold text-ink dark:text-slate-100">Bill #{b.id}</td>
+                  <tr key={b.id} onClick={() => setOpenBill({ id: b.id })} className="hover:bg-page/50 dark:hover:bg-slate-700/50 cursor-pointer">
+                    <td className="px-4 py-3 font-semibold text-ink dark:text-slate-100">
+                      {b.bill_number || `Bill #${b.id}`}
+                      <div className="text-[11px] font-normal text-ink-4">{dateTime(b.created_at)}</div>
+                    </td>
                     <td className="px-4 py-3 text-ink-2 dark:text-slate-300">
                       {b.patient_detail ? `${b.patient_detail.first_name} ${b.patient_detail.last_name}` : `Patient #${b.patient}`}
                     </td>
                     <td className="px-4 py-3 font-bold text-ink dark:text-slate-100">
-                      ₹{b.net_amount}
+                      {money(b.net_amount)}
                       {Number(b.non_payable_amount ?? 0) > 0 && <div className="text-xs font-medium text-warning-text">Patient ₹{b.non_payable_amount} not covered</div>}
                     </td>
                     <td className="px-4 py-3">
@@ -251,16 +312,9 @@ export function BillingPage() {
                         <span className="ml-1.5 px-2 py-0.5 text-xs font-semibold rounded-full bg-warning-bg text-warning-text" title={b.hold_reason}>On hold</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-right space-x-1">
+                    <td className="px-4 py-3 text-right space-x-1 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                       <button
-                        onClick={async () => {
-                          try {
-                            const blob = await downloadBillPdf(b.id)
-                            triggerBlobDownload(blob, `Bill_${b.id}.pdf`)
-                          } catch {
-                            alert("Failed to download bill PDF.")
-                          }
-                        }}
+                        onClick={() => downloadPdf(b)}
                         className="px-2 py-1 text-xs font-semibold bg-chip-bg dark:bg-slate-700 text-ink dark:text-slate-200 rounded hover:bg-border-soft dark:hover:bg-slate-600 transition-colors"
                         title="Download itemized PDF invoice"
                       >
@@ -277,19 +331,13 @@ export function BillingPage() {
                       <button
                         disabled={b.on_hold}
                         title={b.on_hold ? `On hold: ${b.hold_reason}` : undefined}
-                        onClick={() => {
-                          setSelectedBillForPay(b)
-                          setPayAmount(b.net_amount)
-                        }}
+                        onClick={() => openPay(b)}
                         className="px-2 py-1 text-xs font-semibold bg-success-bg text-success-text rounded hover:bg-success/25"
                       >
                         + Pay
                       </button>
                       <button
-                        onClick={() => {
-                          setSelectedBillForClaim(b)
-                          setClaimAmt(String((Number(b.net_amount) - Number(b.non_payable_amount ?? 0)).toFixed(2)))
-                        }}
+                        onClick={() => openClaim(b)}
                         className="px-2 py-1 text-xs font-semibold bg-accent-tint text-accent-hover rounded hover:bg-accent/25"
                       >
                         + Claim
@@ -316,8 +364,11 @@ export function BillingPage() {
             </tbody>
           </table>
         </div>
+        <Pager page={billsPage} count={counts.bills} onPage={setBillsPage} />
+        </div>
       ) : activeTab === "payments" ? (
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-hidden">
+        <div className="space-y-3">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-x-auto">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
               <tr className="border-b border-border dark:border-slate-700 bg-page dark:bg-slate-900/50 text-xs font-semibold text-ink-4 uppercase">
@@ -337,20 +388,23 @@ export function BillingPage() {
                 </tr>
               ) : (
                 payments.map((p) => (
-                  <tr key={p.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
+                  <tr key={p.id} onClick={() => setOpenBill({ id: p.bill, paymentId: p.id })} className="hover:bg-page/50 dark:hover:bg-slate-700/50 cursor-pointer">
                     <td className="px-4 py-3 font-semibold">Bill #{p.bill}</td>
-                    <td className="px-4 py-3 font-bold text-success">₹{p.amount}</td>
+                    <td className="px-4 py-3 font-bold text-success">{money(p.amount)}</td>
                     <td className="px-4 py-3 uppercase text-xs font-medium">{p.payment_method}</td>
                     <td className="px-4 py-3 text-ink-4 text-xs">{p.transaction_id || "-"}</td>
-                    <td className="px-4 py-3 text-ink-4 text-xs">{new Date(p.paid_at).toLocaleString()}</td>
+                    <td className="px-4 py-3 text-ink-4 text-xs">{dateTime(p.paid_at)}</td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
         </div>
+        <Pager page={paymentsPage} count={counts.payments} onPage={setPaymentsPage} />
+        </div>
       ) : (
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-hidden">
+        <div className="space-y-3">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-border dark:border-slate-700 overflow-x-auto">
           <table className="w-full text-left border-collapse text-sm">
             <thead>
               <tr className="border-b border-border dark:border-slate-700 bg-page dark:bg-slate-900/50 text-xs font-semibold text-ink-4 uppercase">
@@ -371,19 +425,35 @@ export function BillingPage() {
                 </tr>
               ) : (
                 claims.map((c) => (
-                  <tr key={c.id} className="hover:bg-page/50 dark:hover:bg-slate-700/50">
+                  <tr key={c.id} onClick={() => setOpenBill({ id: c.bill })} className="hover:bg-page/50 dark:hover:bg-slate-700/50 cursor-pointer">
                     <td className="px-4 py-3 font-semibold">Bill #{c.bill}</td>
                     <td className="px-4 py-3 font-medium">{c.insurance_company}</td>
                     <td className="px-4 py-3 text-xs text-ink-4">{c.policy_number}</td>
-                    <td className="px-4 py-3 font-bold">₹{c.claimed_amount}</td>
-                    <td className="px-4 py-3 font-bold text-success">₹{c.approved_amount}</td>
-                    <td className="px-4 py-3 capitalize text-xs font-semibold text-accent">{c.status}</td>
+                    <td className="px-4 py-3 font-bold">{money(c.claimed_amount)}</td>
+                    <td className="px-4 py-3 font-bold text-success">{money(c.approved_amount)}</td>
+                    <td className="px-4 py-3"><StatusPill value={c.status} /></td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
         </div>
+        <Pager page={claimsPage} count={counts.claims} onPage={setClaimsPage} />
+        </div>
+      )}
+
+      {openBill && (
+        <BillDrawer
+          billId={openBill.id}
+          highlightPaymentId={openBill.paymentId}
+          refreshKey={drawerRefresh}
+          onClose={() => setOpenBill(null)}
+          onDownload={downloadPdf}
+          onAddItem={setSelectedBillForAddItem}
+          onPay={openPay}
+          onClaim={openClaim}
+          onAdjust={setBillToAdjust}
+        />
       )}
 
       {billForSplit !== null && <PayerSplitModal billId={billForSplit} onClose={() => setBillForSplit(null)} />}

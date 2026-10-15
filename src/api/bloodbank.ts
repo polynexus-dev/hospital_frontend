@@ -1,8 +1,9 @@
 import { api } from "./client"
 import type { BloodUnit, CrossMatchRequest, Donor, Paginated, Transfusion } from "../types/api"
 
-export function listDonors() {
-  return api.get<Paginated<Donor>>("/bloodbank/donors/")
+export function listDonors(params: Record<string, string> = {}) {
+  const qs = new URLSearchParams(params).toString()
+  return api.get<Paginated<Donor>>(`/bloodbank/donors/${qs ? `?${qs}` : ""}`)
 }
 
 export function createDonor(data: { name: string; blood_group: string; phone?: string }) {
@@ -24,8 +25,9 @@ export function createBloodUnit(data: {
   return api.post<BloodUnit>("/bloodbank/units/", data)
 }
 
-export function listCrossMatchRequests() {
-  return api.get<Paginated<CrossMatchRequest>>("/bloodbank/cross-matches/")
+export function listCrossMatchRequests(params: Record<string, string> = {}) {
+  const qs = new URLSearchParams(params).toString()
+  return api.get<Paginated<CrossMatchRequest>>(`/bloodbank/cross-matches/${qs ? `?${qs}` : ""}`)
 }
 
 export function createCrossMatchRequest(data: {

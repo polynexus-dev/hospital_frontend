@@ -15,6 +15,7 @@ import { EmergencyAccessTab } from "./EmergencyAccessTab"
 import { DataRightsTab } from "./DataRightsTab"
 import { GrievancesTab } from "./GrievancesTab"
 import { PermissionMatrixModal } from "./PermissionMatrixModal"
+import { viewRecord } from "../../store/recordViewer"
 
 type TabKey = "users" | "roles" | "export" | "audit" | "integrations" | "emergency_access" | "data_rights" | "grievances"
 
@@ -226,7 +227,7 @@ export function AdminPage() {
             {isUsersLoading && <LoadingState />}
             {isUsersError && <ErrorState />}
             {!isUsersLoading && !isUsersError && users.map((u) => (
-              <div key={u.id} className="grid grid-cols-[1.3fr_1.6fr_1.1fr_0.7fr_0.7fr_0.9fr] gap-2.5 py-2.5 border-b border-border-faint items-center text-[13px] min-w-[860px]">
+              <div onClick={(ev) => viewRecord(ev, u, { subtitle: "User" })} title="Click to view details" key={u.id} className="grid grid-cols-[1.3fr_1.6fr_1.1fr_0.7fr_0.7fr_0.9fr] gap-2.5 py-2.5 border-b border-border-faint items-center text-[13px] min-w-[860px] cursor-pointer hover:bg-page/60">
                 <div className="font-semibold truncate">
                   {u.first_name || u.last_name ? `${u.first_name} ${u.last_name}` : u.email}
                 </div>
@@ -622,7 +623,7 @@ export function AdminPage() {
             {isAuditLoading && <LoadingState />}
             {isAuditError && <ErrorState />}
             {!isAuditLoading && !isAuditError && auditLogs.map((log) => (
-              <div key={log.id} className="grid grid-cols-[1.2fr_1.3fr_0.8fr_1.8fr_0.9fr] gap-2.5 py-2.5 border-b border-border-faint items-center text-[13px] min-w-[900px]">
+              <div onClick={(ev) => viewRecord(ev, log, { subtitle: "Audit log entry" })} title="Click to view details" key={log.id} className="grid grid-cols-[1.2fr_1.3fr_0.8fr_1.8fr_0.9fr] gap-2.5 py-2.5 border-b border-border-faint items-center text-[13px] min-w-[900px] cursor-pointer hover:bg-page/60">
                 <div className="font-mono text-[12px] text-ink-3">{new Date(log.created_at).toLocaleString()}</div>
                 <div className="text-ink-3 truncate">{log.actor_email ?? "system"}</div>
                 <div><Pill tone={ACTION_TONE[log.action]}>{log.action}</Pill></div>
