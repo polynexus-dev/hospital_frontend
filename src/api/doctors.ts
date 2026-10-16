@@ -42,6 +42,11 @@ export function createDoctor(payload: DoctorInput) {
   return api.post<Doctor>("/doctors/", payload)
 }
 
+/** Creates the doctor's login (Consultant Doctor role, doctor's email) and returns a one-time password. */
+export function grantDoctorLogin(id: number | string, email?: string) {
+  return api.post<import("./accounts").TemporaryPassword>(`/doctors/${id}/grant-login/`, email ? { email } : {})
+}
+
 export function updateDoctor(id: number | string, payload: Partial<DoctorInput>) {
   return api.patch<Doctor>(`/doctors/${id}/`, payload)
 }

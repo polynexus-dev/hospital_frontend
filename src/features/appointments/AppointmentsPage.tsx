@@ -20,6 +20,8 @@ import { listPatients } from "../../api/patients"
 import type { Appointment, AppointmentStatus, Slot } from "../../types/api"
 import type { Tone } from "../../components/ui/tone"
 import { viewRecord } from "../../store/recordViewer"
+import { useAuthStore } from "../../store/auth"
+import { SearchSelect, type SearchOption } from "../../components/ui/SearchSelect"
 
 const STATUS_LABELS: Record<AppointmentStatus, string> = {
   booked: "Booked",
@@ -119,15 +121,26 @@ function cellTone(slot: Slot | undefined, appt: Appointment | undefined): CellTo
   return "available"
 }
 
+const patientOption = (p: { id: number; full_name?: string; first_name?: string; last_name?: string; mobile?: string; uhid?: string }): SearchOption => ({
+  value: p.id,
+  label: p.full_name || `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim() || `Patient #${p.id}`,
+  hint: [p.uhid, p.mobile].filter(Boolean).join(" · "),
+})
+
+const searchPatients = (q: string) => listPatients(q || undefined).then((res) => res.results.map(patientOption))
+
 export function AppointmentsPage() {
   const queryClient = useQueryClient()
+  // A doctor whose role sees only their own records works on their own calendar
+  const me = useAuthStore((s) => s.user)
+  const ownDoctorId = me?.data_scope === "assigned_only" && me.own_doctor_id ? me.own_doctor_id : 0
   const [selectedDate, setSelectedDate] = useState<string>(todayIso())
   const [selectedApptId, setSelectedApptId] = useState<number | null>(null)
 
   // Booking modal state
   const [isBookModalOpen, setIsBookModalOpen] = useState(false)
   const [bookPatientId, setBookPatientId] = useState<number>(0)
-  const [bookDoctorId, setBookDoctorId] = useState<number>(0)
+  const [bookDoctorId, setBookDoctorId] = useState<number>(ownDoctorId)
   const [bookSlotId, setBookSlotId] = useState<number>(0)
   const [bookReason, setBookReason] = useState("")
   const [bookSource, setBookSource] = useState("crm")
@@ -135,13 +148,13 @@ export function AppointmentsPage() {
 
   // Block-leave modal state
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false)
-  const [blockDoctorId, setBlockDoctorId] = useState<number>(0)
+  const [blockDoctorId, setBlockDoctorId] = useState<number>(ownDoctorId)
   const [blockStart, setBlockStart] = useState(todayIso())
   const [blockEnd, setBlockEnd] = useState(todayIso())
   const [blockReason, setBlockReason] = useState("")
 
   // OPD queue panel doctor selection
-  const [queueDoctorId, setQueueDoctorId] = useState<number>(0)
+  const [queueDoctorId, setQueueDoctorId] = useState<number>(ownDoctorId)
 
   const doctorsQuery = useQuery({ queryKey: ["doctors"], queryFn: () => listDoctors() })
   const patientsQuery = useQuery({ queryKey: ["patients-dropdown"], queryFn: () => listPatients() })
@@ -161,7 +174,10 @@ export function AppointmentsPage() {
     enabled: queueDoctorId > 0,
   })
 
-  const doctors = useMemo(() => (doctorsQuery.data?.results ?? []).filter((d) => d.is_active), [doctorsQuery.data])
+  const doctors = useMemo(
+    () => (doctorsQuery.data?.results ?? []).filter((d) => d.is_active && (!ownDoctorId || d.id === ownDoctorId)),
+    [doctorsQuery.data, ownDoctorId],
+  )
   const patients = patientsQuery.data?.results ?? []
   const slots = slotsQuery.data?.results ?? []
   const appointments = apptsQuery.data?.results ?? []
@@ -617,41 +633,31 @@ export function AppointmentsPage() {
                 <label className="block text-[11px] font-semibold uppercase tracking-[.04em] text-ink-4 mb-1">
                   Patient *
                 </label>
-                <select
-                  required
-                  className="w-full h-9 px-3 border border-border-strong rounded-control text-[13px] bg-surface"
+                <SearchSelect
+                  ariaLabel="Patient"
                   value={bookPatientId}
-                  onChange={(e) => setBookPatientId(Number(e.target.value))}
-                >
-                  <option value={0}>Select patient…</option>
-                  {patients.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.full_name || `${p.first_name} ${p.last_name}`} ({p.mobile})
-                    </option>
-                  ))}
-                </select>
+                  onChange={(id) => setBookPatientId(id)}
+                  search={searchPatients}
+                  selectedLabel={bookPatientId ? patientMap.get(bookPatientId) : undefined}
+                  placeholder="Search by name, full mobile number or UHID…"
+                  emptyText="No patient found — register them in OPD Registration first"
+                />
               </div>
 
               <div>
                 <label className="block text-[11px] font-semibold uppercase tracking-[.04em] text-ink-4 mb-1">
                   Doctor *
                 </label>
-                <select
-                  required
-                  className="w-full h-9 px-3 border border-border-strong rounded-control text-[13px] bg-surface"
+                <SearchSelect
+                  ariaLabel="Doctor"
                   value={bookDoctorId}
-                  onChange={(e) => {
-                    setBookDoctorId(Number(e.target.value))
+                  onChange={(id) => {
+                    setBookDoctorId(id)
                     setBookSlotId(0)
                   }}
-                >
-                  <option value={0}>Select doctor…</option>
-                  {doctors.map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {d.name} ({d.speciality})
-                    </option>
-                  ))}
-                </select>
+                  options={doctors.map((d) => ({ value: d.id, label: d.name, hint: d.speciality }))}
+                  placeholder="Search doctor or speciality…"
+                />
               </div>
 
               {bookDoctorId > 0 && (

@@ -21,6 +21,7 @@ import {
   onboardHospital,
   platformAnalytics,
   resolveTicket,
+  setHospitalBlockDevtools,
   setHospitalPermissions,
   updateHospitalModules,
   updateSubscription,
@@ -217,6 +218,11 @@ function SubscriptionRow({
     },
   })
 
+  const setBlockDevtools = useMutation({
+    mutationFn: (block: boolean) => setHospitalBlockDevtools(hospital!.id, block),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["saas-hospitals"] }),
+  })
+
   const moduleCount = hospital?.enabled_modules?.length ?? SYSTEM_MODULES.length
 
   return (
@@ -256,6 +262,23 @@ function SubscriptionRow({
             title="Limit which features this hospital's admin can use and grant to staff"
           >
             🔐 Permissions
+          </Button>
+        )}
+        {hospital && onConfigureModules && (
+          <Button
+            size="sm"
+            variant={hospital.block_devtools ? "primary" : "secondary"}
+            disabled={setBlockDevtools.isPending}
+            onClick={() => {
+              const block = !hospital.block_devtools
+              const msg = block
+                ? `Block right-click and browser inspect shortcuts (F12, Ctrl+Shift+I, view-source) for ${hospital.name}'s staff?`
+                : `Allow right-click and browser inspect again for ${hospital.name}'s staff?`
+              if (window.confirm(msg)) setBlockDevtools.mutate(block)
+            }}
+            title="Right-click and devtools shortcuts for this hospital's staff (takes effect on their next page load)"
+          >
+            🛡️ Inspect: {hospital.block_devtools ? "blocked" : "allowed"}
           </Button>
         )}
         {hospital && onIssueLicense && (

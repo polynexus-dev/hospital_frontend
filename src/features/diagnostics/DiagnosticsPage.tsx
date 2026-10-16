@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { useSearchParams } from "react-router-dom"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Card, CardHeader, Eyebrow } from "../../components/ui/Card"
 import { Button } from "../../components/ui/Button"
@@ -29,7 +30,9 @@ type Tab = "lab" | "radiology"
 // front-desk/nursing staff treat as one "send for investigations" task.
 export function DiagnosticsPage() {
   const queryClient = useQueryClient()
-  const [tab, setTab] = useState<Tab>("lab")
+  const [params] = useSearchParams()
+  // ?tab=radiology deep-links here (e.g. from the dashboard's "Diag pending" card)
+  const [tab, setTab] = useState<Tab>(() => (params.get("tab") === "radiology" ? "radiology" : "lab"))
   const [isNewOrderOpen, setIsNewOrderOpen] = useState(false)
   const [selectedLabOrderId, setSelectedLabOrderId] = useState<number | null>(null)
   const [selectedRadOrderId, setSelectedRadOrderId] = useState<number | null>(null)

@@ -188,7 +188,11 @@ export function LoginPage() {
       const result = await login(email, password)
       if ((result as { password_expired?: boolean }).password_expired) {
         setExpired(true)
-        setNotice("Your password has expired. Choose a new one to continue.")
+        setNotice(
+          (result as { temporary?: boolean }).temporary
+            ? "You signed in with a one-time password. Choose your own password to continue."
+            : "Your password has expired. Choose a new one to continue.",
+        )
         return
       }
       if (isMfaChallenge(result)) setMfaToken(result.mfa_token)

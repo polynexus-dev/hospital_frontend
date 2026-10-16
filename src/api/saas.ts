@@ -74,6 +74,11 @@ export function onboardHospital(data: OnboardTenantPayload) {
   return api.post<SaaSHospital>("/saas-admin/hospitals/", data)
 }
 
+/** SaaS console switch: block right-click / inspect shortcuts for this hospital's staff. */
+export function setHospitalBlockDevtools(id: string, block_devtools: boolean) {
+  return api.patch<SaaSHospital>(`/saas-admin/hospitals/${id}/`, { block_devtools })
+}
+
 export function updateHospitalModules(id: string, enabledModules: string[]) {
   return api.post<SaaSHospital>(`/saas-admin/hospitals/${id}/modules/`, { enabled_modules: enabledModules })
 }

@@ -105,13 +105,29 @@ function DispenseModal({ medicine, onClose, onDispensed }: { medicine: Medicine;
   const [free, setFree] = useState(false)
   const [freeReason, setFreeReason] = useState("")
   const [error, setError] = useState<string | null>(null)
+  // NABH MOM safety rules enforced by the server: high-risk drugs need an
+  // independent second check, critical allergy/interaction alerts an override reason
+  const [needsVerifier, setNeedsVerifier] = useState(Boolean(medicine.is_high_risk))
+  const [verifier, setVerifier] = useState<unknown>(null)
+  const [alerts, setAlerts] = useState<{ message?: string; title?: string; severity?: string }[] | null>(null)
+  const [overrideReason, setOverrideReason] = useState("")
 
   const dispenseMutation = useMutation({
-    mutationFn: () => dispenseMedicine({ batch: batchId, quantity, patient: patient ? Number(patient) : null, ...(free ? { bill: false, no_charge_reason: freeReason } : {}) }),
+    mutationFn: () =>
+      dispenseMedicine({
+        batch: batchId,
+        quantity,
+        patient: patient ? Number(patient) : null,
+        ...(free ? { bill: false, no_charge_reason: freeReason } : {}),
+        ...(needsVerifier && verifier ? { verified_by: Number(verifier) } : {}),
+        ...(alerts && overrideReason.trim() ? { override_reason: overrideReason.trim() } : {}),
+      }),
     onSuccess: onDispensed,
     onError: (err: unknown) => {
-      const detail = err instanceof ApiError ? (err.body as { detail?: string } | null)?.detail : undefined
-      setError(detail ?? "Could not dispense — check the quantity against available stock.")
+      const body = err instanceof ApiError ? (err.body as { code?: string; alerts?: { message?: string }[] } | null) : null
+      if (body?.code === "double_check_required") setNeedsVerifier(true)
+      if (body?.code === "safety_alert") setAlerts(body.alerts ?? [])
+      setError(extractApiError(err, "Could not dispense."))
     },
   })
 
@@ -148,10 +164,29 @@ function DispenseModal({ medicine, onClose, onDispensed }: { medicine: Medicine;
             </label>
           )}
           {free && <input className={`${inputClass} w-full`} placeholder="Why (e.g. part of the package)" aria-label="No-charge reason" value={freeReason} onChange={(e) => setFreeReason(e.target.value)} />}
+          {needsVerifier && (
+            <div className="p-2.5 rounded-control border border-warning/40 bg-warning-bg/50">
+              <div className="text-[11.5px] font-semibold text-warning-text mb-1">High-risk medicine: verified by (a second pharmacist or nurse) *</div>
+              <FieldInput
+                field={{ key: "verified_by", label: "Verified by", type: "fk", source: "/users/?is_active=true", sourceLabel: (u) => `${[u.first_name, u.last_name].filter(Boolean).join(" ") || u.email}${u.role_name ? ` · ${u.role_name}` : ""}` }}
+                value={verifier}
+                onChange={setVerifier}
+              />
+            </div>
+          )}
+          {alerts && (
+            <div className="p-2.5 rounded-control border border-danger/40 bg-danger-bg/60 space-y-1.5">
+              <div className="text-[11.5px] font-semibold text-danger-text">Safety alert for this patient</div>
+              {alerts.map((a, i) => (
+                <div key={i} className="text-[12px] text-ink-2">• {a.message || a.title}</div>
+              ))}
+              <input className={`${inputClass} w-full`} placeholder="Clinical reason to dispense anyway *" aria-label="Override reason" value={overrideReason} onChange={(e) => setOverrideReason(e.target.value)} />
+            </div>
+          )}
         </div>
         <div className="flex justify-end gap-2 pt-3.5">
           <Button variant="secondary" onClick={onClose}>Cancel</Button>
-          <Button variant="primary" onClick={() => dispenseMutation.mutate()} disabled={!batchId || quantity < 1 || (free && !freeReason.trim()) || dispenseMutation.isPending}>
+          <Button variant="primary" onClick={() => dispenseMutation.mutate()} disabled={!batchId || quantity < 1 || (free && !freeReason.trim()) || (needsVerifier && !verifier) || (Boolean(alerts) && !overrideReason.trim()) || dispenseMutation.isPending}>
             {dispenseMutation.isPending ? "Dispensing…" : "Dispense"}
           </Button>
         </div>

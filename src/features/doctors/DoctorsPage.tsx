@@ -18,10 +18,15 @@ import {
   createSlotTemplate,
   deleteSlotTemplate,
   generateSlotsFromTemplate,
+  grantDoctorLogin,
   type DoctorInput,
 } from "../../api/doctors"
+import { extractApiError } from "../../api/client"
+import { issueTemporaryPassword, type TemporaryPassword } from "../../api/accounts"
+import { TemporaryPasswordModal } from "../../components/ui/TemporaryPasswordModal"
 import type { Doctor, Department, SlotTemplate } from "../../types/api"
 import { viewRecord } from "../../store/recordViewer"
+import { useAuthStore } from "../../store/auth"
 
 const COMMON_SPECIALITIES = [
   "General Medicine",
@@ -64,9 +69,11 @@ interface DoctorModalProps {
   doctor?: Doctor | null
   departments: Department[]
   onClose: () => void
+  /** a login was just created for the doctor: show its one-time password */
+  onLoginGranted?: (result: TemporaryPassword) => void
 }
 
-function DoctorFormModal({ doctor, departments, onClose }: DoctorModalProps) {
+function DoctorFormModal({ doctor, departments, onClose, onLoginGranted }: DoctorModalProps) {
   const queryClient = useQueryClient()
   const isEditing = Boolean(doctor)
 
@@ -80,6 +87,8 @@ function DoctorFormModal({ doctor, departments, onClose }: DoctorModalProps) {
   const [smcReg, setSmcReg] = useState(doctor?.smc_registration_number ?? "")
   const [consultMinutes, setConsultMinutes] = useState(doctor?.default_consultation_minutes ?? 15)
   const [isActive, setIsActive] = useState(doctor ? doctor.is_active : true)
+  const canGrantLogin = !doctor?.user
+  const [giveLogin, setGiveLogin] = useState(!doctor) // new doctors get a login unless unticked
 
   const saveMutation = useMutation({
     mutationFn: () => {
@@ -96,19 +105,27 @@ function DoctorFormModal({ doctor, departments, onClose }: DoctorModalProps) {
         is_active: isActive,
       }
 
-      if (doctor?.id) {
-        return updateDoctor(doctor.id, payload)
+      const save = async () => {
+        const saved = doctor?.id ? await updateDoctor(doctor.id, payload) : await createDoctor(payload)
+        if (!(giveLogin && canGrantLogin)) return { login: null, loginError: null }
+        try {
+          return { login: await grantDoctorLogin(saved.id), loginError: null }
+        } catch (err) {
+          return { login: null, loginError: extractApiError(err) }
+        }
       }
-      return createDoctor(payload)
+      return save()
     },
-    onSuccess: () => {
+    onSuccess: ({ login, loginError }: { login: TemporaryPassword | null; loginError: string | null }) => {
       queryClient.invalidateQueries({ queryKey: ["doctors"] })
-      showToast(isEditing ? "Doctor updated successfully!" : "Doctor registered successfully!", "success")
+      if (loginError) showToast(`Doctor saved, but no login was created: ${loginError}`, "error")
+      else showToast(isEditing ? "Doctor updated successfully!" : "Doctor registered successfully!", "success")
+      if (login) onLoginGranted?.(login)
       onClose()
     },
-    onError: (err: any) => {
-      const msg = err?.message || err?.body?.detail || "Failed to save doctor details."
-      showToast(msg, "error")
+    onError: (err: unknown) => {
+      // the field-level reason (e.g. "pan: PAN looks like ABCDE1234F."), not "Request … failed with 400"
+      showToast(extractApiError(err, "Failed to save doctor details."), "error")
     },
   })
 
@@ -302,6 +319,23 @@ function DoctorFormModal({ doctor, departments, onClose }: DoctorModalProps) {
               <div className="w-9 h-5 bg-border-strong peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-success"></div>
             </label>
           </div>
+          {canGrantLogin ? (
+            <label className="flex items-start gap-2.5 p-3 rounded-lg border border-border bg-page/40 cursor-pointer">
+              <input type="checkbox" className="mt-0.5" checked={giveLogin} onChange={(e) => setGiveLogin(e.target.checked)} />
+              <span>
+                <span className="block text-[12px] font-semibold text-ink">Give login access</span>
+                <span className="block text-[10.5px] text-ink-4">
+                  Creates a login with the email above (Consultant Doctor role) so they see their own queue, notes and orders. You get a
+                  one-time password; they choose their own at first sign-in.
+                </span>
+                {giveLogin && !email.trim() && <span className="block text-[10.5px] text-danger-text mt-0.5">Enter the doctor&apos;s email to give login access.</span>}
+              </span>
+            </label>
+          ) : (
+            <div className="p-3 rounded-lg border border-border bg-page/40 text-[11.5px] text-ink-3">
+              Signs in as <span className="font-semibold text-ink">{doctor?.login_email}</span>. Use &ldquo;Reset password&rdquo; in the list if they can&apos;t sign in.
+            </div>
+          )}
         </div>
 
         {/* Footer */}
@@ -313,7 +347,7 @@ function DoctorFormModal({ doctor, departments, onClose }: DoctorModalProps) {
             size="sm"
             variant="primary"
             onClick={() => saveMutation.mutate()}
-            disabled={!name.trim() || !speciality.trim() || saveMutation.isPending}
+            disabled={!name.trim() || !speciality.trim() || (giveLogin && canGrantLogin && !email.trim()) || saveMutation.isPending}
           >
             {saveMutation.isPending ? "Saving..." : isEditing ? "Save Changes" : "Register Doctor"}
           </Button>
@@ -980,6 +1014,69 @@ function DeleteDoctorModal({ doctor, onClose }: { doctor: Doctor; onClose: () =>
 // -------------------------------------------------------------
 export function DoctorsPage() {
   const queryClient = useQueryClient()
+  // doctor profiles are master data (hospital admins); logins need user management rights
+  const user = useAuthStore((s) => s.user)
+  const perms = user?.permissions ?? []
+  const isAdmin = Boolean(user?.is_hospital_admin) // the server lets owner/admin roles through regardless
+  const canAddDoctor = isAdmin || perms.includes("appointments.add_doctor")
+  const canEditDoctor = isAdmin || perms.includes("appointments.change_doctor")
+  const canDeleteDoctor = isAdmin || perms.includes("appointments.delete_doctor")
+  const canManageLogins = isAdmin || perms.includes("accounts.add_user") || perms.includes("accounts.change_user")
+  const [tempPassword, setTempPassword] = useState<{ result: TemporaryPassword; title: string } | null>(null)
+  const grantLogin = useMutation({
+    mutationFn: (doc: Doctor) => grantDoctorLogin(doc.id),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["doctors"] })
+      setTempPassword({ result, title: "Doctor login created" })
+    },
+    onError: (err) => showToast(extractApiError(err), "error"),
+  })
+  const resetDoctorPassword = useMutation({
+    mutationFn: (doc: Doctor) => issueTemporaryPassword(doc.user as number),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["doctors"] })
+      setTempPassword({ result, title: "Password reset" })
+    },
+    onError: (err) => showToast(extractApiError(err), "error"),
+  })
+
+  // login status + Give login access / Reset password, shared by the card and table views
+  const loginControls = (doc: Doctor) => !canManageLogins ? null : (
+      <div className="mt-1 flex flex-wrap items-center gap-1">
+        {doc.login_email ? (
+          <>
+            <span className="text-[10px] font-semibold text-success-text" title={`Signs in as ${doc.login_email}`}>🔐 Login</span>
+            {doc.login_must_change_password && <span className="text-[10px] px-1 rounded bg-warning-bg text-warning-text">must set password</span>}
+            <button
+              type="button"
+              className="text-[10px] font-semibold text-brand hover:underline"
+              disabled={resetDoctorPassword.isPending}
+              onClick={() => {
+                if (window.confirm(`Reset ${doc.login_email}'s password? They get a one-time password.`)) resetDoctorPassword.mutate(doc)
+              }}
+            >
+              Reset password
+            </button>
+          </>
+        ) : (
+          <>
+            <span className="text-[10px] text-ink-5">No login</span>
+            <button
+              type="button"
+              className="text-[10px] font-semibold text-brand hover:underline disabled:opacity-50"
+              disabled={!doc.email || grantLogin.isPending}
+              title={doc.email ? "Create a login with this email" : "Add the doctor's email first (Edit)"}
+              onClick={() => {
+                if (window.confirm(`Create a login for ${doc.name} (${doc.email})?`)) grantLogin.mutate(doc)
+              }}
+            >
+              Give login access
+            </button>
+          </>
+        )}
+      </div>
+  )
+
 
   // Filters & State
   const [search, setSearch] = useState("")
@@ -1089,14 +1186,16 @@ export function DoctorsPage() {
           >
             {doctorsQuery.isFetching ? "Refreshing..." : "↻ Refresh"}
           </Button>
-          <Button
-            size="sm"
-            variant="primary"
-            onClick={() => setModalDoctor(null)}
-            className="text-xs shadow-xs"
-          >
-            + Add Doctor
-          </Button>
+          {canAddDoctor && (
+            <Button
+              size="sm"
+              variant="primary"
+              onClick={() => setModalDoctor(null)}
+              className="text-xs shadow-xs"
+            >
+              + Add Doctor
+            </Button>
+          )}
         </div>
       </div>
 
@@ -1280,11 +1379,13 @@ export function DoctorsPage() {
               ? "No physicians matched your filter criteria. Try resetting filters."
               : "No doctors have been registered in the system yet. Add your first physician to get started!"}
           </p>
-          <div className="pt-2">
-            <Button size="sm" variant="primary" onClick={() => setModalDoctor(null)}>
-              + Add Doctor
-            </Button>
-          </div>
+          {canAddDoctor && (
+            <div className="pt-2">
+              <Button size="sm" variant="primary" onClick={() => setModalDoctor(null)}>
+                + Add Doctor
+              </Button>
+            </div>
+          )}
         </Card>
       ) : viewMode === "grid" ? (
         /* Grid / Card View */
@@ -1371,6 +1472,7 @@ export function DoctorsPage() {
                       )}
                     </div>
                   )}
+                  <div className="pt-1 border-t border-border">{loginControls(doc)}</div>
                 </div>
               </div>
 
@@ -1407,24 +1509,28 @@ export function DoctorsPage() {
                 </div>
 
                 <div className="flex items-center gap-1">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-7 w-7 p-0 text-ink-3 hover:text-brand"
-                    title="Edit Doctor Profile"
-                    onClick={() => setModalDoctor(doc)}
-                  >
-                    ✏️
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-7 w-7 p-0 text-danger hover:bg-danger/10"
-                    title="Delete Doctor"
-                    onClick={() => setDeleteTarget(doc)}
-                  >
-                    🗑️
-                  </Button>
+                  {canEditDoctor && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 w-7 p-0 text-ink-3 hover:text-brand"
+                      title="Edit Doctor Profile"
+                      onClick={() => setModalDoctor(doc)}
+                    >
+                      ✏️
+                    </Button>
+                  )}
+                  {canDeleteDoctor && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 w-7 p-0 text-danger hover:bg-danger/10"
+                      title="Delete Doctor"
+                      onClick={() => setDeleteTarget(doc)}
+                    >
+                      🗑️
+                    </Button>
+                  )}
                 </div>
               </div>
             </Card>
@@ -1486,6 +1592,7 @@ export function DoctorsPage() {
                       <div className="text-[10.5px] text-ink-4 truncate max-w-[160px]">
                         {doc.email || "—"}
                       </div>
+                      {loginControls(doc)}
                     </td>
 
                     {/* Slot Duration */}
@@ -1496,10 +1603,11 @@ export function DoctorsPage() {
                     {/* Status */}
                     <td className="px-3 py-3">
                       <button
+                        disabled={!canEditDoctor}
                         onClick={() =>
                           toggleStatusMutation.mutate({ id: doc.id, is_active: !doc.is_active })
                         }
-                        title="Click to toggle status"
+                        title={canEditDoctor ? "Click to toggle status" : undefined}
                         className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-semibold transition-transform active:scale-95 ${
                           doc.is_active
                             ? "bg-success-bg text-success-text hover:bg-success/20"
@@ -1542,20 +1650,24 @@ export function DoctorsPage() {
                         >
                           Leave
                         </Button>
-                        <button
-                          className="p-1 text-ink-3 hover:text-brand"
-                          title="Edit"
-                          onClick={() => setModalDoctor(doc)}
-                        >
-                          ✏️
-                        </button>
-                        <button
-                          className="p-1 text-danger hover:opacity-80"
-                          title="Delete"
-                          onClick={() => setDeleteTarget(doc)}
-                        >
-                          🗑️
-                        </button>
+                        {canEditDoctor && (
+                          <button
+                            className="p-1 text-ink-3 hover:text-brand"
+                            title="Edit"
+                            onClick={() => setModalDoctor(doc)}
+                          >
+                            ✏️
+                          </button>
+                        )}
+                        {canDeleteDoctor && (
+                          <button
+                            className="p-1 text-danger hover:opacity-80"
+                            title="Delete"
+                            onClick={() => setDeleteTarget(doc)}
+                          >
+                            🗑️
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -1572,8 +1684,11 @@ export function DoctorsPage() {
           doctor={modalDoctor}
           departments={departments}
           onClose={() => setModalDoctor(undefined)}
+          onLoginGranted={(result) => setTempPassword({ result, title: "Doctor login created" })}
         />
       )}
+
+      {tempPassword && <TemporaryPasswordModal result={tempPassword.result} title={tempPassword.title} onClose={() => setTempPassword(null)} />}
 
       {queueDoctor && (
         <DoctorQueueModal

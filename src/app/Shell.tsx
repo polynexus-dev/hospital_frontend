@@ -4,6 +4,7 @@ import { IdleLock } from "./IdleLock"
 import { LicenseBanner } from "./LicenseBanner"
 import { WebChatAlerts } from "./WebChatAlerts"
 import { GlobalRecordDrawer } from "../components/record/GlobalRecordDrawer"
+import { DevtoolsGuard } from "./DevtoolsGuard"
 import { useLicensedFeature } from "./useLicensedFeature"
 import { useTranslation } from "react-i18next"
 import { useQuery } from "@tanstack/react-query"
@@ -744,6 +745,7 @@ export function Shell() {
         <LicenseBanner />
         <WebChatAlerts />
         <GlobalRecordDrawer />
+        <DevtoolsGuard />
         {/* Dynamic Outlet with Compact Mode Class */}
         <div className={`flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-3 sm:p-5 ${isCompactMode ? "text-[12px] p-3 gap-2" : ""}`}>
           <Outlet />

@@ -44,6 +44,34 @@ export function dailyMisPreview(params?: ReportDateParams) {
   return api.get<DailyMisPreview>(`/reports/daily-mis-preview/${buildQs(params)}`)
 }
 
+export interface Trend {
+  value: number
+  change_pct: number | null
+}
+
+/** GET /reports/live-dashboard/ — every owner-dashboard figure from live records (end date inclusive). */
+export interface LiveDashboard {
+  generated_at: string
+  calls: { received: Trend; answered: Trend; missed: Trend }
+  opd: {
+    completed: Trend
+    encounters: Trend
+    avg_wait_minutes: { value: number | null; change_minutes: number | null }
+  }
+  now: { waiting: number; in_consultation: number; consults_done_today: number; lab_pending: number; radiology_pending: number }
+  enquiries: { new: number; contacted: number; follow_up: number; converted: number; total: number }
+  revenue_by_service: { service: string; amount: string }[]
+  doctor_billed: string
+  department_volume: { department_id: number | null; department: string; count: number }[]
+  filters: { departments: { id: number; name: string }[] }
+}
+
+export function liveDashboard(params: ReportDateParams & { department?: string; doctor?: string }) {
+  const query = new URLSearchParams()
+  Object.entries(params).forEach(([k, v]) => v && v !== "all" && query.set(k, v))
+  return api.get<LiveDashboard>(`/reports/live-dashboard/?${query}`)
+}
+
 export function revenueBySource(params?: ReportDateParams) {
   return api.get<RevenueBySourceReport>(`/reports/revenue-by-source/${buildQs(params)}`)
 }

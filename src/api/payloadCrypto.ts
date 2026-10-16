@@ -18,6 +18,13 @@ import { getApiBaseUrl } from "./client"
 // ── Module-level session state ─────────────────────────────────────────────
 let _sessionId: string | null = null
 let _aesKey: CryptoKey | null = null
+// "disabled": the server answered 404 (PAYLOAD_ENCRYPTION_ENABLED off) — send plain JSON.
+let _state: "idle" | "pending" | "ready" | "disabled" | "failed" = "idle"
+let _initPromise: Promise<void> | null = null
+let _checkedAt = 0
+// re-ask a server that said "disabled" now and then, so switching encryption on
+// takes effect in open tabs without a reload
+const RECHECK_DISABLED_MS = 60_000
 
 /** Returns the current session ID, or null if not yet initialised. */
 export function getSessionId(): string | null {
@@ -59,14 +66,51 @@ function base64UrlToBuffer(b64: string): ArrayBuffer {
  *
  * Safe to call multiple times -- subsequent calls re-key the session.
  */
-export async function initSession(): Promise<void> {
+export function initSession(): Promise<void> {
+  _state = "pending"
+  _checkedAt = Date.now()
+  _initPromise = handshake().then(
+    () => {
+      _state = "ready"
+    },
+    (err) => {
+      _sessionId = null
+      _aesKey = null
+      _state = String(err).includes("(404)") ? "disabled" : "failed"
+      throw err
+    },
+  )
+  return _initPromise
+}
+
+/**
+ * Waits for the handshake before a request goes out, so no request is sent
+ * in plain text while it is still running. Starts one if none ran yet or the
+ * last one failed. Never throws: if encryption can't be set up the request
+ * proceeds (the server then answers in plain JSON too).
+ */
+export async function ensureSession(): Promise<void> {
+  if (_state === "ready") return
+  if (_state === "disabled" && Date.now() - _checkedAt < RECHECK_DISABLED_MS) return
+  if (_state !== "pending") initSession().catch(() => {})
+  await _initPromise?.catch(() => {})
+}
+
+/** Server forgot our session (restart / 12 h TTL): drop it and handshake again. */
+export async function resetSession(): Promise<void> {
+  _sessionId = null
+  _aesKey = null
+  await initSession().catch(() => {})
+}
+
+async function handshake(): Promise<void> {
   const baseUrl = getApiBaseUrl()
 
   // 1. Generate ephemeral ECDH P-256 key pair.
   const keyPair = await crypto.subtle.generateKey(
     { name: "ECDH", namedCurve: "P-256" },
     false, // private key is non-extractable
-    ["deriveKey"],
+    ["deriveBits"], // deriveBits below (then HKDF) — "deriveKey" alone makes the handshake throw
   )
 
   // 2. Export client public key as uncompressed X9.62 point (65 bytes).

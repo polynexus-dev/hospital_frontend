@@ -5,7 +5,9 @@ import { StatTile } from "../../components/ui/StatTile"
 import { Button } from "../../components/ui/Button"
 import { NeutralTag, Pill, SuccessTag } from "../../components/ui/Pill"
 import { ErrorState, EmptyState, LoadingState } from "../../components/ui/QueryStates"
-import { createRole, getRolePermissions, getUserPermissions, listRoles, listUsers, setRolePermissions, setUserPermissions, updateUser } from "../../api/accounts"
+import { createRole, updateRole, getRolePermissions, getUserPermissions, issueTemporaryPassword, listRoles, listUsers, setRolePermissions, setUserPermissions, updateUser, type TemporaryPassword } from "../../api/accounts"
+import { TemporaryPasswordModal } from "../../components/ui/TemporaryPasswordModal"
+import { AddUserModal } from "./AddUserModal"
 import { listAuditLogs } from "../../api/core"
 import { integrationHealth } from "../../api/integrations"
 import { ApiError, api, triggerBlobDownload } from "../../api/client"
@@ -98,6 +100,22 @@ export function AdminPage() {
   const { data: rolesData, isLoading: isRolesLoading } = useQuery({
     queryKey: ["admin-roles"],
     queryFn: () => listRoles(),
+  })
+
+  const setRoleScope = useMutation({
+    mutationFn: ({ id, scope }: { id: number; scope: "all" | "assigned_only" }) => updateRole(id, { data_scope: scope }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-roles"] }),
+    onError: (err) => window.alert(err instanceof Error ? err.message : String(err)),
+  })
+  const [addingUser, setAddingUser] = useState(false)
+  const [tempPassword, setTempPassword] = useState<{ result: TemporaryPassword; title: string } | null>(null)
+  const resetPassword = useMutation({
+    mutationFn: (u: User) => issueTemporaryPassword(u.id),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] })
+      setTempPassword({ result, title: "Password reset" })
+    },
+    onError: (err) => window.alert(err instanceof ApiError ? JSON.stringify(err.body) : String(err)),
   })
 
   const handleOpenEditRole = (user: User) => {
@@ -212,8 +230,15 @@ export function AdminPage() {
       {activeTab === "users" && (
         <Card>
           <CardHeader>
-            <div className="text-[13px] font-semibold">User directory</div>
-            <div className="text-[12px] text-ink-4">access accounts for this tenant hospital</div>
+            <div className="flex items-center justify-between gap-3 w-full">
+              <div>
+                <div className="text-[13px] font-semibold">User directory</div>
+                <div className="text-[12px] text-ink-4">access accounts for this tenant hospital</div>
+              </div>
+              <Button size="sm" variant="primary" onClick={() => setAddingUser(true)} title="Create a login for any role">
+                + Add user
+              </Button>
+            </div>
           </CardHeader>
           <div className="px-3.5 overflow-x-auto">
             <div className="grid grid-cols-[1.3fr_1.6fr_1.1fr_0.7fr_0.7fr_0.9fr] gap-2.5 py-2.5 border-b border-border-soft text-[11px] tracking-[.06em] uppercase text-ink-4 font-semibold min-w-[860px]">
@@ -236,8 +261,23 @@ export function AdminPage() {
                   {u.role_name || (u.is_staff ? "Administrator" : "Staff")}
                 </div>
                 <div className="uppercase"><NeutralTag>{u.preferred_language}</NeutralTag></div>
-                <div>{u.is_active ? <SuccessTag>ACTIVE</SuccessTag> : <NeutralTag>INACTIVE</NeutralTag>}</div>
-                <div>
+                <div className="flex flex-col items-start gap-1">
+                  {u.is_active ? <SuccessTag>ACTIVE</SuccessTag> : <NeutralTag>INACTIVE</NeutralTag>}
+                  {u.must_change_password && <Pill tone="warn">must set password</Pill>}
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    disabled={resetPassword.isPending}
+                    onClick={() => {
+                      if (window.confirm(`Reset the password of ${u.email}? Their current password stops working and they get a one-time password.`)) resetPassword.mutate(u)
+                    }}
+                    className="text-xs"
+                    title="Issue a one-time password (they choose their own at next sign-in)"
+                  >
+                    🔑 Reset password
+                  </Button>
                   <Button
                     size="sm"
                     variant="secondary"
@@ -257,6 +297,18 @@ export function AdminPage() {
           </div>
         </Card>
       )}
+      {addingUser && (
+        <AddUserModal
+          roles={rolesData?.results ?? []}
+          onClose={() => setAddingUser(false)}
+          onCreated={(result) => {
+            setAddingUser(false)
+            queryClient.invalidateQueries({ queryKey: ["admin-users"] })
+            setTempPassword({ result, title: "Login created" })
+          }}
+        />
+      )}
+      {tempPassword && <TemporaryPasswordModal result={tempPassword.result} title={tempPassword.title} onClose={() => setTempPassword(null)} />}
 
       {/* Edit User Role & Permissions Modal */}
       {editingUser && (
@@ -514,7 +566,21 @@ export function AdminPage() {
                         </div>
                       </div>
                       {r.description && <div className="text-[12px] text-ink-4 mt-1">{r.description}</div>}
-                      <Button size="sm" variant="secondary" className="mt-2" onClick={() => setPermRole(r)}>Edit permissions</Button>
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <Button size="sm" variant="secondary" onClick={() => setPermRole(r)}>Edit permissions</Button>
+                        <label className="flex items-center gap-1.5 text-[11.5px] text-ink-3" title="Which records people with this role can open">
+                          Sees
+                          <select
+                            value={r.data_scope ?? "all"}
+                            disabled={setRoleScope.isPending}
+                            onChange={(e) => setRoleScope.mutate({ id: r.id, scope: e.target.value as "all" | "assigned_only" })}
+                            className="h-7 px-1.5 border border-border-strong rounded-control text-[11.5px] bg-surface"
+                          >
+                            <option value="all">All hospital records</option>
+                            <option value="assigned_only">Only their own patients</option>
+                          </select>
+                        </label>
+                      </div>
                     </div>
 
                     {r.permissions && r.permissions.length > 0 && (

@@ -1,6 +1,20 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { useAuthStore } from "../store/auth"
 
+// Payload encryption is off for these tests (as when the server has
+// PAYLOAD_ENCRYPTION_ENABLED=False); `crypto` below switches it on per test.
+const crypto = vi.hoisted(() => ({ ready: false, resets: 0 }))
+vi.mock("./payloadCrypto", () => ({
+  ensureSession: async () => {},
+  resetSession: async () => {
+    crypto.resets++
+  },
+  getSessionId: () => (crypto.ready ? "sess-1" : null),
+  isSessionReady: () => crypto.ready,
+  encryptPayload: async (data: unknown) => ({ enc: `gcm2$${btoa(JSON.stringify(data))}` }),
+  decryptPayload: async (token: string) => JSON.parse(atob(token.slice(5))),
+}))
+
 // api/client.ts reads API_BASE_URL from import.meta.env at module-eval
 // time, and useAuthStore.getState() fresh per call — no network involved,
 // every test below drives it through a mocked global fetch.
@@ -10,6 +24,8 @@ describe("api client", () => {
     localStorage.clear()
     useAuthStore.setState({ accessToken: null, refreshToken: null, user: null })
     vi.restoreAllMocks()
+    crypto.ready = false
+    crypto.resets = 0
   })
 
   afterEach(() => {
@@ -131,6 +147,40 @@ describe("api client", () => {
     expect(options.headers["Content-Type"]).toBe("application/json")
     expect(options.body).toBe(JSON.stringify({ first_name: "Asha", mobile: "9800000000" }))
   })
+
+  it("with an encryption session, sends and reads only encrypted bodies — errors included", async () => {
+    crypto.ready = true
+    const enc = (o: unknown) => JSON.stringify({ enc: `gcm2$${btoa(JSON.stringify(o))}` })
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(enc({ id: 7 }), { status: 201, headers: { "content-type": "application/json" } }))
+      .mockResolvedValueOnce(new Response(enc({ mobile: ["Invalid"] }), { status: 400, headers: { "content-type": "application/json" } }))
+    vi.stubGlobal("fetch", fetchMock)
+
+    const { api, ApiError } = await import("./client")
+    expect(await api.post("/patients/", { first_name: "Asha" })).toEqual({ id: 7 })
+    const [, options] = fetchMock.mock.calls[0]
+    expect(options.headers["X-Session-Id"]).toBe("sess-1")
+    expect(options.body).not.toContain("Asha") // nothing readable on the wire
+
+    const err = (await api.post("/patients/", {}).catch((e: unknown) => e)) as InstanceType<typeof ApiError>
+    expect(err).toBeInstanceOf(ApiError)
+    expect(err.body).toEqual({ mobile: ["Invalid"] }) // decrypted, so the form can show it
+  })
+
+  it("re-keys (does not log out) when the server has lost the encryption session", async () => {
+    crypto.ready = true
+    useAuthStore.setState({ accessToken: "tok", refreshToken: "refresh-tok" })
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ detail: "Encryption session not found or expired." }), { status: 401, headers: { "content-type": "application/json" } }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ ok: 1 }), { status: 200, headers: { "content-type": "application/json" } }))
+    vi.stubGlobal("fetch", fetchMock)
+
+    const { api } = await import("./client")
+    expect(await api.get("/patients/")).toEqual({ ok: 1 })
+    expect(crypto.resets).toBe(1)
+    expect(fetchMock.mock.calls.map((c) => String(c[0])).some((u) => u.includes("/auth/refresh/"))).toBe(false)
+    expect(useAuthStore.getState().accessToken).toBe("tok")
+  })
 })
 
 describe("getApiBaseUrl", () => {
@@ -146,5 +196,19 @@ describe("getApiBaseUrl", () => {
     vi.stubEnv("VITE_API_BASE_URL", "/api/v1")
     const { getApiBaseUrl } = await import("./client")
     expect(getApiBaseUrl()).toBe(`${window.location.origin}/api/v1`)
+  })
+})
+
+describe("ApiError message (shown on screen — encryption hides the Network tab)", () => {
+  it("lists every field error with readable field names", async () => {
+    const { ApiError } = await import("./client")
+    const err = new ApiError(400, { pan: ["PAN looks like ABCDE1234F."], email: ["Enter a valid email address."] }, "Request to /doctors/ failed with 400")
+    expect(err.message).toBe("Pan: PAN looks like ABCDE1234F.; Email: Enter a valid email address.")
+  })
+
+  it("uses detail when present, and the generic text for HTML error pages", async () => {
+    const { ApiError } = await import("./client")
+    expect(new ApiError(403, { detail: "You do not have permission." }, "x").message).toBe("You do not have permission.")
+    expect(new ApiError(500, "<!DOCTYPE html><html>…", "Request to /x/ failed with 500").message).toBe("Request to /x/ failed with 500")
   })
 })

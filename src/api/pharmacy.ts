@@ -2,6 +2,7 @@ import { api } from "./client"
 import type { Paginated } from "../types/api"
 
 export interface Medicine {
+  is_high_risk?: boolean
   id: number
   name: string
   generic_name: string
@@ -64,7 +65,7 @@ export function listDispenseRecords(params: Record<string, string> = {}) {
   return api.get<Paginated<DispenseRecord>>(`/pharmacy/dispense-records/${qs ? `?${qs}` : ""}`)
 }
 
-export function dispenseMedicine(payload: { batch: number; quantity: number; prescription?: number; patient?: number | null; bill?: boolean; no_charge_reason?: string }) {
+export function dispenseMedicine(payload: { batch: number; quantity: number; prescription?: number; patient?: number | null; bill?: boolean; no_charge_reason?: string; verified_by?: number | null; override_reason?: string }) {
   return api.post<DispenseRecord>("/pharmacy/dispense-records/", payload)
 }
 

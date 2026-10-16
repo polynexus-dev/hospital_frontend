@@ -1,5 +1,5 @@
 import { useAuthStore } from "../store/auth"
-import { decryptPayload, encryptPayload, getSessionId, isSessionReady } from "./payloadCrypto"
+import { decryptPayload, encryptPayload, ensureSession, getSessionId, isSessionReady, resetSession } from "./payloadCrypto"
 
 export function getSubdomain(): string | null {
   if (typeof window === "undefined") return null
@@ -8,6 +8,8 @@ export function getSubdomain(): string | null {
   if (querySub) return querySub.toLowerCase()
 
   const host = window.location.hostname.toLowerCase()
+  // an IP address (192.168.1.156, ::1) is never a hospital subdomain
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host) || host.includes(":")) return null
   const parts = host.split(".")
   const reserved = new Set(["www", "api", "hms", "crm", "admin", "app", "hospital"])
 
@@ -43,40 +45,64 @@ export function getApiBaseUrl(): string {
 
 export const API_BASE_URL = getApiBaseUrl()
 
+/** The readable reason in a DRF error body ("detail", or the first field error), if any. */
+const fieldLabel = (key: string) => key.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase())
+
+/**
+ * The readable reason in a DRF error body: "detail", or every field error
+ * ("Pan: PAN looks like ABCDE1234F.; Email: Enter a valid email address.").
+ * Shown on screen — with payload encryption the browser's Network tab can't.
+ */
+function describeErrorBody(body: unknown): string | null {
+  if (!body) return null
+  if (typeof body === "string") return body.trim().startsWith("<") ? null : body // an HTML error page is not a message
+  if (Array.isArray(body)) return body.length ? body.map(String).join("; ") : null
+  if (typeof body === "object") {
+    const b = body as Record<string, unknown>
+    if (typeof b.detail === "string") return b.detail
+    const parts: string[] = []
+    for (const [key, val] of Object.entries(b)) {
+      const text = Array.isArray(val) ? val.map((v) => (typeof v === "object" ? describeErrorBody(v) : String(v))).filter(Boolean).join(" ") : typeof val === "object" && val ? describeErrorBody(val) : String(val)
+      if (!text) continue
+      parts.push(key === "non_field_errors" || key === "errors" || key === "detail" ? text : `${fieldLabel(key)}: ${text}`)
+      if (parts.length === 4) break
+    }
+    return parts.length ? parts.join("; ") : null
+  }
+  return null
+}
+
+const SECRET_KEY = /pass(word)?|otp|token|secret|pin$/i
+
+/** Failed calls, decrypted, in the console: dev builds, or any build after localStorage.hms_debug_api = "1". */
+function logApiFailure(method: string, path: string, status: number, sent: unknown, received: unknown) {
+  let on = import.meta.env.DEV
+  try {
+    on = on || localStorage.getItem("hms_debug_api") === "1"
+  } catch {
+    // storage blocked
+  }
+  if (!on) return
+  const masked = sent && typeof sent === "object" && !(sent instanceof FormData)
+    ? Object.fromEntries(Object.entries(sent as Record<string, unknown>).map(([k, v]) => [k, SECRET_KEY.test(k) ? "•••" : v]))
+    : sent
+  console.warn(`[API ${status}] ${method} ${path}`, { request: masked, response: received })
+}
+
 export class ApiError extends Error {
   status: number
   body: unknown
 
   constructor(status: number, body: unknown, message: string) {
-    super(message)
+    // screens that show err.message get the server's reason, not "Request … failed with 400"
+    super(describeErrorBody(body) ?? message)
     this.status = status
     this.body = body
   }
 }
 
 export function extractApiError(err: unknown, fallback = "An unexpected error occurred."): string {
-  if (err instanceof ApiError && err.body) {
-    if (typeof err.body === "string") return err.body
-    if (Array.isArray(err.body) && err.body.length > 0) {
-      return String(err.body[0])
-    }
-    if (typeof err.body === "object") {
-      const b = err.body as Record<string, unknown>
-      if (typeof b.detail === "string") return b.detail
-      if (Array.isArray(b.non_field_errors) && b.non_field_errors.length > 0) {
-        return String(b.non_field_errors[0])
-      }
-      if (Array.isArray(b.errors) && b.errors.length > 0) {
-        return String(b.errors[0])
-      }
-      const firstKey = Object.keys(b)[0]
-      if (firstKey) {
-        const val = b[firstKey]
-        if (Array.isArray(val) && val.length > 0) return `${firstKey}: ${val[0]}`
-        if (typeof val === "string") return `${firstKey}: ${val}`
-      }
-    }
-  }
+  if (err instanceof ApiError) return describeErrorBody(err.body) ?? err.message
   if (err instanceof Error) return err.message
   return fallback
 }
@@ -88,17 +114,20 @@ async function refreshAccessToken(): Promise<string | null> {
   if (!refreshToken) return null
 
   if (!refreshPromise) {
-    refreshPromise = fetch(`${API_BASE_URL}/auth/refresh/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refresh: refreshToken }),
-    })
+    refreshPromise = (async () => {
+      await ensureSession()
+      const headers: Record<string, string> = { "Content-Type": "application/json" }
+      const sessionId = getSessionId()
+      if (sessionId) headers["X-Session-Id"] = sessionId
+      const body = isSessionReady() ? JSON.stringify(await encryptPayload({ refresh: refreshToken })) : JSON.stringify({ refresh: refreshToken })
+      return fetch(`${API_BASE_URL}/auth/refresh/`, { method: "POST", headers, body })
+    })()
       .then(async (res) => {
         if (!res.ok) {
           logout()
           return null
         }
-        const data = await res.json()
+        const data = (await readJson(res)) as { access: string }
         setAccessToken(data.access)
         return data.access as string
       })
@@ -119,7 +148,16 @@ interface RequestOptions extends Omit<RequestInit, "body"> {
   skipAuth?: boolean
 }
 
+/** Parses a JSON body, decrypting it when it is a Layer-2 {"enc": "gcm2$…"} payload. */
+async function readJson(res: Response): Promise<unknown> {
+  const json = await res.json()
+  if (json && typeof json === "object" && "enc" in json && isSessionReady()) return decryptPayload(json.enc as string)
+  return json
+}
+
 async function request<T>(path: string, options: RequestOptions = {}, isRetry = false): Promise<T> {
+  // never send a request in plain text while the encryption handshake is still running
+  await ensureSession()
   const { accessToken } = useAuthStore.getState()
   const { body, isFormData, skipAuth, headers, ...rest } = options
 
@@ -152,18 +190,27 @@ async function request<T>(path: string, options: RequestOptions = {}, isRetry = 
     body: serialisedBody,
   })
 
-  if (res.status === 401 && !skipAuth && !isRetry) {
-    const newToken = await refreshAccessToken()
-    if (newToken) return request<T>(path, options, true)
+  if (res.status === 401 && !isRetry) {
+    // the server lost our encryption session (restart / TTL): re-key, not log out
+    const detail = String(((await res.clone().json().catch(() => null)) as { detail?: string } | null)?.detail ?? "")
+    if (detail.includes("Encryption session")) {
+      await resetSession()
+      return request<T>(path, options, true)
+    }
+    if (!skipAuth) {
+      const newToken = await refreshAccessToken()
+      if (newToken) return request<T>(path, options, true)
+    }
   }
 
   if (!res.ok) {
     let parsedBody: unknown = null
     try {
-      parsedBody = await res.json()
+      parsedBody = await readJson(res)
     } catch {
       // no JSON body
     }
+    logApiFailure(String(rest.method ?? "GET"), path, res.status, body, parsedBody)
     throw new ApiError(res.status, parsedBody, `Request to ${path} failed with ${res.status}`)
   }
 
@@ -171,14 +218,7 @@ async function request<T>(path: string, options: RequestOptions = {}, isRetry = 
   const contentType = res.headers.get("content-type") ?? ""
   if (!contentType.includes("application/json")) return undefined as T
 
-  const json = await res.json()
-
-  // Decrypt the response if it is a Layer-2 encrypted payload.
-  if (json && typeof json === "object" && "enc" in json && isSessionReady()) {
-    return decryptPayload(json.enc as string) as Promise<T>
-  }
-
-  return json as T
+  return (await readJson(res)) as T
 }
 
 async function requestBlob(path: string, isRetry = false): Promise<Blob> {

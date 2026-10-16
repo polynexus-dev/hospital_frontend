@@ -26,11 +26,19 @@ export interface User {
   hospital_city?: string
   hospital_state?: string
   hospital_helpline?: string
+  hospital_block_devtools?: boolean
+  /** owner/admin role: allowed everything in the hospital (mirrors the server) */
+  is_hospital_admin?: boolean
+  /** "assigned_only": screens show only this user's own records */
+  data_scope?: "all" | "assigned_only"
+  /** the user's own doctor profile, if they are a doctor */
+  own_doctor_id?: number | null
   hospital_enabled_modules?: string[]
   available_hospitals?: Array<{ id: string; name: string; slug: string; city: string }>
   department: number | null
   role: number | null
   role_name: string | null
+  must_change_password?: boolean
   role_domain?: "crm" | "erp" | "both" | null
   permissions: string[]
   preferred_language: Language
@@ -56,6 +64,8 @@ export interface Role {
   name: string
   description: string
   template?: string
+  /** assigned_only: sees only their own appointments, patients, OPD visits and admissions */
+  data_scope?: "all" | "assigned_only"
   created_at: string
   permissions?: string[]
   /** Whether the requesting user may give this role to someone. */
@@ -332,6 +342,10 @@ export interface Doctor {
   smc_registration_number?: string
   degree?: string
   pan?: string
+  /** linked login (null = this doctor can't sign in) */
+  user?: number | null
+  login_email?: string | null
+  login_must_change_password?: boolean | null
 }
 
 export interface Slot {
@@ -1233,6 +1247,7 @@ export interface SaaSHospital {
   primary_language: string
   is_active: boolean
   enabled_modules: string[]
+  block_devtools?: boolean
   staff_count: number
   created_at: string
   updated_at: string

@@ -5,7 +5,8 @@ import { MemoryRouter } from "react-router-dom"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { DoctorsPage } from "./DoctorsPage"
 import * as doctorsApi from "../../api/doctors"
-import type { Doctor, Department } from "../../types/api"
+import type { Doctor, Department, User } from "../../types/api"
+import { useAuthStore } from "../../store/auth"
 
 vi.mock("../../api/doctors", () => ({
   listDoctors: vi.fn(),
@@ -73,6 +74,8 @@ function renderPage() {
 
 describe("DoctorsPage", () => {
   beforeEach(() => {
+    // a hospital admin manages doctor profiles; other roles see the list read-only
+    useAuthStore.setState({ user: { is_hospital_admin: true, permissions: [] } as unknown as User })
     vi.clearAllMocks()
     vi.mocked(doctorsApi.listDoctors).mockResolvedValue({
       count: 2,
@@ -145,5 +148,22 @@ describe("DoctorsPage", () => {
     expect(await screen.findByText(/Manage Leave: Dr. Rajesh K. Deshmukh/i)).toBeInTheDocument()
     expect(screen.getByText("🔒 Block Leave")).toBeInTheDocument()
     expect(screen.getByText("🔓 Unblock Leave")).toBeInTheDocument()
+  })
+})
+
+describe("DoctorsPage for a doctor", () => {
+  it("shows the list but no Add / Edit / Delete or login controls", async () => {
+    useAuthStore.setState({ user: { is_hospital_admin: false, permissions: ["appointments.view_doctor"] } as unknown as User })
+    vi.spyOn(doctorsApi, "listDoctors").mockResolvedValue({ count: 0, next: null, previous: null, results: [] })
+    vi.spyOn(doctorsApi, "listDepartments").mockResolvedValue([])
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <MemoryRouter>
+          <DoctorsPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    )
+    expect(await screen.findByText("Doctors Directory")).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /Add Doctor/ })).not.toBeInTheDocument()
   })
 })
