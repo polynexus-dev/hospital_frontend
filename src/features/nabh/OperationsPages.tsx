@@ -17,7 +17,7 @@ export function OncologyPage() {
   return (
     <ModuleHub
       title="Oncology"
-      subtitle="NABH oncology annexure — TNM staging, chemotherapy with BSA dosing & double-check, radiotherapy, tumour boards, clinical trials, BMT"
+      subtitle="TNM staging, chemotherapy with BSA dosing & double-check, radiotherapy, tumour boards, clinical trials, BMT"
       tabs={[
         {
           key: "cases",
@@ -131,7 +131,7 @@ export function AccountsPage() {
   return (
     <ModuleHub
       title="Accounts, Tariff & Insurance"
-      subtitle="NABH FPM.2–4 — payables with 3-way match, vouchers with approval, day book, customer invoicing & receivables, Tally export, GST reports, tariff, insurance & claim reconciliation"
+      subtitle="Payables with 3-way match, vouchers with approval, day book, customer invoicing & receivables, Tally export, GST reports, tariff, insurance & claim reconciliation"
       tabs={[
         {
           key: "invoices",
@@ -201,7 +201,7 @@ export function ProcurementPage() {
   return (
     <ModuleHub
       title="Procurement & Stores"
-      subtitle="NABH FPM.1 — approval rules, indents, goods receipt with discrepancy flags, inter-store transfers, supplier scorecards; rate contracts, PO sanction & delivery tracking, cart"
+      subtitle="Approval rules, indents, goods receipt with discrepancy flags, inter-store transfers, supplier scorecards; rate contracts, PO sanction & delivery tracking, cart"
       tabs={[
         { key: "cart", label: "Cart", render: () => <CartPanel /> },
         { key: "po-tracking", label: "PO sanction & delivery", render: () => <POTrackingPanel /> },
@@ -244,7 +244,7 @@ export function HRNabhPage() {
   return (
     <ModuleHub
       title="HR — Payroll, Roster, Talent"
-      subtitle="NABH HRM — payroll (PF/ESI/PT/TDS), duty rules & roster publishing, appraisals, recruitment, exit, induction & training"
+      subtitle="Payroll (PF/ESI/PT/TDS), duty rules & roster publishing, appraisals, recruitment, exit, induction & training"
       tabs={[
         {
           key: "payroll",
@@ -282,7 +282,7 @@ export function PharmacyNabhPage() {
   return (
     <ModuleHub
       title="Pharmacy — Medication Safety"
-      subtitle="NABH MOM — formulary flags, reorder & expiry alerts, recalls, returns, reconciliation, ward indents, emergency drug stock"
+      subtitle="Formulary flags, reorder & expiry alerts, recalls, returns, reconciliation, ward indents, emergency drug stock"
       tabs={[
         { key: "reorder", label: "Reorder alerts", resource: { title: "At or below reorder level", endpoint: "/pharmacy/medicines/reorder_alerts/", searchable: false, columns: [col("name", "Medicine"), col("stock", "Stock"), col("reorder_level", "Reorder level"), col("is_emergency", "Emergency drug")] } },
         { key: "expiry", label: "Near expiry", resource: { title: "Expiring within 90 days", endpoint: "/pharmacy/batches/expiring/", searchable: false, columns: [col("medicine", "Medicine"), col("batch_number", "Batch"), col("expiry_date", "Expiry"), col("quantity", "Qty"), { key: "expired", label: "Status", render: (r) => (r.expired ? "EXPIRED" : "Near expiry") }] } },
@@ -321,7 +321,7 @@ export function InpatientFlowPage() {
   return (
     <ModuleHub
       title="Inpatient Flow"
-      subtitle="NABH AAC.5/6 — bed board & availability forecast, discharge planning with department clearances, admission rules"
+      subtitle="Bed board & availability forecast, discharge planning with department clearances, admission rules"
       tabs={[
         { key: "beds", label: "Bed board", render: () => <BedBoard /> },
         { key: "due", label: "Due for discharge", resource: { title: "Due for discharge", endpoint: "/ipd/admissions/due_for_discharge/", searchable: false, columns: [col("patient", "Patient"), col("uhid", "UHID"), col("ward", "Ward"), col("bed", "Bed"), col("expected_discharge_date", "Expected"), col("discharge_initiated_at", "Initiated"), col("pending_clearances", "Pending clearances")] } },

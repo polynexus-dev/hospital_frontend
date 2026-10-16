@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM node:20-alpine
 
 WORKDIR /app
@@ -8,8 +9,19 @@ COPY package*.json ./
 # Install dependencies
 RUN npm ci
 
+# The 3D anatomy models are Git LFS files. The build context has no .git, so
+# fetch the real models here (scripts/fetch-lfs-models.mjs: size + sha256
+# checked, fails the build rather than ship a pointer). Own layer, so code
+# changes don't re-download them. Private repo: --secret id=lfs_token,env=GH_TOKEN
+COPY scripts/fetch-lfs-models.mjs scripts/
+COPY public/models/ public/models/
+RUN --mount=type=secret,id=lfs_token,required=false \
+    node scripts/fetch-lfs-models.mjs public/models && mkdir -p /lfs-models && cp -a public/models/. /lfs-models/
+
 # Copy source code
 COPY . .
+# COPY . . brought the pointer files back; put the real models in place
+RUN cp -a /lfs-models/. public/models/
 
 # Build-time environment variable
 ARG VITE_API_BASE_URL=/api/v1

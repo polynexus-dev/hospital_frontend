@@ -66,7 +66,7 @@ function SecurityPolicyForm() {
             onChange={(e) => set("idle_lock_minutes", Number(e.target.value))}
           />
           <span className="block text-[11px] text-ink-4 mt-1">
-            1–120 minutes. 10–15 is usual for shared clinical workstations; NABH (DOM.4.b) leaves the time to your hospital's IT policy.
+            1–120 minutes. 10–15 is usual for shared clinical workstations.
           </span>
         </label>
         <button onClick={save} className="mt-4 px-4 py-2 text-sm font-medium text-white bg-success hover:bg-success-text rounded-lg">Save policy</button>
@@ -133,7 +133,7 @@ export function GovernancePage() {
   return (
     <ModuleHub
       title="IT Governance & Security"
-      subtitle="NABH DOM / DAC, CERT-In, DPDP — password & lockout policy, security events, incidents & breaches, audit rules & rollback, consent notices, backups, accreditations, help"
+      subtitle="Password & lockout policy, security events, incidents & breaches, audit rules & rollback, consent notices, backups, accreditations, help"
       tabs={[
         { key: "policy", label: "Security policy", render: () => <SecurityPolicyForm /> },
         { key: "sso", label: "Single sign-on", render: () => <SSOSettings /> },

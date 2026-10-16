@@ -8,7 +8,7 @@ export function ClinicalSafetyPage() {
   return (
     <ModuleHub
       title="Clinical Safety & Documentation"
-      subtitle="NABH COP / MOM — alerts, allergies, assessments, risk scores, consent, handover, care plans, CDSS and reporting"
+      subtitle="Alerts, allergies, assessments, risk scores, consent, handover, care plans, CDSS and reporting"
       tabs={[
         {
           key: "alerts",
@@ -99,7 +99,7 @@ export function ClinicalSafetyPage() {
           label: "Order sets",
           resource: {
             title: "Order sets", endpoint: "/clinical/order-sets/", createLabel: "New order set",
-            description: "Diagnosis-linked lab / radiology / medication bundles suggested at ordering (COP.1.c/i).",
+            description: "Diagnosis-linked lab / radiology / medication bundles suggested at ordering.",
             columns: [col("name", "Name"), col("kind", "Kind"), col("diagnosis_codes", "ICD codes"), { key: "items", label: "Items", render: (r) => (r.items ?? []).map((i: any) => i.name).join(", ") }],
             fields: [{ key: "name", label: "Name", required: true }, { key: "kind", label: "Kind", type: "select", options: opts("medication", "lab", "radiology", "mixed"), defaultValue: "mixed" },
               { key: "diagnosis_codes", label: "ICD-10 prefixes (JSON)", type: "json", placeholder: '["N18"]' }, { key: "diagnosis_keywords", label: "Keywords (JSON)", type: "json", placeholder: '["kidney"]' },
@@ -177,7 +177,7 @@ export function InfectionControlPage() {
   return (
     <ModuleHub
       title="Infection Prevention & Control"
-      subtitle="NABH COP.8 — HAI surveillance, device days, antimicrobial stewardship, staff exposure, hand hygiene"
+      subtitle="HAI surveillance, device days, antimicrobial stewardship, staff exposure, hand hygiene"
       tabs={[
         {
           key: "hai",

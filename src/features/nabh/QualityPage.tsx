@@ -63,7 +63,7 @@ export function QualityPage() {
   return (
     <ModuleHub
       title="Patient Safety & Quality"
-      subtitle="NABH COP.8.c, COP.4.d, MOM.4, IMS.2 — incidents, medication errors, emergency codes, drills, checklists and KPIs"
+      subtitle="Incidents, medication errors, emergency codes, drills, checklists and KPIs"
       tabs={[
         { key: "kpis", label: "NABH KPIs", render: () => <KPIDashboard /> },
         {

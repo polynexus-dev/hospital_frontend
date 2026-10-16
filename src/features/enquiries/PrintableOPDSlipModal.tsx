@@ -1,6 +1,7 @@
 import { useRef } from "react"
 import type { Enquiry } from "../../types/api"
 import { Button } from "../../components/ui/Button"
+import { useAuthStore } from "../../store/auth"
 
 interface Props {
   enquiry: Enquiry
@@ -9,6 +10,9 @@ interface Props {
 
 export function PrintableOPDSlipModal({ enquiry, onClose }: Props) {
   const printAreaRef = useRef<HTMLDivElement>(null)
+  const user = useAuthStore((s) => s.user)
+  const hospitalName = user?.hospital_name || "Hospital"
+  const hospitalAddress = [user?.hospital_address, user?.hospital_city, user?.hospital_state].filter(Boolean).join(", ")
 
   const tokenNumber = `TK-${(enquiry.id * 17) % 90 + 10}`
   const uhid = `UHID-${new Date().getFullYear()}-${(enquiry.patient || enquiry.id).toString().padStart(6, "0")}`
@@ -84,15 +88,14 @@ Emergency Helpline: 1800-419-7000`
               <div className="flex items-center justify-center gap-2 mb-1">
                 <span className="text-2xl">🏥</span>
                 <h1 className="text-base font-black tracking-wide text-ink uppercase">
-                  Nexus Multi-Specialty Hospital
+                  {hospitalName}
                 </h1>
               </div>
-              <p className="text-[11px] text-ink-3 font-medium">
-                NABH Accredited Tertiary Healthcare & Research Center
-              </p>
-              <p className="text-[10px] text-ink-4">
-                Plot 14, Health City, Ring Road • 24x7 Emergency: (020) 6700-1111
-              </p>
+              {(hospitalAddress || user?.hospital_helpline) && (
+                <p className="text-[10px] text-ink-4">
+                  {[hospitalAddress, user?.hospital_helpline && `Helpline: ${user.hospital_helpline}`].filter(Boolean).join(" • ")}
+                </p>
+              )}
             </div>
 
             {/* Token Banner */}

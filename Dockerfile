@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Production frontend: Vite build (minified, no source maps; our code is
 # obfuscated by default, third-party libraries in vendor-*.js are left as is
 # because obfuscating them protects nothing and breaks some) served by nginx, which is also the deployment's reverse proxy
@@ -12,15 +13,18 @@ ARG OBFUSCATE=1
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
+# The 3D anatomy models are Git LFS files. The build context has no .git, so
+# fetch the real models here (scripts/fetch-lfs-models.mjs: size + sha256
+# checked, fails the build rather than ship a pointer). Own layer, so code
+# changes don't re-download them. Private repo: --secret id=lfs_token,env=GH_TOKEN
+COPY scripts/fetch-lfs-models.mjs scripts/
+COPY public/models/ public/models/
+RUN --mount=type=secret,id=lfs_token,required=false \
+    node scripts/fetch-lfs-models.mjs public/models && mkdir -p /lfs-models && cp -a public/models/. /lfs-models/
 COPY . .
+# COPY . . brought the pointer files back; put the real models in place
+RUN cp -a /lfs-models/. public/models/
 ENV VITE_API_BASE_URL=/api/v1
-# The 3D anatomy models are Git LFS files: without `git lfs pull` they're tiny
-# pointer files, and the bundle would ship a broken model. Refuse to build.
-RUN for f in public/models/*.glb public/models/*.gltf public/models/*.obj; do \
-      if [ -f "$f" ] && head -c 100 "$f" | grep -q "git-lfs.github.com"; then \
-        echo "$f is a Git LFS pointer, not the model. Run 'git lfs pull' in the Frontend repo, then build again." >&2; exit 1; \
-      fi; \
-    done
 RUN rm -f .env .env.* \
     && npx tsc -b \
     && npx vite build --sourcemap false \

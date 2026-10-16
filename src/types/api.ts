@@ -25,6 +25,7 @@ export interface User {
   hospital_address?: string
   hospital_city?: string
   hospital_state?: string
+  hospital_helpline?: string
   hospital_enabled_modules?: string[]
   available_hospitals?: Array<{ id: string; name: string; slug: string; city: string }>
   department: number | null

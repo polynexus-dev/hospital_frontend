@@ -128,7 +128,7 @@ export function Shell() {
   ]
   const erpSections: NavSection[] = [
     { heading: "Clinical care", items: careNav },
-    { heading: "NABH clinical", items: nabhCareNav },
+    { heading: "Clinical services", items: nabhCareNav },
     { heading: "Finance & operations", items: erpOpsNav },
     { heading: "Quality & operations", items: nabhOpsNav },
   ]

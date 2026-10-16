@@ -15,7 +15,7 @@ export function SupportServicesPage() {
           label: "Incoming ambulances",
           resource: {
             title: "Heading to the ED", endpoint: "/support-services/ambulance-trips/incoming/", searchable: false,
-            description: "Live position and the latest vitals transmitted from the vehicle (COP.4.c).",
+            description: "Live position and the latest vitals transmitted from the vehicle.",
             columns: [col("vehicle_number", "Vehicle"), col("patient_name", "Patient"), col("chief_complaint", "Complaint"), { key: "status", label: "Status" }, col("eta_minutes", "ETA (min)"),
               { key: "latest_vitals", label: "Latest vitals", render: (r) => (r.latest_vitals ? `HR ${r.latest_vitals.heart_rate ?? "—"} · SpO₂ ${r.latest_vitals.spo2 ?? "—"} · BP ${r.latest_vitals.bp_systolic ?? "—"}/${r.latest_vitals.bp_diastolic ?? "—"} · GCS ${r.latest_vitals.gcs ?? "—"}` : "—") }],
           },
@@ -142,7 +142,7 @@ export function QueuePage() {
   return (
     <ModuleHub
       title="Queue & Token Management"
-      subtitle="NABH AAC.2.h/i — tokens for every counter, priority handling, waiting-time estimates and TV display boards"
+      subtitle="Tokens for every counter, priority handling, waiting-time estimates and TV display boards"
       tabs={[
         {
           key: "points",
@@ -193,7 +193,7 @@ export function TelemedicinePage() {
   return (
     <ModuleHub
       title="Telemedicine"
-      subtitle="NABH COP.10.a — video consultations with teleconsultation consent, patient join links and e-prescription"
+      subtitle="Video consultations with teleconsultation consent, patient join links and e-prescription"
       tabs={[
         {
           key: "today",
@@ -222,7 +222,7 @@ export function MRDPage() {
   return (
     <ModuleHub
       title="Medical Records (MRD)"
-      subtitle="Case-file tracking, ICD-10 coding, completeness audit and retention (IMS.1.e)"
+      subtitle="Case-file tracking, ICD-10 coding, completeness audit and retention"
       tabs={[
         {
           key: "files",
@@ -270,7 +270,7 @@ export function DietaryPage() {
   return (
     <ModuleHub
       title="Dietary & Kitchen"
-      subtitle="NABH COP.7 — nutritional screening, dietitian consultation, therapeutic diet orders and meal service"
+      subtitle="Nutritional screening, dietitian consultation, therapeutic diet orders and meal service"
       tabs={[
         {
           key: "orders",
