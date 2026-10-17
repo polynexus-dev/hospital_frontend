@@ -22,6 +22,7 @@ import type { Tone } from "../../components/ui/tone"
 import { viewRecord } from "../../store/recordViewer"
 import { useAuthStore } from "../../store/auth"
 import { SearchSelect, type SearchOption } from "../../components/ui/SearchSelect"
+import { ConsultationPanel } from "./ConsultationPanel"
 
 const STATUS_LABELS: Record<AppointmentStatus, string> = {
   booked: "Booked",
@@ -324,6 +325,8 @@ export function AppointmentsPage() {
   const selectedAppt = selectedApptId ? (appointments.find((a) => a.id === selectedApptId) ?? null) : null
   const selectedApptSlot = selectedAppt ? slots.find((s) => s.id === selectedAppt.slot) : undefined
   const selectedApptDoctor = selectedAppt ? doctorMap.get(selectedAppt.doctor) : undefined
+  const canSeeClinical = useAuthStore((s) => (s.user?.permissions ?? []).includes("patients.access_clinical_detail"))
+  const showConsult = !!selectedAppt && canSeeClinical && ["checked_in", "in_consult", "completed"].includes(selectedAppt.status)
 
   const gridLoading = doctorsQuery.isLoading || slotsQuery.isLoading || apptsQuery.isLoading
   const gridError = doctorsQuery.isError || slotsQuery.isError || apptsQuery.isError
@@ -819,7 +822,7 @@ export function AppointmentsPage() {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4"
           onClick={() => setSelectedApptId(null)}
         >
-          <div className="bg-surface rounded-card p-5 w-full max-w-[380px]" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-surface rounded-card p-5 w-full max-h-[90vh] overflow-y-auto" style={{ maxWidth: showConsult ? 900 : 380 }} onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between gap-2 mb-1">
               <div className="text-[15px] font-semibold">{patientName(selectedAppt.patient)}</div>
               <Pill tone={STATUS_TONE[selectedAppt.status]}>{STATUS_LABELS[selectedAppt.status]}</Pill>
@@ -880,6 +883,8 @@ export function AppointmentsPage() {
                 Close
               </Button>
             </div>
+            {/* Clinical staff see the visit's triage, vitals, notes and diagnoses here. */}
+            {showConsult && <ConsultationPanel appointmentId={selectedAppt.id} />}
           </div>
         </div>
       )}

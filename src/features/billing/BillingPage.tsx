@@ -325,7 +325,7 @@ export function BillingPage() {
                         onClick={() => setSelectedBillForAddItem(b)}
                         disabled={b.on_hold || b.is_locked}
                         title={b.on_hold ? `On hold: ${b.hold_reason}` : b.is_locked ? "Locked (final bill)" : undefined}
-                        className="px-2 py-1 text-xs font-semibold bg-brand-tint text-brand-dark rounded hover:bg-brand-border"
+                        className="px-2 py-1 text-xs font-semibold bg-brand-tint text-brand-dark rounded hover:bg-brand-border disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         + Add Item
                       </button>
@@ -355,7 +355,7 @@ export function BillingPage() {
                         onClick={() => setBillToAdjust(b)}
                         className="px-2 py-1 text-xs font-semibold border border-border-strong rounded hover:bg-page"
                       >
-                        Hold / credit / category
+                        Hold / lock / credit / category
                       </button>
                     </td>
 
