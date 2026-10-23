@@ -175,9 +175,15 @@ export function AppointmentsPage() {
     enabled: queueDoctorId > 0,
   })
 
-  const doctors = useMemo(
-    () => (doctorsQuery.data?.results ?? []).filter((d) => d.is_active && (!ownDoctorId || d.id === ownDoctorId)),
+  const [showInactive, setShowInactive] = useState(false)
+  const allDoctors = useMemo(
+    () => (doctorsQuery.data?.results ?? []).filter((d) => !ownDoctorId || d.id === ownDoctorId),
     [doctorsQuery.data, ownDoctorId],
+  )
+  const inactiveDoctorsCount = useMemo(() => allDoctors.filter((d) => !d.is_active).length, [allDoctors])
+  const doctors = useMemo(
+    () => allDoctors.filter((d) => showInactive || d.is_active),
+    [allDoctors, showInactive],
   )
   const patients = patientsQuery.data?.results ?? []
   const slots = slotsQuery.data?.results ?? []
@@ -376,8 +382,18 @@ export function AppointmentsPage() {
                 Today
               </button>
             )}
-            <div className="text-[12.5px] text-ink-4 whitespace-nowrap">
-              OPD · {doctors.length} consultant{doctors.length === 1 ? "" : "s"} on floor
+            <div className="text-[12.5px] text-ink-4 whitespace-nowrap flex items-center gap-2">
+              <span>OPD · {doctors.length} consultant{doctors.length === 1 ? "" : "s"} on floor</span>
+              {inactiveDoctorsCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setShowInactive((prev) => !prev)}
+                  className="text-[11px] font-semibold text-brand hover:underline cursor-pointer bg-brand-tint px-2 py-0.5 rounded border border-brand/20 transition-colors"
+                  title="Toggle inactive / off-duty doctors"
+                >
+                  {showInactive ? "Hide inactive" : `+ Show ${inactiveDoctorsCount} inactive`}
+                </button>
+              )}
             </div>
             <div className="flex-1" />
             <div className="flex items-center gap-3 flex-wrap">
@@ -418,8 +434,13 @@ export function AppointmentsPage() {
                   const doctorBooked = doctorSlots.filter((s) => apptsBySlot.has(s.id)).length
                   return (
                     <div key={d.id} className="px-2 py-2 border-b border-l border-border-soft text-center bg-page/40">
-                      <div className="text-[12.5px] font-semibold truncate" title={d.name}>
-                        {d.name}
+                      <div className="text-[12.5px] font-semibold truncate flex items-center justify-center gap-1.5" title={d.name}>
+                        <span className="truncate">{d.name}</span>
+                        {!d.is_active && (
+                          <span className="text-[9px] px-1 py-0.2 rounded bg-chip-bg text-chip-text border border-border shrink-0 font-normal">
+                            Inactive
+                          </span>
+                        )}
                       </div>
                       <div className="text-[10.5px] text-ink-4 truncate">{d.speciality || "General"}</div>
                       <div className="text-[10px] text-ink-5 mt-0.5 font-mono">
@@ -658,7 +679,11 @@ export function AppointmentsPage() {
                     setBookDoctorId(id)
                     setBookSlotId(0)
                   }}
-                  options={doctors.map((d) => ({ value: d.id, label: d.name, hint: d.speciality }))}
+                  options={doctors.map((d) => ({
+                    value: d.id,
+                    label: `${d.name}${d.is_active ? "" : " (Inactive)"}`,
+                    hint: d.speciality,
+                  }))}
                   placeholder="Search doctor or speciality…"
                 />
               </div>

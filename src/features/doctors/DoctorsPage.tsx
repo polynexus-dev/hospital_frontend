@@ -1413,11 +1413,17 @@ export function DoctorsPage() {
                     </div>
                   </div>
 
-                  <span
-                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold shrink-0 ${
+                  <button
+                    type="button"
+                    disabled={!canEditDoctor || toggleStatusMutation.isPending}
+                    onClick={() =>
+                      toggleStatusMutation.mutate({ id: doc.id, is_active: !doc.is_active })
+                    }
+                    title={canEditDoctor ? `Click to mark as ${doc.is_active ? "Inactive" : "Active"}` : undefined}
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold shrink-0 transition-transform active:scale-95 cursor-pointer ${
                       doc.is_active
-                        ? "bg-success-bg text-success-text border border-success/20"
-                        : "bg-chip-bg text-chip-text border border-border"
+                        ? "bg-success-bg text-success-text border border-success/20 hover:bg-success/20"
+                        : "bg-chip-bg text-chip-text border border-border hover:bg-border"
                     }`}
                   >
                     <span
@@ -1426,7 +1432,7 @@ export function DoctorsPage() {
                       }`}
                     />
                     {doc.is_active ? "Active" : "Inactive"}
-                  </span>
+                  </button>
                 </div>
 
                 {/* Details Badges */}
