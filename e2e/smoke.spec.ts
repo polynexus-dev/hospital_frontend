@@ -5,9 +5,12 @@ import { expect, test, type Page, type Route } from "@playwright/test"
 // browser side only: rendering, forms, fetch/CORS, Web Crypto, layout.
 
 const API = "http://api.e2e.test/api/v1"
+// The app sends credentials: "include", and browsers reject "*" on a credentialed
+// request, so this names the origin and headers just as the real API has to.
 const cors = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "*",
+  "Access-Control-Allow-Origin": "http://localhost:4173",
+  "Access-Control-Allow-Credentials": "true",
+  "Access-Control-Allow-Headers": "authorization, content-type, x-auth-cookie, x-session-id, x-enc-query",
   "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
 }
 
@@ -105,7 +108,6 @@ test("patient uploads a missing document from the portal", async ({ page }) => {
   // Registered after mockApi so it wins for this path (Playwright: last route first).
   await page.route("http://api.e2e.test/api/v1/portal/documents/**", async (route) => {
     const req = route.request()
-    const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "GET, POST, OPTIONS" }
     if (req.method() === "OPTIONS") return route.fulfill({ status: 204, headers: cors })
     if (req.method() === "POST") {
       uploaded = req.headers()["content-type"] || ""
@@ -137,7 +139,6 @@ test("patient books a slot and is taken to pay when the hospital requires it", a
     "/portal/doctors/4/slots/": [{ id: 99, date: "2030-01-15", start_time: "10:00:00", end_time: "10:15:00" }],
   })
   await page.route("http://api.e2e.test/api/v1/portal/appointments/**", async (route) => {
-    const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "GET, POST, OPTIONS" }
     if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers: cors })
     if (route.request().method() === "POST") {
       return route.fulfill({ status: 201, headers: cors, json: { id: 5, status: "booked", doctor: "Dr Rao", date: "2030-01-15", time: "10:00:00",
