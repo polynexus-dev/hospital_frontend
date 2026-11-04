@@ -7,12 +7,13 @@ import { Button } from "../../components/ui/Button"
 import { NeutralTag, Pill, SuccessTag } from "../../components/ui/Pill"
 import { Avatar } from "../../components/ui/Avatar"
 import { EmptyState, ErrorState, LoadingState } from "../../components/ui/QueryStates"
-import { getPatient, getPatientTimeline, listPatientDocuments, updatePatient, uploadPatientDocument } from "../../api/patients"
+import { documentFileName, downloadPatientDocument, getPatient, getPatientTimeline, listPatientDocuments, updatePatient, uploadPatientDocument } from "../../api/patients"
 import { listAppointments, listDoctors } from "../../api/appointments"
 import { createConsent, listConsent, listMessages, setConsent } from "../../api/communications"
 import { listHisBilling } from "../../api/integrations"
 import { DpdpConsentCard } from "./DpdpConsentCard"
 import { ImmunizationsCard } from "./ImmunizationsCard"
+import { AbdmRecordsCard } from "./AbdmRecordsCard"
 import { DocumentChecklistCard } from "./DocumentChecklistCard"
 import { createPrescription, downloadPrescriptionPdf, listPrescriptions } from "../../api/prescriptions"
 import { listEnquiries } from "../../api/enquiries"
@@ -31,7 +32,7 @@ import { PatientHistoryCard } from "../clinical/PatientHistoryCard"
 
 const INR = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })
 
-type TabKey = "timeline" | "history" | "prescriptions" | "documents" | "appointments" | "messages" | "consents" | "immunizations"
+type TabKey = "timeline" | "history" | "prescriptions" | "documents" | "appointments" | "messages" | "consents" | "immunizations" | "abdm"
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "timeline", label: "Timeline" },
@@ -42,6 +43,7 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: "messages", label: "Messages" },
   { key: "consents", label: "Consents" },
   { key: "immunizations", label: "Immunizations" },
+  { key: "abdm", label: "ABDM" },
 ]
 
 
@@ -1051,14 +1053,17 @@ export function PatientDetailPage() {
                   <div className="text-[13px] font-semibold truncate">{doc.title}</div>
                   {doc.notes && <div className="text-[11.5px] text-ink-4 mt-1">{doc.notes}</div>}
                   {doc.file && (
-                    <a
-                      href={doc.file}
-                      target="_blank"
-                      rel="noreferrer"
+                    <button
+                      type="button"
+                      onClick={() =>
+                        downloadPatientDocument(doc.id)
+                          .then((blob) => triggerBlobDownload(blob, documentFileName(doc.title, doc.file)))
+                          .catch(() => alert("The document couldn't be downloaded."))
+                      }
                       className="inline-block text-[11.5px] font-semibold text-brand hover:underline mt-2"
                     >
                       Download →
-                    </a>
+                    </button>
                   )}
                 </div>
               ))}
@@ -1124,6 +1129,8 @@ export function PatientDetailPage() {
       )}
 
       {activeTab === "immunizations" && <ImmunizationsCard patientId={Number(patientId)} />}
+
+      {activeTab === "abdm" && <AbdmRecordsCard patientId={Number(patientId)} />}
 
       {activeTab === "consents" && (
         <>

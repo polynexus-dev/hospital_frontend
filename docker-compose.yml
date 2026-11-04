@@ -5,6 +5,7 @@ services:
       dockerfile: Dockerfile.dev
       args:
         VITE_API_BASE_URL: /api/v1
+        VITE_REQUIRE_PAYLOAD_ENCRYPTION: "1"
     ports:
       - "8002:8002"
     restart: always

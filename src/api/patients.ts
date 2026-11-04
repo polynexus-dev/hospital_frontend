@@ -34,6 +34,17 @@ export function uploadPatientDocument(formData: FormData) {
   return api.post<Document>("/documents/", formData)
 }
 
+/** The uploaded file, fetched with the user's token: stored files are never served from a public /media/ URL. */
+export function downloadPatientDocument(id: number | string) {
+  return api.getBlob(`/documents/${id}/file/`)
+}
+
+/** "Discharge summary" + ".../summary_ab12.pdf" -> "Discharge summary.pdf" */
+export function documentFileName(title: string, storedPath: string | null | undefined) {
+  const ext = /\.[a-z0-9]{1,5}$/i.exec((storedPath ?? "").split("?")[0])?.[0] ?? ""
+  return `${title || "document"}${ext}`
+}
+
 export interface RecallPatient {
   id: number
   full_name: string

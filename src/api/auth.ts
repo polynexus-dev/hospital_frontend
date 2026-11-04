@@ -3,7 +3,8 @@ import type { User } from "../types/api"
 
 interface TokenPair {
   access: string
-  refresh: string
+  // No refresh token here: the backend sets it as an httpOnly cookie for
+  // this app (X-Auth-Cookie, see api/client.ts), out of reach of page scripts.
   // Set when the account's role requires MFA (owner/admin/staff — see
   // apps.accounts.models.User.requires_mfa on the backend) but hasn't
   // enrolled yet. Not a hard block — real tokens are still returned — but
@@ -26,20 +27,25 @@ export function isMfaChallenge(result: LoginResult): result is MfaChallenge {
   return "mfa_required" in result && result.mfa_required === true
 }
 
-export function login(email: string, password: string) {
-  return api.post<LoginResult>("/auth/login/", { email, password }, { skipAuth: true })
+/** `remember` is "Keep me signed in": unchecked, the refresh cookie ends with the browser session. */
+export function login(email: string, password: string, remember = true) {
+  return api.post<LoginResult>("/auth/login/", { email, password, remember }, { skipAuth: true })
 }
 
-export function verifyMfa(mfaToken: string, otp: string) {
-  return api.post<TokenPair>("/auth/mfa/verify/", { mfa_token: mfaToken, otp }, { skipAuth: true })
+export function verifyMfa(mfaToken: string, otp: string, remember = true) {
+  return api.post<TokenPair>("/auth/mfa/verify/", { mfa_token: mfaToken, otp, remember }, { skipAuth: true })
 }
 
-// Blacklists the refresh token server-side (rest_framework_simplejwt's
-// TokenBlacklistView) so a token that's already been logged out of can't be
-// replayed — without this, "logout" only ever cleared local state and the
+export function exchangeSsoCode<T>(code: string, remember = true) {
+  return api.post<T>("/auth/sso/exchange/", { code, remember }, { skipAuth: true })
+}
+
+// Blacklists the refresh token server-side (the one in the httpOnly cookie)
+// and clears the cookie, so a token that's already been logged out of can't
+// be replayed — without this, "logout" only ever cleared local state and the
 // still-valid refresh token kept working until it naturally expired.
-export function logoutRequest(refreshToken: string) {
-  return api.post<void>("/auth/logout/", { refresh: refreshToken })
+export function logoutRequest() {
+  return api.post<void>("/auth/logout/", {}, { skipAuth: true })
 }
 
 export function fetchMe() {

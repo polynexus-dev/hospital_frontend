@@ -100,8 +100,14 @@ export function DicomViewer() {
   useEffect(() => {
     if (!image) return
     if (!image.is_dicom) {
-      setSrc(image.url)
-      return
+      // a key image: fetched with the token from its API path, like rendered frames
+      let cancelled = false
+      fetchPng(image.url)
+        .then((url) => !cancelled && setSrc(url))
+        .catch(() => !cancelled && setRenderError("The image couldn't be loaded."))
+      return () => {
+        cancelled = true
+      }
     }
     if (image.supported === false) {
       setSrc(null)

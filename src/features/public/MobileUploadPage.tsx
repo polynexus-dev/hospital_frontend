@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { useParams } from "react-router-dom"
-import { API_BASE_URL } from "../../api/client"
+import { secureFetch } from "../../api/client"
 
 // Public page opened by scanning the "Upload from phone" QR code. No
 // sign-in: the signed token in the URL says which patient and document type.
@@ -15,10 +15,10 @@ export function MobileUploadPage() {
   const [done, setDone] = useState<string[]>([])
   const cameraRef = useRef<HTMLInputElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
-  const endpoint = `${API_BASE_URL}/mobile-upload/${encodeURIComponent(token)}/`
+  const endpoint = `/mobile-upload/${encodeURIComponent(token)}/`
 
   useEffect(() => {
-    fetch(endpoint).then(async (r) => {
+    secureFetch(endpoint).then(async (r) => {
       const body = await r.json().catch(() => ({}))
       if (r.ok) setInfo(body)
       else setError(body.detail ?? "This link isn't valid.")
@@ -32,7 +32,7 @@ export function MobileUploadPage() {
     const fd = new FormData()
     fd.append("file", file)
     try {
-      const r = await fetch(endpoint, { method: "POST", body: fd })
+      const r = await secureFetch(endpoint, { method: "POST", body: fd })
       const body = await r.json().catch(() => ({}))
       if (!r.ok) {
         setError(body.detail ?? body.file ?? "Upload failed.")

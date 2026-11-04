@@ -4,6 +4,14 @@ import { MemoryRouter, Route, Routes } from "react-router-dom"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { MobileUploadPage } from "./MobileUploadPage"
 
+// The encryption itself is covered in api/client.test.ts.
+vi.mock("../../api/payloadCrypto", () => ({
+  ensureSession: async () => {},
+  resetSession: async () => {},
+  getSessionId: () => null,
+  isSessionReady: () => false,
+}))
+
 const info = { hospital: "Sai Hospital", patient: "Ravi", uhid: "•••0042", category: "Insurance card", requirement: "", expires_at: "2026-10-14T12:00:00Z", uploads: 0, max_files: 10, open: true }
 
 function show() {

@@ -1,9 +1,14 @@
 #!/bin/sh
-# HTTPS when a certificate is mounted at /etc/nginx/certs/tls.crt + tls.key,
-# plain HTTP otherwise. A background check (every CERT_CHECK_SECONDS, default
-# hourly) switches modes and reloads nginx when the certificate is added,
-# replaced or renewed (Let's Encrypt), so no restart is needed.
+# Always HTTPS: the app's encryption needs a secure page, and browsers don't
+# offer that over plain HTTP. Uses the certificate mounted at
+# /etc/nginx/certs/tls.crt + tls.key, otherwise a self-signed one generated
+# here for TLS_HOSTS (browsers warn until a real one is installed). A background
+# check (every CERT_CHECK_SECONDS, default hourly) switches and reloads nginx
+# when a certificate is added, replaced or renewed (Let's Encrypt), so no
+# restart is needed.
 set -e
+
+SELF=/etc/nginx/selfsigned
 
 cert_state() {
   if [ -s /etc/nginx/certs/tls.crt ] && [ -s /etc/nginx/certs/tls.key ]; then
@@ -13,12 +18,37 @@ cert_state() {
   fi
 }
 
+ensure_self_signed() {
+  wanted="${TLS_HOSTS:-localhost}"
+  if [ -s "$SELF/tls.crt" ] && [ "$(cat "$SELF/hosts" 2>/dev/null)" = "$wanted" ]; then
+    return
+  fi
+  san="DNS:localhost,IP:127.0.0.1"
+  for h in $(echo "$wanted" | tr ',' ' '); do
+    case "$h" in
+      localhost|127.0.0.1|*\**|*:*) ;;
+      *[!0-9.]*) san="$san,DNS:${h#.}" ;;
+      *) san="$san,IP:$h" ;;
+    esac
+  done
+  mkdir -p "$SELF"
+  openssl req -x509 -newkey rsa:2048 -nodes -days 3650 -subj "/CN=Hospital server" \
+    -addext "subjectAltName=$san" -keyout "$SELF/tls.key" -out "$SELF/tls.crt" 2>/dev/null
+  chmod 600 "$SELF/tls.key"
+  echo "$wanted" > "$SELF/hosts"
+  echo "hms: generated a self-signed certificate for $san"
+}
+
 apply_config() {
+  # A non-standard HTTPS port has to appear in the redirect from port 80.
+  port=""
+  [ "${HTTPS_PUBLIC_PORT:-443}" = "443" ] || port=":$HTTPS_PUBLIC_PORT"
   if [ "$1" = none ]; then
-    cp /etc/nginx/hms/http.conf /etc/nginx/conf.d/hms.conf
-    echo "hms: no certificate in /etc/nginx/certs, serving HTTP"
+    ensure_self_signed
+    sed -e "s#/etc/nginx/certs/#$SELF/#g" -e "s#https://\$host#https://\$host$port#" /etc/nginx/hms/https.conf > /etc/nginx/conf.d/hms.conf
+    echo "hms: no certificate in /etc/nginx/certs, using the self-signed one"
   else
-    cp /etc/nginx/hms/https.conf /etc/nginx/conf.d/hms.conf
+    sed -e "s#https://\$host#https://\$host$port#" /etc/nginx/hms/https.conf > /etc/nginx/conf.d/hms.conf
     echo "hms: TLS enabled"
   fi
 }

@@ -20,7 +20,7 @@ function renderWidget() {
 
 describe("AIChatbotWidget", () => {
   beforeEach(() => {
-    useAuthStore.setState({ accessToken: null, refreshToken: null, user: null })
+    useAuthStore.setState({ accessToken: null, user: null })
     vi.clearAllMocks()
   })
 

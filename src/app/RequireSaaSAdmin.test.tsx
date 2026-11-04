@@ -41,7 +41,7 @@ function renderGuarded() {
 
 describe("RequireSaaSAdmin", () => {
   beforeEach(() => {
-    useAuthStore.setState({ accessToken: null, refreshToken: null, user: null })
+    useAuthStore.setState({ accessToken: null, user: null })
   })
 
   it("redirects an ordinary hospital user to the dashboard", () => {

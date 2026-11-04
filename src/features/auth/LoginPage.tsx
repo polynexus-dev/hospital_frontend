@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
-import { login, verifyMfa, fetchMe, isMfaChallenge } from "../../api/auth"
-import { rememberSessionChoice, useAuthStore } from "../../store/auth"
+import { exchangeSsoCode, login, verifyMfa, fetchMe, isMfaChallenge } from "../../api/auth"
+import { keptSessionChoice, rememberSessionChoice, useAuthStore } from "../../store/auth"
 import { api, API_BASE_URL, ApiError, extractApiError, getSubdomain } from "../../api/client"
 import { getPublicTenantBranding } from "../../api/saas"
 import type { PublicTenantBranding } from "../../types/api"
@@ -73,7 +73,7 @@ function Field({ id, label, icon, right, children }: { id: string; label: string
 export function LoginPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const setTokens = useAuthStore((s) => s.setTokens)
+  const setAccessToken = useAuthStore((s) => s.setAccessToken)
   const setUser = useAuthStore((s) => s.setUser)
 
   const subdomain = getSubdomain()
@@ -106,7 +106,7 @@ export function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
-  const [keepSignedIn, setKeepSignedIn] = useState(true)
+  const [keepSignedIn, setKeepSignedIn] = useState(keptSessionChoice) // the SSO return trip must not reset it
   const [otp, setOtp] = useState("")
   const [mfaToken, setMfaToken] = useState<string | null>(null)
   const [nextPath, setNextPath] = useState("")
@@ -160,13 +160,12 @@ export function LoginPage() {
       return
     }
     setLoading(true)
-    api
-      .post<any>("/auth/sso/exchange/", { code }, { skipAuth: true })
+    exchangeSsoCode<any>(code ?? "", keptSessionChoice())
       .then(async (res) => {
         setNextPath(res.next || "")
         if (res.mfa_required) setMfaToken(res.mfa_token)
         else {
-          setTokens(res.access, res.refresh)
+          setAccessToken(res.access)
           await completeLogin(res.next)
         }
       })
@@ -176,6 +175,7 @@ export function LoginPage() {
   }, [])
 
   const startSso = (b: SSOButton) => {
+    rememberSessionChoice(keepSignedIn) // read back on the return trip (exchangeSsoCode)
     const qs = new URLSearchParams({ return_to: window.location.origin, next: nextPath })
     window.location.assign(`${API_BASE_URL}/auth/sso/${b.id}/start/?${qs}`)
   }
@@ -185,7 +185,7 @@ export function LoginPage() {
     setError("")
     setLoading(true)
     try {
-      const result = await login(email, password)
+      const result = await login(email, password, keepSignedIn)
       if ((result as { password_expired?: boolean }).password_expired) {
         setExpired(true)
         setNotice(
@@ -197,7 +197,7 @@ export function LoginPage() {
       }
       if (isMfaChallenge(result)) setMfaToken(result.mfa_token)
       else {
-        setTokens(result.access, result.refresh)
+        setAccessToken(result.access)
         await completeLogin()
       }
     } catch (err) {
@@ -216,8 +216,8 @@ export function LoginPage() {
     setError("")
     setLoading(true)
     try {
-      const tokens = await verifyMfa(mfaToken, otp)
-      setTokens(tokens.access, tokens.refresh)
+      const tokens = await verifyMfa(mfaToken, otp, keepSignedIn)
+      setAccessToken(tokens.access)
       await completeLogin()
     } catch (err) {
       if (err instanceof ApiError && (err.status === 400 || err.status === 401)) setError(t("login.otpInvalid"))

@@ -23,43 +23,36 @@ function renderProtected() {
 
 describe("ProtectedRoute", () => {
   beforeEach(() => {
-    useAuthStore.setState({ accessToken: null, refreshToken: null, user: null })
+    useAuthStore.setState({ accessToken: null, user: null })
     vi.clearAllMocks()
   })
 
-  it("redirects to /login when there is no refresh token at all", () => {
+  it("redirects to /login when nobody is signed in", () => {
     renderProtected()
     expect(screen.getByText("Login screen")).toBeInTheDocument()
   })
 
-  it("renders the protected content immediately when a user is already in the store", () => {
+  it("renders the protected content immediately when a user is already in the store", async () => {
+    const { fetchMe } = await import("../api/auth")
+    vi.mocked(fetchMe).mockResolvedValue(undefined as never)
     // @ts-expect-error partial User for this test
-    useAuthStore.setState({ refreshToken: "r1", user: { id: 1, email: "x@example.com" } })
+    useAuthStore.setState({ user: { id: 1, email: "x@example.com" } })
     renderProtected()
     expect(screen.getByText("Dashboard content")).toBeInTheDocument()
   })
 
-  it("fetches the current user when a refresh token exists but no user is loaded yet, then renders", async () => {
+  it("redirects to /login once the session turns out to be gone (refresh failed -> logout)", async () => {
     const { fetchMe } = await import("../api/auth")
+    vi.mocked(fetchMe).mockImplementation(async () => {
+      useAuthStore.getState().logout() // what the API client does when the refresh cookie is rejected
+      throw new Error("401")
+    })
     // @ts-expect-error partial User for this test
-    vi.mocked(fetchMe).mockResolvedValue({ id: 1, email: "x@example.com", hospital_name: "Test Hospital" })
-    useAuthStore.setState({ refreshToken: "r1", user: null })
-
-    renderProtected()
-
-    await waitFor(() => expect(screen.getByText("Dashboard content")).toBeInTheDocument())
-    expect(useAuthStore.getState().user?.email).toBe("x@example.com")
-  })
-
-  it("logs out and redirects to /login when fetching the current user fails", async () => {
-    const { fetchMe } = await import("../api/auth")
-    vi.mocked(fetchMe).mockRejectedValue(new Error("401"))
-    useAuthStore.setState({ refreshToken: "r1", user: null })
+    useAuthStore.setState({ user: { id: 1, email: "x@example.com" } })
 
     renderProtected()
 
     await waitFor(() => expect(screen.getByText("Login screen")).toBeInTheDocument())
-    expect(useAuthStore.getState().refreshToken).toBeNull()
   })
 
   it("refreshes a cached user in the background so new permissions show up", async () => {
@@ -67,7 +60,7 @@ describe("ProtectedRoute", () => {
     // @ts-expect-error partial User for this test
     vi.mocked(fetchMe).mockResolvedValue({ id: 1, email: "x@example.com", permissions: ["governance.view_auditrule"] })
     // @ts-expect-error partial User for this test
-    useAuthStore.setState({ refreshToken: "r", user: { id: 1, email: "x@example.com", permissions: [] } })
+    useAuthStore.setState({ user: { id: 1, email: "x@example.com", permissions: [] } })
     renderProtected()
     expect(screen.getByText("Dashboard content")).toBeInTheDocument() // no wait for the network
     await waitFor(() => expect(useAuthStore.getState().user?.permissions).toEqual(["governance.view_auditrule"]))

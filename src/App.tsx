@@ -75,6 +75,7 @@ const ConsultationTimePage = lazy(() => import("./features/nabh/ConsultationTime
 const PredictivePage = lazy(() => import("./features/nabh/PredictivePage").then((m) => ({ default: m.PredictivePage })))
 const QueueDisplayBoard = lazy(() => import("./features/public/QueueDisplayBoard").then((m) => ({ default: m.QueueDisplayBoard })))
 const MobileUploadPage = lazy(() => import("./features/public/MobileUploadPage").then((m) => ({ default: m.MobileUploadPage })))
+const SharedFilePage = lazy(() => import("./features/public/SharedFilePage").then((m) => ({ default: m.SharedFilePage })))
 const TeleJoinPage = lazy(() => import("./features/public/TeleJoinPage").then((m) => ({ default: m.TeleJoinPage })))
 const PatientPortal = lazy(() => import("./features/portal/PatientPortal").then((m) => ({ default: m.PatientPortal })))
 
@@ -96,6 +97,7 @@ function App() {
       <Route path="/display/:key" element={<Suspense fallback={<LoadingState />}><QueueDisplayBoard /></Suspense>} />
       <Route path="/tele/join/:token" element={<Suspense fallback={<LoadingState />}><TeleJoinPage /></Suspense>} />
       <Route path="/m/upload/:token" element={<Suspense fallback={<LoadingState />}><MobileUploadPage /></Suspense>} />
+      <Route path="/r/:kind/:token" element={<Suspense fallback={<LoadingState />}><SharedFilePage /></Suspense>} />
       <Route path="/portal/*" element={<Suspense fallback={<LoadingState />}><PatientPortal /></Suspense>} />
 
       <Route element={<ProtectedRoute />}>

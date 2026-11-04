@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { API_BASE_URL, ApiError, extractApiError, getSubdomain, triggerBlobDownload } from "../../api/client"
+import { ApiError, extractApiError, getSubdomain, secureFetch, triggerBlobDownload } from "../../api/client"
 
 // Patient portal (AAC.2.f, AAC.3.l, AAC.4.k, COP.1.l, AAC.7.a, AAC.8, FPM.3.f).
 // Uses its own "Portal <token>" credential — never the staff JWT client.
@@ -16,11 +16,10 @@ function getToken() {
 
 async function portal<T>(path: string, init: { method?: string; body?: unknown } = {}): Promise<T> {
   const token = getToken()
-  const isForm = init.body instanceof FormData  // file uploads: the browser sets the multipart boundary
-  const res = await fetch(`${API_BASE_URL}/portal${path}`, {
+  const res = await secureFetch(`/portal${path}`, {
     method: init.method ?? "GET",
-    headers: { ...(isForm ? {} : { "Content-Type": "application/json" }), ...(token ? { Authorization: `Portal ${token}` } : {}) },
-    body: init.body === undefined ? undefined : isForm ? (init.body as FormData) : JSON.stringify(init.body),
+    headers: token ? { Authorization: `Portal ${token}` } : {},
+    body: init.body,
   })
   if (!res.ok) {
     let body: unknown = null

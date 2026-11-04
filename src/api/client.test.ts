@@ -3,9 +3,11 @@ import { useAuthStore } from "../store/auth"
 
 // Payload encryption is off for these tests (as when the server has
 // PAYLOAD_ENCRYPTION_ENABLED=False); `crypto` below switches it on per test.
-const crypto = vi.hoisted(() => ({ ready: false, resets: 0 }))
+const crypto = vi.hoisted(() => ({ ready: false, resets: 0, failed: false }))
 vi.mock("./payloadCrypto", () => ({
-  ensureSession: async () => {},
+  ensureSession: async () => {
+    if (crypto.failed) throw new Error("A secure connection to the server couldn't be set up.")
+  },
   resetSession: async () => {
     crypto.resets++
   },
@@ -13,6 +15,8 @@ vi.mock("./payloadCrypto", () => ({
   isSessionReady: () => crypto.ready,
   encryptPayload: async (data: unknown) => ({ enc: `gcm2$${btoa(JSON.stringify(data))}` }),
   decryptPayload: async (token: string) => JSON.parse(atob(token.slice(5))),
+  encryptBytes: async (bytes: Uint8Array) => `gcm2$${btoa(String.fromCharCode(...bytes))}`,
+  decryptBytes: async (token: string) => Uint8Array.from(atob(token.slice(5)), (c) => c.charCodeAt(0)).buffer,
 }))
 
 // api/client.ts reads API_BASE_URL from import.meta.env at module-eval
@@ -22,10 +26,11 @@ vi.mock("./payloadCrypto", () => ({
 describe("api client", () => {
   beforeEach(() => {
     localStorage.clear()
-    useAuthStore.setState({ accessToken: null, refreshToken: null, user: null })
+    useAuthStore.setState({ accessToken: null, user: null })
     vi.restoreAllMocks()
     crypto.ready = false
     crypto.resets = 0
+    crypto.failed = false
   })
 
   afterEach(() => {
@@ -56,7 +61,7 @@ describe("api client", () => {
   })
 
   it("on a 401, refreshes the access token and retries the original request once", async () => {
-    useAuthStore.setState({ accessToken: "expired-tok", refreshToken: "refresh-tok" })
+    useAuthStore.setState({ accessToken: "expired-tok" })
 
     const fetchMock = vi.fn()
       // 1. original request -> 401
@@ -79,7 +84,7 @@ describe("api client", () => {
   })
 
   it("logs out and gives up (does not retry forever) when the refresh call itself fails", async () => {
-    useAuthStore.setState({ accessToken: "expired-tok", refreshToken: "refresh-tok" })
+    useAuthStore.setState({ accessToken: "expired-tok" })
 
     const fetchMock = vi.fn()
       .mockResolvedValueOnce(new Response(null, { status: 401 })) // original
@@ -91,11 +96,11 @@ describe("api client", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(2) // no third (retried) call
     expect(useAuthStore.getState().accessToken).toBeNull()
-    expect(useAuthStore.getState().refreshToken).toBeNull()
+    expect(useAuthStore.getState().user).toBeNull()
   })
 
   it("does not attempt a refresh loop on a second consecutive 401 (isRetry guard)", async () => {
-    useAuthStore.setState({ accessToken: "expired-tok", refreshToken: "refresh-tok" })
+    useAuthStore.setState({ accessToken: "expired-tok" })
 
     const fetchMock = vi.fn()
       .mockResolvedValueOnce(new Response(null, { status: 401 })) // original
@@ -107,6 +112,40 @@ describe("api client", () => {
     await expect(api.get("/patients/1/")).rejects.toBeInstanceOf(ApiError)
 
     expect(fetchMock).toHaveBeenCalledTimes(3) // not a fourth call — doesn't refresh-and-retry indefinitely
+  })
+
+  it("refreshes from the httpOnly cookie: credentials included, opt-in header, no token in the body", async () => {
+    useAuthStore.setState({ accessToken: "expired-tok" })
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(null, { status: 401 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ access: "new-tok" }), { status: 200, headers: { "content-type": "application/json" } }))
+      .mockResolvedValueOnce(new Response("{}", { status: 200, headers: { "content-type": "application/json" } }))
+    vi.stubGlobal("fetch", fetchMock)
+
+    const { api } = await import("./client")
+    await api.get("/patients/")
+
+    const [url, options] = fetchMock.mock.calls[1]
+    expect(url).toContain("/auth/refresh/")
+    expect(options.credentials).toBe("include")
+    expect(options.headers["X-Auth-Cookie"]).toBe("1")
+    expect(options.body).toBe("{}")
+  })
+
+  it("after a reload (cached user, no access token in memory) gets a token before the first call", async () => {
+    // @ts-expect-error partial User for this test
+    useAuthStore.setState({ accessToken: null, user: { id: 1, email: "x@example.com" } })
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ access: "fresh-tok" }), { status: 200, headers: { "content-type": "application/json" } }))
+      .mockResolvedValueOnce(new Response("{}", { status: 200, headers: { "content-type": "application/json" } }))
+    vi.stubGlobal("fetch", fetchMock)
+
+    const { api } = await import("./client")
+    await api.get("/patients/")
+
+    expect(fetchMock).toHaveBeenCalledTimes(2) // no wasted 401
+    expect(fetchMock.mock.calls[0][0]).toContain("/auth/refresh/")
+    expect(fetchMock.mock.calls[1][1].headers["Authorization"]).toBe("Bearer fresh-tok")
   })
 
   it("throws ApiError with the parsed error body on a non-401 failure", async () => {
@@ -167,9 +206,46 @@ describe("api client", () => {
     expect(err.body).toEqual({ mobile: ["Invalid"] }) // decrypted, so the form can show it
   })
 
+  it("sends nothing at all if a secure session can't be set up", async () => {
+    crypto.failed = true
+    const fetchMock = vi.fn()
+    vi.stubGlobal("fetch", fetchMock)
+
+    const { api } = await import("./client")
+    await expect(api.post("/auth/login/", { email: "a@b.in", password: "secret" }, { skipAuth: true })).rejects.toThrow(/secure connection/i)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it("moves the query string out of the URL into an encrypted header", async () => {
+    crypto.ready = true
+    const fetchMock = vi.fn().mockResolvedValue(new Response("{}", { status: 200, headers: { "content-type": "application/json" } }))
+    vi.stubGlobal("fetch", fetchMock)
+
+    const { api } = await import("./client")
+    await api.get("/patients/?search=Asha")
+
+    const [url, options] = fetchMock.mock.calls[0]
+    expect(url).not.toContain("Asha")
+    expect(url.endsWith("/patients/")).toBe(true)
+    expect(atob(options.headers["X-Enc-Query"].slice(5))).toBe("search=Asha")
+  })
+
+  it("opens an encrypted file download into a Blob of the original type", async () => {
+    crypto.ready = true
+    useAuthStore.setState({ accessToken: "tok" })
+    const sealed = JSON.stringify({ enc: `gcm2$${btoa("%PDF-1.4")}`, ct: "application/pdf" })
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(sealed, { status: 200, headers: { "content-type": "application/json" } })))
+
+    const { api } = await import("./client")
+    const blob = await api.getBlob("/documents/1/file/")
+
+    expect(blob.type).toBe("application/pdf")
+    expect(await blob.text()).toBe("%PDF-1.4")
+  })
+
   it("re-keys (does not log out) when the server has lost the encryption session", async () => {
     crypto.ready = true
-    useAuthStore.setState({ accessToken: "tok", refreshToken: "refresh-tok" })
+    useAuthStore.setState({ accessToken: "tok" })
     const fetchMock = vi.fn()
       .mockResolvedValueOnce(new Response(JSON.stringify({ detail: "Encryption session not found or expired." }), { status: 401, headers: { "content-type": "application/json" } }))
       .mockResolvedValueOnce(new Response(JSON.stringify({ ok: 1 }), { status: 200, headers: { "content-type": "application/json" } }))

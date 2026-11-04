@@ -1,13 +1,11 @@
 server_tokens off;
 root /usr/share/nginx/html;
-client_max_body_size 25m;
+client_max_body_size 36m;  # 25 MB of files once encrypted (PAYLOAD_MAX_BODY_BYTES)
 
 gzip on;
 gzip_types text/css application/javascript application/json image/svg+xml;
 
-add_header X-Content-Type-Options nosniff always;
-add_header X-Frame-Options SAMEORIGIN always;
-add_header Referrer-Policy strict-origin-when-cross-origin always;
+include /etc/nginx/hms/security-headers.inc;
 
 location = /healthz { access_log off; return 200 "ok\n"; }
 
@@ -32,10 +30,12 @@ location /static/ {
 location /assets/ {
     expires 1y;
     add_header Cache-Control "public, immutable";
+    include /etc/nginx/hms/security-headers.inc;  # a location's own add_header drops the server's
     try_files $uri =404;
 }
 
 location / {
     add_header Cache-Control "no-cache";
+    include /etc/nginx/hms/security-headers.inc;
     try_files $uri /index.html;
 }

@@ -342,14 +342,11 @@ export function Shell() {
   }
 
   const handleLogout = () => {
-    const { refreshToken } = useAuthStore.getState()
-    // Best-effort: blacklist the refresh token server-side so it can't be
-    // replayed after logout. Local state is cleared and the user is
+    // Best-effort: blacklist the refresh token (the httpOnly cookie) server-side
+    // so it can't be replayed after logout. Local state is cleared and the user is
     // navigated away regardless of whether this call succeeds — a network
     // hiccup on logout must never trap the user on an authenticated page.
-    if (refreshToken) {
-      logoutRequest(refreshToken).catch(() => {})
-    }
+    logoutRequest().catch(() => {})
     logout()
     navigate("/login")
   }

@@ -1,5 +1,5 @@
 import { useAuthStore } from "../store/auth"
-import { decryptPayload, encryptPayload, ensureSession, getSessionId, isSessionReady, resetSession } from "./payloadCrypto"
+import { decryptBytes, encryptBytes, encryptPayload, ensureSession, getSessionId, isSessionReady, resetSession } from "./payloadCrypto"
 
 export function getSubdomain(): string | null {
   if (typeof window === "undefined") return null
@@ -109,25 +109,99 @@ export function extractApiError(err: unknown, fallback = "An unexpected error oc
 
 let refreshPromise: Promise<string | null> | null = null
 
+// Opts this browser app into the httpOnly refresh cookie (see
+// apps.accounts.refresh_cookie on the backend): sign-in and refresh then
+// set the cookie instead of returning the refresh token in the body. The
+// cookie is scoped to /api/v1/auth/, so other calls never carry it.
+const AUTH_COOKIE_HEADER = { "X-Auth-Cookie": "1" }
+
+interface SecureInit {
+  method?: string
+  body?: unknown // JSON-serialisable, or FormData
+  headers?: Record<string, string>
+  signal?: AbortSignal | null
+}
+
+/** A FormData as the exact multipart bytes the browser would send, and their type. */
+async function multipartBytes(form: FormData): Promise<{ bytes: Uint8Array<ArrayBuffer>; contentType: string }> {
+  const encoded = new Response(form)
+  return { bytes: new Uint8Array(await encoded.arrayBuffer()), contentType: encoded.headers.get("content-type") ?? "" }
+}
+
+/** Opens a sealed response, of any type, back into an ordinary Response. */
+async function unseal(res: Response): Promise<Response> {
+  if (!isSessionReady() || !(res.headers.get("content-type") ?? "").includes("application/json")) return res
+  const json = (await res.clone().json().catch(() => null)) as { enc?: string; ct?: string } | null
+  if (!json?.enc) return res
+  return new Response(await decryptBytes(json.enc), { status: res.status, headers: { "content-type": json.ct ?? "application/json" } })
+}
+
+/**
+ * The one way this app talks to the API. Body and query string go out
+ * encrypted, whatever the response is comes back opened, and nothing is sent
+ * at all if a secure session can't be set up. `path` is relative to the API.
+ */
+export async function secureFetch(path: string, init: SecureInit = {}, isRetry = false): Promise<Response> {
+  await ensureSession()
+  const { body, headers, ...rest } = init
+  const finalHeaders: Record<string, string> = { ...AUTH_COOKIE_HEADER, ...headers }
+  const isForm = body instanceof FormData
+  if (!isForm) finalHeaders["Content-Type"] = "application/json"
+
+  let url = `${API_BASE_URL}${path}`
+  let sent: string | FormData | undefined
+  if (isSessionReady()) {
+    finalHeaders["X-Session-Id"] = getSessionId() as string
+    const queryAt = path.indexOf("?")
+    if (queryAt >= 0) {
+      url = `${API_BASE_URL}${path.slice(0, queryAt)}`
+      finalHeaders["X-Enc-Query"] = await encryptBytes(new TextEncoder().encode(path.slice(queryAt + 1)))
+    }
+    if (isForm) {
+      const { bytes, contentType } = await multipartBytes(body)
+      finalHeaders["Content-Type"] = "application/json"
+      sent = JSON.stringify({ enc: await encryptBytes(bytes), ct: contentType })
+    } else if (body !== undefined) {
+      sent = JSON.stringify(await encryptPayload(body))
+    }
+  } else {
+    sent = isForm ? body : body === undefined ? undefined : JSON.stringify(body)
+  }
+
+  const res = await fetch(url, { ...rest, headers: finalHeaders, body: sent, credentials: "include" })
+
+  if (res.status === 401 && !isRetry) {
+    // the server lost our encryption session (restart / TTL): re-key, not log out
+    const detail = String(((await res.clone().json().catch(() => null)) as { detail?: string } | null)?.detail ?? "")
+    if (detail.includes("Encryption session")) {
+      await resetSession()
+      return secureFetch(path, init, true)
+    }
+  }
+  return unseal(res)
+}
+
+async function postRefresh(): Promise<Response> {
+  return secureFetch("/auth/refresh/", { method: "POST", body: {} })
+}
+
+/** One refresh at a time across every open tab: refresh tokens rotate and the old one is blacklisted, so two tabs spending the same cookie at once would sign one of them out. */
+function withRefreshLock<T>(fn: () => Promise<T>): Promise<T> {
+  const locks = typeof navigator !== "undefined" ? (navigator as Navigator & { locks?: LockManager }).locks : undefined
+  return locks ? locks.request("hms-token-refresh", fn) : fn()
+}
+
 async function refreshAccessToken(): Promise<string | null> {
-  const { refreshToken, setAccessToken, logout } = useAuthStore.getState()
-  if (!refreshToken) return null
+  const { setAccessToken, logout } = useAuthStore.getState()
 
   if (!refreshPromise) {
-    refreshPromise = (async () => {
-      await ensureSession()
-      const headers: Record<string, string> = { "Content-Type": "application/json" }
-      const sessionId = getSessionId()
-      if (sessionId) headers["X-Session-Id"] = sessionId
-      const body = isSessionReady() ? JSON.stringify(await encryptPayload({ refresh: refreshToken })) : JSON.stringify({ refresh: refreshToken })
-      return fetch(`${API_BASE_URL}/auth/refresh/`, { method: "POST", headers, body })
-    })()
+    refreshPromise = withRefreshLock(postRefresh)
       .then(async (res) => {
         if (!res.ok) {
           logout()
           return null
         }
-        const data = (await readJson(res)) as { access: string }
+        const data = (await res.json()) as { access: string }
         setAccessToken(data.access)
         return data.access as string
       })
@@ -144,73 +218,35 @@ async function refreshAccessToken(): Promise<string | null> {
 
 interface RequestOptions extends Omit<RequestInit, "body"> {
   body?: unknown
-  isFormData?: boolean
+  isFormData?: boolean // not needed: a FormData body is recognised on its own
   skipAuth?: boolean
 }
 
-/** Parses a JSON body, decrypting it when it is a Layer-2 {"enc": "gcm2$…"} payload. */
-async function readJson(res: Response): Promise<unknown> {
-  const json = await res.json()
-  if (json && typeof json === "object" && "enc" in json && isSessionReady()) return decryptPayload(json.enc as string)
-  return json
-}
-
 async function request<T>(path: string, options: RequestOptions = {}, isRetry = false): Promise<T> {
-  // never send a request in plain text while the encryption handshake is still running
-  await ensureSession()
+  const { body, skipAuth, headers, method, signal } = options
+  // After a reload the access token (memory only) is gone: get one from the
+  // refresh cookie up front rather than letting every first request 401.
+  if (!skipAuth && !useAuthStore.getState().accessToken && useAuthStore.getState().user) await refreshAccessToken()
   const { accessToken } = useAuthStore.getState()
-  const { body, isFormData, skipAuth, headers, ...rest } = options
 
   const finalHeaders: Record<string, string> = { ...(headers as Record<string, string>) }
-  if (!isFormData) finalHeaders["Content-Type"] = "application/json"
   if (accessToken && !skipAuth) finalHeaders["Authorization"] = `Bearer ${accessToken}`
 
-  // Attach session ID so the backend PayloadEncryptionMiddleware can look up
-  // the shared AES key. No-op when session is not initialised (dev / Postman).
-  const sessionId = getSessionId()
-  if (sessionId) finalHeaders["X-Session-Id"] = sessionId
+  const res = await secureFetch(path, { method, body, headers: finalHeaders, signal })
 
-  // Encrypt the request body when the session is active.
-  let serialisedBody: string | FormData | undefined
-  if (isFormData) {
-    serialisedBody = body as FormData
-  } else if (body !== undefined) {
-    if (isSessionReady()) {
-      // Encrypt: send {"enc":"gcm2$..."} instead of plain JSON.
-      const encrypted = await encryptPayload(body)
-      serialisedBody = JSON.stringify(encrypted)
-    } else {
-      serialisedBody = JSON.stringify(body)
-    }
-  }
-
-  const res = await fetch(`${API_BASE_URL}${path}`, {
-    ...rest,
-    headers: finalHeaders,
-    body: serialisedBody,
-  })
-
-  if (res.status === 401 && !isRetry) {
-    // the server lost our encryption session (restart / TTL): re-key, not log out
-    const detail = String(((await res.clone().json().catch(() => null)) as { detail?: string } | null)?.detail ?? "")
-    if (detail.includes("Encryption session")) {
-      await resetSession()
-      return request<T>(path, options, true)
-    }
-    if (!skipAuth) {
-      const newToken = await refreshAccessToken()
-      if (newToken) return request<T>(path, options, true)
-    }
+  if (res.status === 401 && !isRetry && !skipAuth) {
+    const newToken = await refreshAccessToken()
+    if (newToken) return request<T>(path, options, true)
   }
 
   if (!res.ok) {
     let parsedBody: unknown = null
     try {
-      parsedBody = await readJson(res)
+      parsedBody = await res.json()
     } catch {
       // no JSON body
     }
-    logApiFailure(String(rest.method ?? "GET"), path, res.status, body, parsedBody)
+    logApiFailure(String(method ?? "GET"), path, res.status, body, parsedBody)
     throw new ApiError(res.status, parsedBody, `Request to ${path} failed with ${res.status}`)
   }
 
@@ -218,18 +254,17 @@ async function request<T>(path: string, options: RequestOptions = {}, isRetry = 
   const contentType = res.headers.get("content-type") ?? ""
   if (!contentType.includes("application/json")) return undefined as T
 
-  return (await readJson(res)) as T
+  return (await res.json()) as T
 }
 
-async function requestBlob(path: string, isRetry = false): Promise<Blob> {
+async function requestBlob(path: string, options: { skipAuth?: boolean } = {}, isRetry = false): Promise<Blob> {
+  if (!options.skipAuth && !useAuthStore.getState().accessToken && useAuthStore.getState().user) await refreshAccessToken()
   const { accessToken } = useAuthStore.getState()
-  const res = await fetch(`${API_BASE_URL}${path}`, {
-    headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
-  })
+  const res = await secureFetch(path, { headers: accessToken && !options.skipAuth ? { Authorization: `Bearer ${accessToken}` } : {} })
 
-  if (res.status === 401 && !isRetry) {
+  if (res.status === 401 && !isRetry && !options.skipAuth) {
     const newToken = await refreshAccessToken()
-    if (newToken) return requestBlob(path, true)
+    if (newToken) return requestBlob(path, options, true)
   }
 
   if (!res.ok) {
@@ -250,7 +285,7 @@ export const api = {
   // For authenticated binary downloads (PDFs, etc.) — window.open()/a[href]
   // can't attach an Authorization header, so the caller fetches the blob
   // here and triggers the save itself (see triggerBlobDownload below).
-  getBlob: (path: string) => requestBlob(path),
+  getBlob: (path: string, options?: { skipAuth?: boolean }) => requestBlob(path, options),
 }
 
 export function triggerBlobDownload(blob: Blob, filename: string) {

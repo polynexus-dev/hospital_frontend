@@ -23,13 +23,13 @@ function renderLogin() {
 
 describe("LoginPage", () => {
   beforeEach(() => {
-    useAuthStore.setState({ accessToken: null, refreshToken: null, user: null })
+    useAuthStore.setState({ accessToken: null, user: null })
     vi.clearAllMocks()
   })
 
   it("logs straight in when the account has no MFA challenge", async () => {
     const { login, fetchMe } = await import("../../api/auth")
-    vi.mocked(login).mockResolvedValue({ access: "acc-1", refresh: "ref-1" })
+    vi.mocked(login).mockResolvedValue({ access: "acc-1" })
     // @ts-expect-error partial User for this test
     vi.mocked(fetchMe).mockResolvedValue({ id: 1, email: "doc@test-hospital.example" })
 
@@ -41,12 +41,13 @@ describe("LoginPage", () => {
 
     await waitFor(() => expect(screen.getByText("Dashboard content")).toBeInTheDocument())
     expect(useAuthStore.getState().accessToken).toBe("acc-1")
+    expect(login).toHaveBeenCalledWith("doc@test-hospital.example", "correct-password", true) // "Keep me signed in" -> lasting cookie
   })
 
   it("switches to the OTP step when the account has MFA enabled, then verifies", async () => {
     const { login, verifyMfa, fetchMe } = await import("../../api/auth")
     vi.mocked(login).mockResolvedValue({ mfa_required: true, mfa_token: "challenge-token" })
-    vi.mocked(verifyMfa).mockResolvedValue({ access: "acc-2", refresh: "ref-2" })
+    vi.mocked(verifyMfa).mockResolvedValue({ access: "acc-2" })
     // @ts-expect-error partial User for this test
     vi.mocked(fetchMe).mockResolvedValue({ id: 2, email: "owner@test-hospital.example" })
 
@@ -63,7 +64,7 @@ describe("LoginPage", () => {
     await user.click(screen.getByRole("button", { name: /verify/i }))
 
     await waitFor(() => expect(screen.getByText("Dashboard content")).toBeInTheDocument())
-    expect(verifyMfa).toHaveBeenCalledWith("challenge-token", "123456")
+    expect(verifyMfa).toHaveBeenCalledWith("challenge-token", "123456", true)
     expect(useAuthStore.getState().accessToken).toBe("acc-2")
   })
 
@@ -108,13 +109,13 @@ describe("LoginPage", () => {
     const { api } = await import("../../api/client")
     // @ts-expect-error partial User for this test
     vi.mocked(fetchMe).mockResolvedValue({ id: 3, email: "asha@cityhospital.in" })
-    const post = vi.spyOn(api, "post").mockResolvedValue({ access: "acc-sso", refresh: "ref-sso", next: "/dashboard" })
+    const post = vi.spyOn(api, "post").mockResolvedValue({ access: "acc-sso", next: "/dashboard" })
     window.history.replaceState(null, "", "/login#sso=one-time-code")
 
     renderLogin()
 
     await waitFor(() => expect(screen.getByText("Dashboard content")).toBeInTheDocument())
-    expect(post).toHaveBeenCalledWith("/auth/sso/exchange/", { code: "one-time-code" }, { skipAuth: true })
+    expect(post).toHaveBeenCalledWith("/auth/sso/exchange/", { code: "one-time-code", remember: true }, { skipAuth: true })
     expect(useAuthStore.getState().accessToken).toBe("acc-sso")
     expect(window.location.hash).toBe("") // the code is not left in the address bar
     post.mockRestore()
