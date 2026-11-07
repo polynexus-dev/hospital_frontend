@@ -33,6 +33,7 @@ import { PermissionMatrixModal } from "../admin/PermissionMatrixModal"
 import { LicenseGeneratorModal } from "./LicenseGeneratorModal"
 import { LicencesTab } from "./LicencesTab"
 import { TenantOnboardModal } from "./TenantOnboardModal"
+import { LegalAgreementModal } from "./LegalAgreementModal"
 import { viewRecord } from "../../store/recordViewer"
 
 
@@ -200,6 +201,7 @@ function SubscriptionRow({
   onConfigureModules,
   onConfigurePermissions,
   onIssueLicense,
+  onGenerateContract,
 }: {
   subscription: TenantSubscription
   hospital?: SaaSHospital
@@ -207,6 +209,7 @@ function SubscriptionRow({
   onConfigureModules?: (hospital: SaaSHospital) => void
   onConfigurePermissions?: (hospital: SaaSHospital) => void
   onIssueLicense?: (hospital: SaaSHospital) => void
+  onGenerateContract?: (hospital: SaaSHospital) => void
 }) {
   const queryClient = useQueryClient()
 
@@ -284,6 +287,16 @@ function SubscriptionRow({
         {hospital && onIssueLicense && (
           <Button size="sm" variant="secondary" onClick={() => onIssueLicense(hospital)} title="Issue a signed license file for an on-premise installation">
             📜 License
+          </Button>
+        )}
+        {hospital && onGenerateContract && (
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => onGenerateContract(hospital)}
+            title="Generate law-firm grade Master Client Legal Agreement & Order Form"
+          >
+            📝 Agreement
           </Button>
         )}
         {onInspect && (
@@ -369,6 +382,7 @@ export function SaaSConsolePage() {
   const [modulesHospital, setModulesHospital] = useState<SaaSHospital | null>(null)
   const [permissionsHospital, setPermissionsHospital] = useState<SaaSHospital | null>(null)
   const [licenseHospital, setLicenseHospital] = useState<SaaSHospital | null>(null)
+  const [agreementHospital, setAgreementHospital] = useState<SaaSHospital | null>(null)
   const [renewFrom, setRenewFrom] = useState<OnPremiseLicense | null>(null)
 
   const analytics = useQuery({
@@ -1082,6 +1096,7 @@ export function SaaSConsolePage() {
                   onConfigureModules={(h) => setModulesHospital(h)}
                   onConfigurePermissions={(h) => setPermissionsHospital(h)}
                   onIssueLicense={(h) => setLicenseHospital(h)}
+                  onGenerateContract={(h) => setAgreementHospital(h)}
                 />
               )
             })}
@@ -1230,10 +1245,17 @@ export function SaaSConsolePage() {
         <TenantModulesModal
           hospital={modulesHospital}
           onClose={() => setModulesHospital(null)}
+          onOpenAgreement={(h) => setAgreementHospital(h)}
           onSave={async (modules: string[]) => {
             await updateModulesMutation.mutateAsync({ id: modulesHospital.id, modules })
           }}
           isSaving={updateModulesMutation.isPending}
+        />
+      )}
+      {agreementHospital && (
+        <LegalAgreementModal
+          hospital={agreementHospital}
+          onClose={() => setAgreementHospital(null)}
         />
       )}
     </div>

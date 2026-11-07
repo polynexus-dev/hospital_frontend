@@ -166,6 +166,22 @@ export function toggleHospitalStatus(id: string) {
   return api.post<SaaSHospital>(`/saas-admin/hospitals/${id}/toggle-status/`)
 }
 
+export interface HospitalLegalAgreementResponse {
+  hospital_id: string
+  hospital_name: string
+  hospital_slug: string
+  filename: string
+  html: string
+}
+
+export function getHospitalLegalAgreement(hospitalId: string) {
+  return api.get<HospitalLegalAgreementResponse>(`/saas-admin/hospitals/${hospitalId}/legal-agreement/`)
+}
+
+export function downloadHospitalLegalAgreementHtml(hospitalId: string) {
+  return api.getBlob(`/saas-admin/hospitals/${hospitalId}/legal-agreement/?download=1`)
+}
+
 export function getPublicTenantBranding(subdomain?: string | null) {
   const query = subdomain ? `?subdomain=${encodeURIComponent(subdomain)}` : ""
   return api.get<PublicTenantBranding>(`/public/tenant-branding/${query}`)

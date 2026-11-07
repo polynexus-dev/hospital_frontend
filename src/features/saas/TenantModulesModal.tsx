@@ -135,6 +135,7 @@ interface TenantModulesModalProps {
   onClose: () => void
   onSave: (modules: string[]) => Promise<void>
   isSaving: boolean
+  onOpenAgreement?: (hospital: SaaSHospital) => void
 }
 
 export function TenantModulesModal({
@@ -142,6 +143,7 @@ export function TenantModulesModal({
   onClose,
   onSave,
   isSaving,
+  onOpenAgreement,
 }: TenantModulesModalProps) {
   const [selected, setSelected] = useState<string[]>(knownModules(hospital.enabled_modules))
 
@@ -195,6 +197,18 @@ export function TenantModulesModal({
             Changes take effect immediately for all {hospital.name} staff users upon reload.
           </span>
           <div className="flex items-center gap-2">
+            {onOpenAgreement && (
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  onClose()
+                  onOpenAgreement(hospital)
+                }}
+                title="Open and preview law-firm grade legal agreement for this client"
+              >
+                📝 Generate Contract ↗
+              </Button>
+            )}
             <Button variant="secondary" onClick={onClose} disabled={isSaving}>
               Cancel
             </Button>
